@@ -46,7 +46,8 @@ System prompt / instructions here.
 
 ## Installing agents
 
-Use the repo's `install-agent.sh` (skills are installed separately by `install-skill.sh`):
+Use the repo's `install-agent.sh` (skills are installed separately by `install-skill.sh`).
+A PowerShell edition, `install-agent.ps1`, provides the same behavior on Windows:
 
 ```bash
 bash install-agent.sh --tool claude --target /path/to/project
@@ -55,7 +56,14 @@ bash install-agent.sh --tool claude --target /path/to/project --remove
 bash install-agent.sh --list-tools
 ```
 
+```powershell
+pwsh install-agent.ps1 -Tool claude,opencode,kiro -Target C:\path\to\project
+pwsh install-agent.ps1 -Tool claude -Target . -Remove
+pwsh install-agent.ps1 -ListTools
+```
+
 The script symlinks each `agents/<name>/<name>.md` into the target tool's agents directory.
+On Windows, pass `-Copy` to `install-agent.ps1` if symlink creation requires admin rights.
 
 ### Tool-specific limitations
 
