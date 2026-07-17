@@ -35,17 +35,23 @@ Use an API client boundary, not hidden fetches inside components.
 3. Performance (HIGH): lazy-load, reserve space (CLS<0.1), virtualize long lists, debounce input.
 4. Style consistency (HIGH): match product type, consistent system, vector icons (no emoji).
 5. Layout & responsive (HIGH): mobile-first, no horizontal scroll, no fixed-px, allow zoom.
-6. Typography & color (MEDIUM): 16px base / 1.5 line-height, semantic color tokens, no <12px body.
-7. Animation (MEDIUM): 150–300ms, conveys meaning, spatial continuity, honor reduced-motion.
-8. Forms & feedback (MEDIUM): visible labels, inline errors near field, progressive disclosure.
-9. Navigation (HIGH): predictable back, bottom nav ≤5, deep links, route-scoped test selectors.
-10. Charts & data (LOW): legends, tooltips, never color-alone to convey meaning.
+ 6. Typography & color (MEDIUM): 16px base / 1.5 line-height, semantic color tokens, no <12px body.
+ 7. Animation (MEDIUM): 150–300ms, conveys meaning, spatial continuity, honor reduced-motion.
+ 8. Forms & feedback (MEDIUM): visible labels, inline errors near field, progressive disclosure.
+ 9. Navigation (HIGH): predictable back, bottom nav ≤5, deep links, route-scoped test selectors.
+ 10. Charts & data (LOW): legends, tooltips, never color-alone to convey meaning.
+ 11. Security & robustness (HIGH): HTTPS-only + HSTS/CSP/nosniff; sanitize HTML sinks (Trusted
+     Types); SRI for third-party; semantic valid HTML; secure cookies; global error handling.
+ Deep web-quality detail (WCAG 2.2, Core Web Vitals LCP/INP/CLS, security baseline) is in
+ `web-quality.md`; the structural patterns are in `design-patterns.md`.
 
 ## Evidence required
 
 Route/page files; shared shell when multiple pages; API client boundary or typed contract; at
-least one list/filter/task/action flow; state-handling evidence; build/type/lint/test checks when
-available; manual smoke path when automation is unavailable.
+least one list/filter/task/action flow; state-handling evidence; accessibility evidence (semantic
+controls, labels, focus, contrast, keyboard); performance evidence (budgets, virtualized lists,
+debounced input, no CLS); security evidence (HTTPS, CSP/Trusted Types, SRI, no leaked maps);
+build/type/lint/test checks when available; manual smoke path when automation is unavailable.
 
 ## Regression tests
 
@@ -62,6 +68,11 @@ Avoid brittle positional selectors; prefer route-scoped rendering and unique acc
 - Backend-source-of-truth rules duplicated or contradicted.
 - Design-pattern table ignored → accessibility/touch regressions (no focus, hover-only, sub-44px,
   color-only meaning).
+- Core Web Vitals regression (LCP > 2.5s, INP > 200ms, CLS > 0.1) or budget blowout (JS > 300KB,
+  CSS > 100KB) without justification.
+- Security baseline missing (mixed content; no CSP/Trusted Types for HTML sinks; third-party without
+  SRI; `innerHTML`/`document.write` fed untrusted input).
 
 Gate may WARN when: advanced filtering deferred + documented; a11y automation unavailable but
-semantic controls present; config UI UI-local only with persistence out of scope.
+semantic controls present; config UI UI-local only with persistence out of scope; perf budgets
+exceeded but a mitigation plan + measurement are attached.

@@ -25,8 +25,21 @@ Given a request to build or review an internal / operator-facing UI, the skill i
 - Provide **loading / empty / error / permission-denied / success** states for every critical flow.
 - Build **configuration** and **AI-assistant** surfaces with the right boundaries (backend stays
   authoritative; AI does not silently mutate business state).
-- Apply the **design-pattern table** and the detailed rules in `references/design-patterns.md`, then
-  run the pre-delivery checklist before declaring the UI done.
+- Apply the **design-pattern table** and the detailed rules in `references/design-patterns.md`, plus
+  the web-quality discipline (WCAG 2.2 accessibility, Core Web Vitals, security baseline) in
+  `references/web-quality.md`, then run the pre-delivery checklists before declaring the UI done.
+
+## What It Covers
+
+- **Structure** — one capability page per route, shared shell, list/detail workflows, server-side
+  filtering/pagination, role-aware navigation, resilient state handling, configuration UX,
+  AI-assistant UX, and the backend-source-of-truth rule.
+- **Design patterns** — 11 priority-ordered disciplines (accessibility, touch, performance, style,
+  layout, typography/color, animation, forms, navigation, charts, security) summarized in `SKILL.md`
+  and detailed in `references/design-patterns.md`.
+- **Web quality** — accessibility to WCAG 2.2 AA, Core Web Vitals (LCP/INP/CLS) with budgets, and a
+  security/robustness baseline (CSP, Trusted Types, SRI, semantic HTML, error handling), detailed in
+  `references/web-quality.md`.
 
 ## Repository Layout
 
@@ -43,7 +56,8 @@ This repo is organized as:
 │       ├── evals/
 │       │   └── evals.json         # Eval scenarios (build + review)
 │       └── references/
-│           ├── design-patterns.md # Full per-category UI/UX rules + pre-delivery checklist
+│           ├── design-patterns.md # Structural UI/UX pattern rules + pre-delivery checklist
+│           ├── web-quality.md      # WCAG 2.2, Core Web Vitals, security best-practices
 │           └── condensed.md       # Fallback for tools that don't read SKILL.md
 ├── install.sh         # Cross-platform installer (symlinks skills into target projects)
 └── README.md
@@ -101,7 +115,7 @@ or
 > "Review this admin dashboard for UX and accessibility problems before we ship it."
 
 The agent recognizes the intent from the skill's `description` and applies the capability-page
-structure plus the design-pattern discipline.
+structure plus the design-pattern and web-quality disciplines.
 
 ## Eval Scenarios
 
@@ -109,15 +123,20 @@ structure plus the design-pattern discipline.
 
 1. **Build** — scaffold a multi-capability operator console; checks expect multiple capability pages
    (not one dashboard), server-side pagination, required states, a config page, an AI-assistant
-   surface with no-silent-mutation, and accessibility basics.
+   surface with no-silent-mutation, accessibility basics, performance budgets, and a security baseline.
 2. **Review** — audit an existing admin dashboard; checks expect defects mapped to the
-   design-pattern disciplines (focus, contrast, hover-only, unbounded lists, color-only charts).
+   design-pattern and web-quality disciplines (focus, contrast, hover-only, unbounded lists,
+   color-only charts, CLS/INP regressions, missing CSP/SRI).
 
 ## Credits
 
-Synthesized from two public skills:
+Synthesized from three public skills:
 
 - `backoffice-workflow-ux` (authenticfake/clike) — operational backoffice UX structure.
 - `ui-ux-pro-max` (nextlevelbuilder/ui-ux-pro-max-skill) — UI/UX design-pattern intelligence,
   ported as curated patterns/checklists only (no search script, no stack-specific data) to keep the
   skill tech-agnostic.
+- `web-quality-skills` (addyosmani/web-quality-skills, MIT) — accessibility (WCAG 2.2), performance &
+  Core Web Vitals, and security best-practices, ported as framework-neutral principles into
+  `references/web-quality.md`. SEO and the upstream CLI audit script were intentionally excluded as
+  out of scope for internal tools / our "patterns only, no script" constraint.

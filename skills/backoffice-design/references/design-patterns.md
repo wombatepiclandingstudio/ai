@@ -7,22 +7,32 @@ underlying intent.
 
 > Note: This reference intentionally omits stack-specific guidance and any search-database tooling.
 > It is meant to be read and applied directly by the agent, not queried by a script.
+>
+> For **deep** accessibility (WCAG 2.2 POUR, full criteria checklist, live regions), **performance
+> & Core Web Vitals** (LCP/INP/CLS checklists, budgets, runtime hygiene), and **security /
+> robustness** (CSP, Trusted Types, SRI, semantic HTML, error handling), see
+> [`web-quality.md`](web-quality.md). That file holds the exhaustive detail; this one keeps the
+> structural pattern summaries.
 
 ---
 
 ## 1. Accessibility (CRITICAL)
 
-- Maintain text contrast of at least 4.5:1 for body text; 3:1 for large text and UI components.
-- Provide alt text for meaningful images; mark decorative images as presentational.
-- All interactive elements must be reachable and operable by keyboard.
-- Use semantic, programmatic labels (aria-label / role / name) for controls without visible text.
-- **Never** remove focus indicators. Visibly indicate the focused element.
-- Do not rely on color alone to convey state (error, success, required). Pair with icon/text.
-- Respect `prefers-reduced-motion` for any animation.
-- Ensure logical heading order and landmark regions for screen-reader navigation.
+- Target **WCAG 2.2 AA**. Text contrast ≥ 4.5:1 (3:1 large); UI components & focus indicators ≥ 3:1.
+- Provide alt text for meaningful images; mark decorative images `alt=""` + `role="presentation"`.
+- All interactive elements reachable and operable by keyboard; **no keyboard traps** (use native
+  `<dialog>` or a proper focus trap for modals).
+- Controls without visible text need an accessible name (`aria-label`, visually-hidden text, or SVG
+  `<title>`). Never ship an unlabeled icon button.
+- **Never** remove focus indicators; use `:focus-visible` with a visible outline.
+- Do not rely on color alone to convey state (error, success, required) — pair with icon/text.
+- Forms: associated `<label>`, `aria-invalid` + `role="alert"` (or `aria-live`) on errors, focus
+  moved to first invalid field. Avoid forcing redundant entry in the same session.
+- Respect `prefers-reduced-motion`; support 200% zoom and 320px reflow with no horizontal scroll.
+- Target size ≥ 24×24px (AA, 2.5.8); aim for the comfortable 44×44.
 
 **Anti-patterns:** removing focus rings, icon-only buttons without labels, gray-on-gray text,
-color-only status, trapping focus in modals.
+color-only status, trapping focus in modals, hover-only interactions.
 
 ## 2. Touch & Interaction (CRITICAL)
 
@@ -38,14 +48,18 @@ touch targets overlapping without spacing.
 
 ## 3. Performance (HIGH)
 
+- Set an explicit budget (JS < 300KB, CSS < 100KB compressed) and enforce it — backoffice UIs are
+  JS-heavy and data-dense.
+- Target Core Web Vitals at p75: **LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1**. (Full LCP/INP/CLS
+  checklists, critical-CSS, font, and runtime guidance are in [`web-quality.md`](web-quality.md).)
 - Serve modern image formats (WebP / AVIF) and lazy-load below-the-fold media.
-- Reserve space for asynchronously loaded content to avoid layout shift (target CLS < 0.1).
-- Virtualize long lists instead of rendering thousands of rows at once.
-- Debounce / throttle search and filter input; avoid main-thread-blocking work.
-- Keep the main-thread budget clear for interaction responsiveness.
+- Reserve space for asynchronously loaded content to avoid layout shift (target CLS ≤ 0.1).
+- Virtualize long lists (> 100 rows) instead of rendering thousands at once.
+- Debounce / throttle search and filter input; break long tasks with `scheduler.yield()`; avoid
+  main-thread-blocking work; move CPU-heavy work off-thread.
 
 **Anti-patterns:** layout thrashing, unbounded client-side lists, synchronous heavy work on input,
-images without reserved dimensions causing shift.
+render-blocking JS in `<head>`, images without reserved dimensions causing shift.
 
 ## 4. Style Consistency (HIGH)
 
