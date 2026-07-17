@@ -20,6 +20,7 @@ optionally with `references/`, `evals/`, and `scripts/`.
 | Skill | Purpose |
 |-------|---------|
 | `skills/legacy-capability-extractor` | Extract a traceable business capability map from legacy codebases |
+| `skills/backoffice-design` | Design and review enterprise backoffice / operator-console UIs (capability pages, list/detail workflows, and tech-agnostic UI/UX design patterns) |
 
 ### Install a skill into a project
 
