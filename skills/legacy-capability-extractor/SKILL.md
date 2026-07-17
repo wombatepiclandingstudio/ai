@@ -9,6 +9,12 @@ description: >
   source code." Also trigger when the user provides a codebase root path and asks for capability
   analysis, domain decomposition, or modernization readiness assessment. Covers both monolith and
   microservice codebases, with or without database access.
+version: "1.0"
+license: MIT
+metadata:
+  author: personal
+  type: workflow
+  tags: [architecture, modernization, domain-modeling, legacy]
 ---
 
 # Legacy Code Business Capability Extractor
@@ -524,73 +530,20 @@ Before delivering the final domain model, verify:
 
 ## Cross-Tool Compatibility
 
-This skill uses the SKILL.md open standard (YAML frontmatter + Markdown), published by
-Anthropic in December 2025 and now natively supported by 13+ AI coding tools.
+This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any compatible
+tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`, `.opencode/skills/`,
+`.cursor/skills/`, `.github/skills/`, `.kiro/skills/`, `.gemini/skills/`, `.kilocode/skills/`). The
+`SKILL.md` above is the single source of truth; it is installed unmodified into each tool.
 
-### Quick install
-
-```bash
-# Install for ALL 16 supported tools at once
-python3 skills/_shared/sync-skill.py skills/legacy-capability-extractor/ --target .
-
-# Install for specific tools only
-python3 skills/_shared/sync-skill.py skills/legacy-capability-extractor/ --target . --tool cursor,copilot,cline
-
-# Dry run to preview what gets installed
-python3 skills/_shared/sync-skill.py skills/legacy-capability-extractor/ --target . --dry-run
-
-# Remove this skill from all tool files
-python3 skills/_shared/sync-skill.py skills/legacy-capability-extractor/ --target . --remove
-
-# List all supported tools
-python3 skills/_shared/sync-skill.py skills/legacy-capability-extractor/ --list-tools
-```
-
-### Supported tools (16 total)
-
-| Tier | Tool | Install Path | What Gets Installed |
-|------|------|-------------|---------------------|
-| **A** (native) | Claude Code | `.claude/skills/legacy-capability-extractor/` | Full SKILL.md + references + scripts |
-| **A** (native) | Codex CLI (OpenAI) | `.codex/skills/legacy-capability-extractor/` | Full SKILL.md + references + scripts |
-| **A** (native) | OpenCode | `.agents/skills/legacy-capability-extractor/` | Full SKILL.md + references + scripts |
-| **B** (MDC) | Cursor | `.cursor/rules/legacy-capability-extractor.mdc` | MDC with globs, on-demand activation |
-| **C** (rules) | CLAUDE.md | `CLAUDE.md` | Condensed ~30-line rules section |
-| **C** (rules) | GitHub Copilot | `.github/copilot-instructions.md` | Condensed rules section |
-| **C** (rules) | Windsurf | `.windsurfrules` | Condensed rules section |
-| **C** (rules) | Cline / RooCode | `.clinerules` | Condensed rules section |
-| **C** (rules) | Gemini CLI | `GEMINI.md` | Condensed rules section |
-| **C** (rules) | Kiro (AWS) | `.kiro/rules/legacy-capability-extractor.md` | Per-skill condensed file |
-| **C** (rules) | JetBrains AI | `.idea/agent-rules.md` | Condensed rules section |
-| **C** (rules) | Augment Code | `augment.rules.md` | Condensed rules section |
-| **C** (rules) | Aider | `CONVENTIONS.md` | Condensed rules section |
-| **C** (rules) | Bolt.new | `AGENT.md` | Condensed rules section |
-| **C** (rules) | Lovable | `AGENT.md` | Condensed rules section |
-| **D** (universal) | AGENTS.md | `AGENTS.md` | Condensed rules — read by Devin, Amazon Q, Zed AI, Replit AI, and 60k+ projects |
-
-### How it works
-
-- **Tier A** tools natively support SKILL.md. They get the full skill with all references
-  and scripts, loaded on-demand when the description matches the user's request.
-- **Tier B/C/D** tools get a condensed ~30-line version with trigger phrases and a pipeline
-  summary. This is enough for the agent to recognize when to activate and follow the procedure.
-- **Multi-skill safe**: Always-on files (`.windsurfrules`, `CLAUDE.md`, `AGENTS.md`, etc.) use
-  HTML comment markers so multiple skills coexist without overwriting each other. Run the
-  sync script for each skill and they accumulate in the same files.
-- **Source of truth**: This `SKILL.md` is the canonical source. All tool-specific files are
-  derived from it. Edit this file, re-run the sync, and all tools get updated.
-
-### Universal sync script
-
-The `skills/_shared/sync-skill.py` script works with ANY skill in this repo, not just this
-one. To install all skills to a codebase:
+To expose this skill to a target project, run the repo's `install.sh` (it symlinks this folder
+into the chosen tool's path):
 
 ```bash
-for skill in skills/*/SKILL.md; do
-  python3 skills/_shared/sync-skill.py "$(dirname "$skill")" --target /path/to/codebase
-done
+bash install.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
+bash install.sh --list-tools          # show all supported tools and their paths
 ```
 
-### MCP bridge (advanced)
-
-For MCP-compatible tools that don't natively read SKILL.md, use [skill-to-mcp](https://github.com/biocontext-ai/skill-to-mcp)
-to expose this skill as an MCP server resource.
+For tools that do not read `SKILL.md` natively (they only consume a project memory file such as
+`AGENTS.md`/`CLAUDE.md`/`.windsurfrules`), point them at `references/condensed.md` — a flattened
+copy of the pipeline above. Full install details and the progressive-disclosure model are in this
+folder's `README.md`.
