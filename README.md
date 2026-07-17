@@ -6,9 +6,10 @@ Personal repository for all things AI — agents and reusable skills.
 
 ```
 .
-├── agents/     # Custom agent definitions (prompts, configs, personas)
-├── skills/     # Reusable skills following the open Agent Skills standard
-└── install.sh  # Cross-platform installer (symlinks skills into target projects)
+├── agents/          # Custom agent definitions (Claude Code subagent format: <name>/<name>.md)
+├── skills/          # Reusable skills following the open Agent Skills standard
+├── install-skill.sh # Cross-platform installer (symlinks skills into target projects)
+└── install-agent.sh # Cross-platform installer (symlinks agents into target projects)
 ```
 
 ## Skills
@@ -25,9 +26,9 @@ optionally with `references/`, `evals/`, and `scripts/`.
 ### Install a skill into a project
 
 ```bash
-bash install.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
-bash install.sh --list-tools        # show supported tools and paths
-bash install.sh --tool claude --target /path/to/project --remove
+bash install-skill.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
+bash install-skill.sh --list-tools        # show supported tools and paths
+bash install-skill.sh --tool claude --target /path/to/project --remove
 ```
 
 Skills are exposed to each tool by symlinking the skill folder into the tool's discovery path
@@ -36,7 +37,24 @@ so a single canonical `SKILL.md` works across every compatible tool.
 
 ## Agents
 
-Agent definitions live in `agents/`. See [`agents/README.md`](agents/README.md) for the convention.
+Agent definitions live in `agents/` and follow the [Claude Code subagent format](agents/README.md)
+(each agent is `<name>/<name>.md` with YAML frontmatter + a system-prompt body).
+
+| Agent | Purpose |
+|-------|---------|
+| `agents/bookworm` | Hyper-skeptical reviewer that distrusts both others' claims and its own memory; verifies language/framework-specific facts against live sources (web, Context7 MCP, sigmap) before asserting them |
+
+### Install an agent into a project
+
+```bash
+bash install-agent.sh --tool claude,opencode,kiro --target /path/to/project
+bash install-agent.sh --list-tools        # show supported tools and paths
+bash install-agent.sh --tool claude --target /path/to/project --remove
+```
+
+Agents are exposed to each tool by symlinking the agent file into the tool's agents discovery path
+(e.g. `.claude/agents/`). `codex` and `cursor` have no native named-subagent directory, so they are
+skipped with a warning — paste the agent body into the project `AGENTS.md` manually for those tools.
 
 ## Compatibility note
 

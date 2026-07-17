@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 #
-# install.sh — Cross-platform installer for the skills in this repo.
+# install-skill.sh — Cross-platform installer for the SKILLS in this repo.
 #
 # Skills are folders containing a SKILL.md (the open Agent Skills standard). Every
 # compatible tool discovers skills by looking in a well-known directory. This script
 # symlinks (or copies) each skill folder into a target project under that tool's path,
 # so the same canonical SKILL.md is exposed to many tools with no text rewriting.
 #
+# Agent definitions live in agents/ and are installed by install-agent.sh.
+#
 # Usage:
-#   bash install.sh --tool claude --target /path/to/project
-#   bash install.sh --tool claude,codex,cursor --target /path/to/project
-#   bash install.sh --tool claude --target /path/to/project --remove
-#   bash install.sh --list-tools
+#   bash install-skill.sh --tool claude --target /path/to/project
+#   bash install-skill.sh --tool claude,codex,cursor --target /path/to/project
+#   bash install-skill.sh --tool claude --target /path/to/project --remove
+#   bash install-skill.sh --list-tools
 #
 set -euo pipefail
 
