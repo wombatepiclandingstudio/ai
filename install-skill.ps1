@@ -100,9 +100,12 @@ foreach ($t in $Tools) {
 
     if ($Remove) {
         if (Test-Path -LiteralPath $dest -PathType Container) {
-            foreach ($item in Get-ChildItem -LiteralPath $dest) {
-                Remove-Item -LiteralPath $item.FullName -Recurse -Force
-                "removed $t`: $($item.FullName)" | Write-Host
+            foreach ($skillDir in Get-ChildItem -LiteralPath $SkillsDir -Directory) {
+                $link = Join-Path $dest $skillDir.Name
+                if (Test-Path -LiteralPath $link) {
+                    Remove-Item -LiteralPath $link -Recurse -Force
+                    "removed $t`: $link" | Write-Host
+                }
             }
         }
         continue

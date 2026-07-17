@@ -119,9 +119,12 @@ foreach ($t in $Tools) {
 
     if ($Remove) {
         if (Test-Path -LiteralPath $dest -PathType Container) {
-            foreach ($item in Get-ChildItem -LiteralPath $dest) {
-                Remove-Item -LiteralPath $item.FullName -Recurse -Force
-                "removed $t`: $($item.FullName)" | Write-Host
+            foreach ($agentDir in Get-ChildItem -LiteralPath $AgentsDir -Directory) {
+                $link = Join-Path $dest $agentDir.Name
+                if (Test-Path -LiteralPath $link) {
+                    Remove-Item -LiteralPath $link -Recurse -Force
+                    "removed $t`: $link" | Write-Host
+                }
             }
         }
         continue
