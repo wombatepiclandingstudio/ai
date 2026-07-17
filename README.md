@@ -6,10 +6,12 @@ Personal repository for all things AI — agents and reusable skills.
 
 ```
 .
-├── agents/          # Custom agent definitions (Claude Code subagent format: <name>/<name>.md)
-├── skills/          # Reusable skills following the open Agent Skills standard
-├── install-skill.sh # Cross-platform installer (symlinks skills into target projects)
-└── install-agent.sh # Cross-platform installer (symlinks agents into target projects)
+├── agents/           # Custom agent definitions (Claude Code subagent format: <name>/<name>.md)
+├── skills/           # Reusable skills following the open Agent Skills standard
+├── install-skill.sh  # Bash installer — symlinks skills into target projects
+├── install-agent.sh  # Bash installer — symlinks agents into target projects
+├── install-skill.ps1 # PowerShell installer — same, for Windows (pwsh)
+└── install-agent.ps1 # PowerShell installer — same, for Windows (pwsh)
 ```
 
 ## Skills
@@ -31,9 +33,18 @@ bash install-skill.sh --list-tools        # show supported tools and paths
 bash install-skill.sh --tool claude --target /path/to/project --remove
 ```
 
+On Windows (PowerShell):
+
+```powershell
+pwsh install-skill.ps1 -Tool claude,codex,cursor,kilocode,opencode -Target C:\path\to\project
+pwsh install-skill.ps1 -ListTools
+pwsh install-skill.ps1 -Tool claude -Target . -Remove
+```
+
 Skills are exposed to each tool by symlinking the skill folder into the tool's discovery path
 (e.g. `.claude/skills/`, `.codex/skills/`). No code generation or text rewriting is involved,
-so a single canonical `SKILL.md` works across every compatible tool.
+so a single canonical `SKILL.md` works across every compatible tool. On Windows, pass `-Copy` to
+`install-skill.ps1` if symlink creation requires admin rights (it copies instead of linking).
 
 ## Agents
 
@@ -52,9 +63,52 @@ bash install-agent.sh --list-tools        # show supported tools and paths
 bash install-agent.sh --tool claude --target /path/to/project --remove
 ```
 
+On Windows (PowerShell):
+
+```powershell
+pwsh install-agent.ps1 -Tool claude,opencode,kiro -Target C:\path\to\project
+pwsh install-agent.ps1 -ListTools
+pwsh install-agent.ps1 -Tool claude -Target . -Remove
+```
+
 Agents are exposed to each tool by symlinking the agent file into the tool's agents discovery path
 (e.g. `.claude/agents/`). `codex` and `cursor` have no native named-subagent directory, so they are
 skipped with a warning — paste the agent body into the project `AGENTS.md` manually for those tools.
+On Windows, pass `-Copy` to `install-agent.ps1` if symlink creation requires admin rights.
+
+## Install without cloning
+
+You don't need to clone this repo to install its skills or agents. Pipe the installer straight
+from GitHub and tell it which tools to target (replace `main` with a tag/branch if you want a pinned
+version):
+
+```bash
+# Skills
+curl -fsSL https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-skill.sh | bash -s -- --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
+
+# Agents
+curl -fsSL https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-agent.sh | bash -s -- --tool claude,opencode,kiro --target /path/to/project
+```
+
+On Windows (PowerShell), download and run the `.ps1` installer:
+
+```powershell
+# Skills
+irm https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-skill.ps1 -OutFile install-skill.ps1
+pwsh .\install-skill.ps1 -Tool claude,codex,cursor,kilocode,opencode -Target C:\path\to\project
+
+# Agents
+irm https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-agent.ps1 -OutFile install-agent.ps1
+pwsh .\install-agent.ps1 -Tool claude,opencode,kiro -Target C:\path\to\project
+```
+
+If you are working inside an AI coding agent itself, you can also use its **WebFetch** tool to read
+the installer and apply it. For example, ask the agent:
+
+> WebFetch https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-agent.sh and
+> run it with --tool claude --target . to install the bookworm agent.
+
+(Adjust the repo owner `wombatepiclandingstudio` and branch `main` to match this repository.)
 
 ## Compatibility note
 
