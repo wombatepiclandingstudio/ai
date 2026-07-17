@@ -1,7 +1,9 @@
-# Business Capability Extraction from Legacy Code
+# Business Capability Extraction from Legacy Code (condensed)
 
-When the user asks to discover, identify, map, or extract business capabilities, business domains,
-bounded contexts, or functional boundaries from a codebase, follow this structured pipeline.
+This is a condensed version of `SKILL.md` for tools that do not natively read the Agent
+Skills `SKILL.md` format. Point your tool's memory/instructions file (e.g. `AGENTS.md`,
+`CLAUDE.md`, `GEMINI.md`, `.windsurfrules`) at this content, or paste it into the relevant
+rules file. The canonical source remains `SKILL.md`.
 
 ## Trigger Phrases
 - "map the architecture", "find business domains in this code", "understand what this system does"
@@ -11,7 +13,7 @@ bounded contexts, or functional boundaries from a codebase, follow this structur
 
 ## Pipeline: A1 → A7
 
-### A1: Seed Candidates (4–5 signal sources, adaptive)
+### A1: Seed Candidates (adaptive, 4–5 signal sources)
 - **A1.1** Package/module structure — business-named packages (payments, customers) vs generic (core, utils, common). Map the directory tree; note tech stack from build files.
 - **A1.2** Database schema — table clusters via FK relationships, stored procedures. **Skip if no DB access.**
 - **A1.3** Backend entry points — REST controllers, message consumers, scheduled jobs, gRPC services. Group by *business operation*, not technical type. A PaymentController + RecurringPaymentJob = same "Payments" signal.
