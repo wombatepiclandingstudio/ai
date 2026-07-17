@@ -1,0 +1,37 @@
+{
+  "skill_name": "backoffice-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build an operator console for a document-processing platform. The operators need to ingest documents, validate extracted fields, browse an archive of processed records, export batches, run QA on low-confidence extractions, and manage extraction-profile configuration. Stack is your choice. Save the UI scaffold to /home/z/my-project/ops-console.",
+      "expected_output": "A multi-page backoffice UI scaffold with one route per capability (ingest, validation, archive, export, qa, settings/extraction-profiles), a shared shell/navigation, list/detail patterns, server-side filtering and pagination for the archive, loading/empty/error/permission states, a dedicated configuration page, and an AI-assistant surface that states it does not mutate business state. Design patterns from design-patterns.md applied (focus states, 44px targets, no color-only meaning).",
+      "files": [],
+      "expectations": [
+        "Multiple capability pages exist, not a single decorative dashboard",
+        "A shared shell or navigation ties the pages together",
+        "The archive/records view uses server-side filtering and pagination, not an unbounded client list",
+        "Loading, empty, error, and permission-denied states are present for at least one critical workflow",
+        "A dedicated configuration page distinguishes technical keys from user-facing labels and supports add/edit/remove",
+        "An AI-assistant surface states it will not modify business state unless explicitly required",
+        "Destructive actions (e.g. export/delete) require confirmation",
+        "Accessibility basics present: visible focus, keyboard-reachable controls, no color-only status",
+        "No backend business rule (auth, lifecycle, eligibility) is duplicated client-side as authoritative"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this admin dashboard at /home/z/my-project/legacy-admin for UX problems before we ship it. Focus on operator usability and accessibility. Write findings to /home/z/my-project/admin-review.md.",
+      "expected_output": "A review document listing concrete UX/accessibility defects found in the dashboard, mapped to the skill's design-pattern disciplines (accessibility, touch, performance, layout, typography/color, animation, forms, navigation, charts).",
+      "files": [],
+      "expectations": [
+        "Flags missing or insufficient contrast and removed focus rings if present",
+        "Flags hover-only interactions that fail keyboard/touch",
+        "Flags any unbounded client-side list without pagination",
+        "Flags missing loading/empty/error states on data views",
+        "Flags charts that encode meaning by color alone without legend/label",
+        "Flags sub-44px touch targets and missing labels on icon-only actions",
+        "Review is framed as patterns/anti-patterns, not stack-specific code fixes"
+      ]
+    }
+  ]
+}

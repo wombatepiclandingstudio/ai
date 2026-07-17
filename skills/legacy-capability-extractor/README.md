@@ -77,7 +77,6 @@ bash install.sh --tool claude --target /path/to/project --remove
 | Gemini CLI | `.gemini/skills/` |
 | Roo Code / Cline | `.roo/skills/` |
 | Goose | `.goose/skills/` |
-| Kilo Code | `.kilocode/skills/` |
 
 ### Tools without native SKILL.md support
 
