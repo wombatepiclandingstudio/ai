@@ -1,0 +1,85 @@
+---
+description: >
+  Extract business capabilities from legacy codebases. Trigger when the user asks to map
+  business domains, find bounded contexts, understand what a system does, prepare for
+  modernization, or generate a domain model from source code.
+globs: "**/*.java, **/*.py, **/*.js, **/*.ts, **/*.go, **/*.cs, **/pom.xml, **/package.json, **/go.mod, **/*.sql, **/*.proto"
+alwaysApply: false
+---
+
+# Legacy Code Business Capability Extractor
+
+When asked to discover, identify, map, or extract business capabilities from a codebase,
+follow this 7-phase pipeline. Write output files at each step so nothing is lost.
+
+## Trigger
+User asks to: map architecture, find business domains, understand what the system does,
+prepare for modernization, extract capabilities, find bounded contexts, generate domain model.
+
+## Phase A1: Seed Candidates
+
+Extract signals from multiple sources, then merge into a candidate list.
+
+**A1.1 Package Structure** — Map directory tree. Business-named packages (payments, customers)
+are strong signals. Generic names (core, utils, common, shared) are weak. Note tech stack.
+
+**A1.2 Database Schema** (skip if no DB) — Find DDL/migrations/ORM models. Identify table
+clusters via FK relationships. FK-dense clusters = same domain.
+
+**A1.3 Backend Entry Points** — Find REST controllers, message consumers, scheduled jobs,
+gRPC/GraphQL definitions. Group by *business operation*, not technical type.
+
+**A1.4 Frontend Entry Points** (skip if no frontend) — Routes, pages, navigation.
+
+**A1.5 Change Coupling** (optional, skip if no git) — Files that co-change in git history
+typically implement the same feature. Use `git log --name-only` to find co-change groups.
+
+**A1.6 Merge** — 3+ sources = HIGH confidence, 2 = MEDIUM, 1 = LOW. Write `a1-candidates.md`.
+
+## Phase A2: Analyze Candidates
+
+For each candidate assess cohesion, coupling, boundary clarity. Assign one action:
+
+| Action | When |
+|--------|------|
+| CONFIRM | Real business capability: high cohesion, clear boundaries, 2+ signals |
+| SPLIT | Contains distinct business functions needing separation |
+| MERGE | Same business meaning as another candidate; technical separation is deployment artifact |
+| DE-SCOPE | Infrastructure, tooling, cross-cutting concern — NOT a business capability |
+| INVESTIGATE | Insufficient evidence; flag for human review |
+
+**Key rule:** Deployment boundaries do not define business capabilities. A `scheduling-service`
+microservice may be a Payments feature, not a separate capability. Write `a2-analysis.md`.
+
+## Phase A3: Verify Coverage
+
+Check all top-level packages are accounted for (target >90%). Resolve orphans.
+Write `a3-coverage.md`.
+
+## Phase A4: Lock L1
+
+Finalize Level 1 list. No changes after this. Write `a4-l1-locked.md`.
+
+## Phase A5: L2 Sub-Capabilities
+
+Break each L1 into 2-5 concrete operations. For each L2 document: description (business
+terms), key operations (APIs/jobs/events), code location (files), entities (OWNS/MANAGES/
+TRACKS), external deps. Write `a5-l2-per-capability.md`.
+
+## Phase A6: Domain Model
+
+Consolidate: capability hierarchy tree, detailed entries, cross-capability dependency map.
+Write `a6-domain-model.md`.
+
+## Phase A7: Industry Comparison
+
+Compare against BIAN (banking), TM Forum (telecom), APQC (cross-industry), ACORD (insurance),
+HL7 (healthcare). Aligned / org-specific / gaps. Code is source of truth.
+Write `a7-benchmark.md`.
+
+## Anti-Patterns
+- Technical layers (delivery channels, infrastructure, admin, auth/logging) are NOT capabilities
+- Deployment boundaries ≠ business boundaries
+- Don't trust a single pass — run twice, compare
+- Verify every cited file/table/endpoint exists (hallucination check)
+- Dead code generates phantom signals — cross-reference with entry points and git activity

@@ -1,0 +1,47 @@
+{
+  "skill_name": "legacy-capability-extractor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a Java Spring Boot monolith at /home/z/my-project/test-codebase/banking-app. It has about 50K lines of code with REST controllers, JPA entities, and a PostgreSQL database. Can you extract the business capabilities from this codebase? Save the output to /home/z/my-project/test-output/.",
+      "expected_output": "A capability-output directory with a1-candidates.md containing candidates grouped by HIGH/MEDIUM/LOW confidence with evidence trails, a2-analysis.md with confirm/split/merge/de-scope actions, a4-l1-locked.md with finalized L1 capabilities, a5-l2-per-capability.md with L2 sub-capabilities including code locations and entities, and a6-domain-model.md with a consolidated hierarchy.",
+      "files": [],
+      "expectations": [
+        "The output includes a1-candidates.md with candidates rated by confidence",
+        "Candidates include evidence from at least package structure and entry points",
+        "The output includes a2-analysis.md with actions (confirm/split/merge/de-scope) for each candidate",
+        "The output includes a4-l1-locked.md with a finalized L1 capability list",
+        "The output includes a5-l2-per-capability.md with L2 operations mapped to specific files",
+        "The output includes a6-domain-model.md with a capability hierarchy tree",
+        "No delivery channels, infrastructure layers, or cross-cutting concerns are listed as business capabilities",
+        "Cross-capability dependencies are documented"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We're modernizing a legacy Python Django application. The repo is at /home/z/my-project/test-codebase/insurance-claims. It has no database access available (the DB is behind a VPN we can't reach), and there's no frontend — it's a pure API backend. Can you map out what business capabilities exist in this code?",
+      "expected_output": "The pipeline skips A1.2 (database) and A1.4 (frontend) as specified in the skill's adaptive behavior. Outputs still include all other phases with a note about skipped steps.",
+      "files": [],
+      "expectations": [
+        "The pipeline skips A1.2 (database schema analysis) since no DB access is available",
+        "The pipeline skips A1.4 (frontend entry point analysis) since there is no frontend",
+        "The output includes a1-candidates.md noting which signal sources were available and which were skipped",
+        "Candidates are still generated from available signals (package structure and backend entry points)",
+        "The output includes a complete a6-domain-model.md despite missing signal sources"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our CTO wants a quick domain model from our Node.js microservices repo at /home/z/my-project/test-codebase/ecommerce. We have an OpenAPI spec at /home/z/my-project/test-codebase/ecommerce/api-spec/openapi.yaml. Focus on the domain model — we don't need the full industry comparison.",
+      "expected_output": "The pipeline runs A1–A6, using the OpenAPI spec as a pre-generated input for A1.3. A7 may be brief or skipped based on user preference. The domain model traces capabilities to code locations.",
+      "files": [],
+      "expectations": [
+        "The pipeline uses the OpenAPI spec as a pre-generated input for entry point analysis",
+        "The output includes a6-domain-model.md with the capability hierarchy",
+        "L2 sub-capabilities include specific code locations (file paths)",
+        "Each capability entry includes key operations derived from the API spec",
+        "The output does NOT include a7-benchmark.md or notes that it was deprioritized per user request"
+      ]
+    }
+  ]
+}
