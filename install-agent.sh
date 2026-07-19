@@ -16,6 +16,7 @@
 #   bash install-agent.sh --tool claude,codex,cursor --target /path/to/project
 #   bash install-agent.sh --tool claude --target /path/to/project --remove
 #   bash install-agent.sh --list-tools
+#   bash install-agent.sh --tool claude,cline --global
 #
 set -euo pipefail
 
@@ -54,9 +55,10 @@ list_tools() {
 }
 
 usage() {
-  echo "Usage: bash install-agent.sh --tool <key[,key...]> --target <dir> [--remove]"
+  echo "Usage: bash install-agent.sh --tool <key[,key...]> --target <dir> [--remove] [--global]"
   echo "       bash install-agent.sh --list-tools"
   echo "Tool keys: $(IFS=,; echo "${!TOOL_PATHS[*]}")"
+  echo "--global installs under \$HOME so agents apply to all projects."
 }
 
 # Resolve the agent markdown file inside an agent folder.
@@ -81,11 +83,13 @@ resolve_agent_file() {
 TOOLS=""
 TARGET=""
 REMOVE=0
+GLOBAL=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tool) TOOLS="${2:-}"; shift 2 ;;
     --target) TARGET="${2:-}"; shift 2 ;;
     --remove) REMOVE=1; shift ;;
+    --global) GLOBAL=1; shift ;;
     --list-tools) list_tools; exit 0 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 1 ;;
@@ -93,7 +97,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -z "$TOOLS" && $REMOVE -eq 0 ]] && { usage >&2; exit 1; }
-[[ -z "$TARGET" && $REMOVE -eq 0 ]] && { echo "ERROR: --target is required" >&2; exit 1; }
+
+if [[ $GLOBAL -eq 1 ]]; then
+  [[ -z "$HOME" ]] && { echo "ERROR: --global requires HOME to be set" >&2; exit 1; }
+  TARGET="$HOME"
+  echo "Installing globally under $TARGET (all projects)"
+else
+  [[ -z "$TARGET" && $REMOVE -eq 0 ]] && { echo "ERROR: --target is required (or use --global)" >&2; exit 1; }
+fi
 
 if [[ $REMOVE -eq 0 ]]; then
   [[ -d "$TARGET" ]] || { echo "ERROR: target does not exist: $TARGET" >&2; exit 1; }

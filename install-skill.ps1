@@ -15,7 +15,11 @@
     Comma-separated list of tool keys (e.g. "claude,codex,cursor"). See -ListTools.
 
 .PARAMETER Target
-    Target project directory to install into.
+    Target project directory to install into. Ignored when -Global is used.
+
+.PARAMETER Global
+    Install to the user's home directory so the skills apply across ALL projects
+    (e.g. ~/.claude/skills, ~/.codex/skills, ~/.cursor/skills, ~/.cline/skills).
 
 .PARAMETER Remove
     Remove previously installed links/copies instead of installing.
@@ -30,12 +34,14 @@
     pwsh install-skill.ps1 -Tool claude -Target C:\projects\myapp
     pwsh install-skill.ps1 -Tool claude,codex,cursor -Target . -Copy
     pwsh install-skill.ps1 -Tool claude -Target . -Remove
+    pwsh install-skill.ps1 -Tool claude,cursor,cline -Global
     pwsh install-skill.ps1 -ListTools
 #>
 [CmdletBinding(DefaultParameterSetName = 'Install')]
 param(
     [string]   $Tool,
     [string]   $Target,
+    [switch]   $Global,
     [switch]   $Remove,
     [switch]   $Copy,
     [switch]   $ListTools
@@ -79,7 +85,18 @@ function Usage {
 if ($ListTools) { List-Tools; exit 0 }
 
 if (-not $Tool -and -not $Remove) { Usage; exit 1 }
-if (-not $Target -and -not $Remove) { Write-Error 'ERROR: -Target is required'; exit 1 }
+
+# Global install: target is the user's home directory so skills apply across all projects.
+if ($Global) {
+    if (-not $env:HOME) {
+        Write-Error 'ERROR: -Global requires the HOME environment variable to be set'
+        exit 1
+    }
+    $Target = $env:HOME
+    "Installing globally under $Target (all projects)" | Write-Host
+} else {
+    if (-not $Target -and -not $Remove) { Write-Error 'ERROR: -Target is required (or use -Global)'; exit 1 }
+}
 
 if (-not $Remove) {
     if (-not (Test-Path -LiteralPath $Target -PathType Container)) {

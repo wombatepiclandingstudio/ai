@@ -41,6 +41,16 @@ pwsh install-skill.ps1 -ListTools
 pwsh install-skill.ps1 -Tool claude -Target . -Remove
 ```
 
+Install to the user's home directory so the skills apply across **all** projects (e.g. `~/.claude/skills`, `~/.codex/skills`, `~/.cursor/skills`, `~/.cline/skills`):
+
+```bash
+bash install-skill.sh --tool claude,cursor,cline --global
+```
+
+```powershell
+pwsh install-skill.ps1 -Tool claude,cursor,cline -Global
+```
+
 Skills are exposed to each tool by symlinking the skill folder into the tool's discovery path
 (e.g. `.claude/skills/`, `.codex/skills/`). No code generation or text rewriting is involved,
 so a single canonical `SKILL.md` works across every compatible tool. On Windows, pass `-Copy` to
@@ -69,6 +79,16 @@ On Windows (PowerShell):
 pwsh install-agent.ps1 -Tool claude,opencode,kiro -Target C:\path\to\project
 pwsh install-agent.ps1 -ListTools
 pwsh install-agent.ps1 -Tool claude -Target . -Remove
+```
+
+Install to the user's home directory so the agents apply across **all** projects (e.g. `~/.claude/agents`, `~/.cline/agents`). `codex` and `cursor` have no native global named-subagent directory, so they still print a manual `AGENTS.md` hint:
+
+```bash
+bash install-agent.sh --tool claude,cline --global
+```
+
+```powershell
+pwsh install-agent.ps1 -Tool claude,cline -Global
 ```
 
 Agents are exposed to each tool by symlinking the agent file into the tool's agents discovery path

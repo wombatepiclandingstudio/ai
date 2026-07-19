@@ -14,6 +14,7 @@
 #   bash install-skill.sh --tool claude,codex,cursor --target /path/to/project
 #   bash install-skill.sh --tool claude --target /path/to/project --remove
 #   bash install-skill.sh --list-tools
+#   bash install-skill.sh --tool claude,cursor,cline --global
 #
 set -euo pipefail
 
@@ -45,19 +46,22 @@ list_tools() {
 }
 
 usage() {
-  echo "Usage: bash install.sh --tool <key[,key...]> --target <dir> [--remove]"
-  echo "       bash install.sh --list-tools"
+  echo "Usage: bash install-skill.sh --tool <key[,key...]> --target <dir> [--remove] [--global]"
+  echo "       bash install-skill.sh --list-tools"
   echo "Tool keys: $(IFS=,; echo "${!TOOL_PATHS[*]}")"
+  echo "--global installs under \$HOME so skills apply to all projects."
 }
 
 TOOLS=""
 TARGET=""
 REMOVE=0
+GLOBAL=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tool) TOOLS="${2:-}"; shift 2 ;;
     --target) TARGET="${2:-}"; shift 2 ;;
     --remove) REMOVE=1; shift ;;
+    --global) GLOBAL=1; shift ;;
     --list-tools) list_tools; exit 0 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 1 ;;
@@ -65,7 +69,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -z "$TOOLS" && $REMOVE -eq 0 ]] && { usage >&2; exit 1; }
-[[ -z "$TARGET" && $REMOVE -eq 0 ]] && { echo "ERROR: --target is required" >&2; exit 1; }
+
+if [[ $GLOBAL -eq 1 ]]; then
+  [[ -z "$HOME" ]] && { echo "ERROR: --global requires HOME to be set" >&2; exit 1; }
+  TARGET="$HOME"
+  echo "Installing globally under $TARGET (all projects)"
+else
+  [[ -z "$TARGET" && $REMOVE -eq 0 ]] && { echo "ERROR: --target is required (or use --global)" >&2; exit 1; }
+fi
 
 if [[ $REMOVE -eq 0 ]]; then
   [[ -d "$TARGET" ]] || { echo "ERROR: target does not exist: $TARGET" >&2; exit 1; }
