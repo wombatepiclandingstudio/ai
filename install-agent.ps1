@@ -16,7 +16,12 @@
     Comma-separated list of tool keys (e.g. "claude,opencode"). See -ListTools.
 
 .PARAMETER Target
-    Target project directory to install into.
+    Target project directory to install into. Ignored when -Global is used.
+
+.PARAMETER Global
+    Install to the user's home directory so the agents apply across ALL projects
+    (e.g. ~/.claude/agents, ~/.cline/agents). Note: codex and cursor have no
+    native global named-subagent directory, so those keys still print a manual hint.
 
 .PARAMETER Remove
     Remove previously installed links/copies instead of installing.
@@ -31,12 +36,14 @@
     pwsh install-agent.ps1 -Tool claude -Target C:\projects\myapp
     pwsh install-agent.ps1 -Tool claude,opencode,kiro -Target . -Copy
     pwsh install-agent.ps1 -Tool claude -Target . -Remove
+    pwsh install-agent.ps1 -Tool claude,cline -Global
     pwsh install-agent.ps1 -ListTools
 #>
 [CmdletBinding(DefaultParameterSetName = 'Install')]
 param(
     [string]   $Tool,
     [string]   $Target,
+    [switch]   $Global,
     [switch]   $Remove,
     [switch]   $Copy,
     [switch]   $ListTools
@@ -94,7 +101,18 @@ function Resolve-AgentFile {
 if ($ListTools) { List-Tools; exit 0 }
 
 if (-not $Tool -and -not $Remove) { Usage; exit 1 }
-if (-not $Target -and -not $Remove) { Write-Error 'ERROR: -Target is required'; exit 1 }
+
+# Global install: target is the user's home directory so agents apply across all projects.
+if ($Global) {
+    if (-not $env:HOME) {
+        Write-Error 'ERROR: -Global requires the HOME environment variable to be set'
+        exit 1
+    }
+    $Target = $env:HOME
+    "Installing globally under $Target (all projects)" | Write-Host
+} else {
+    if (-not $Target -and -not $Remove) { Write-Error 'ERROR: -Target is required (or use -Global)'; exit 1 }
+}
 
 if (-not $Remove) {
     if (-not (Test-Path -LiteralPath $Target -PathType Container)) {

@@ -62,6 +62,16 @@ pwsh install-agent.ps1 -Tool claude -Target . -Remove
 pwsh install-agent.ps1 -ListTools
 ```
 
+To install across **all** projects (into your home directory, e.g. `~/.claude/agents`, `~/.cline/agents`), use `--global` / `-Global`. `codex` and `cursor` have no native global named-subagent directory, so they still print a manual `AGENTS.md` hint:
+
+```bash
+bash install-agent.sh --tool claude,cline --global
+```
+
+```powershell
+pwsh install-agent.ps1 -Tool claude,cline -Global
+```
+
 The script symlinks each `agents/<name>/<name>.md` into the target tool's agents directory.
 On Windows, pass `-Copy` to `install-agent.ps1` if symlink creation requires admin rights.
 
