@@ -51,6 +51,23 @@ bash install-skill.sh --tool claude,cursor,cline --global
 pwsh install-skill.ps1 -Tool claude,cursor,cline -Global
 ```
 
+With `--global` / `-Global`, each tool's **global** (user-home) discovery dir is used, not the
+project-relative one. The resolved global paths (verified against each tool's 2026 docs) are:
+
+| Tool | Global skills dir |
+|------|-------------------|
+| claude | `~/.claude/skills` |
+| codex | `~/.codex/skills` |
+| opencode | `~/.config/opencode/skills` |
+| cursor | `~/.cursor/skills` |
+| kiro | `~/.kiro/skills` |
+| gemini | `~/.gemini/skills` |
+| kilo | `~/.kilo/skills` (legacy `~/.kilocode/skills` also read) |
+| roo | `~/.roo/skills` |
+| cline | `~/.cline/skills` |
+| goose | `~/.goose/skills` |
+| copilot / vscode | `~/.github/skills` (best-effort; these read `.github/skills` per project) |
+
 Skills are exposed to each tool by symlinking the skill folder into the tool's discovery path
 (e.g. `.claude/skills/`, `.codex/skills/`). No code generation or text rewriting is involved,
 so a single canonical `SKILL.md` works across every compatible tool. On Windows, pass `-Copy` to
@@ -90,6 +107,10 @@ bash install-agent.sh --tool claude,cline --global
 ```powershell
 pwsh install-agent.ps1 -Tool claude,cline -Global
 ```
+
+With `--global` / `-Global`, each tool's **global** (user-home) agents dir is used
+(see the global-path table above, replacing `skills` with `agents`). `codex` and `cursor`
+have no native global named-subagent directory, so they still print a manual `AGENTS.md` hint.
 
 Agents are exposed to each tool by symlinking the agent file into the tool's agents discovery path
 (e.g. `.claude/agents/`). `codex` and `cursor` have no native named-subagent directory, so they are

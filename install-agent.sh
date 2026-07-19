@@ -40,6 +40,27 @@ declare -A TOOL_PATHS=(
   [goose]=".goose/agents"
   [vscode]=".github/agents"
 )
+
+# Map a tool key to its GLOBAL (user-home) agents path. Used when --global is passed.
+# Verified 2026: claude ~/.claude/agents · opencode ~/.config/opencode/agents ·
+#   kiro ~/.kiro/agents · gemini ~/.gemini/agents · kilo ~/.kilo/agents (legacy
+#   ~/.kilocode/agents also read) · roo ~/.roo/agents · cline ~/.cline/agents ·
+#   goose ~/.goose/agents. codex/cursor have NO native global named-subagent dir
+#   (still skipped with the manual AGENTS.md hint). copilot/vscode read .github/agents
+#   per project; --global best-effort installs under $HOME/.github/agents.
+declare -A GLOBAL_PATHS=(
+  [claude]=".claude/agents"
+  [opencode]=".config/opencode/agents"
+  [copilot]=".github/agents"
+  [kiro]=".kiro/agents"
+  [gemini]=".gemini/agents"
+  [kilocode]=".kilocode/agents"
+  [kilo]=".kilo/agents"
+  [roo]=".roo/agents"
+  [cline]=".cline/agents"
+  [goose]=".goose/agents"
+  [vscode]=".github/agents"
+)
 # Tools that have no native named-subagent directory (install skipped with guidance).
 NO_AGENT_DIR=" codex cursor "
 
@@ -112,14 +133,16 @@ fi
 
 IFS=',' read -ra TOOL_LIST <<< "$TOOLS"
 for tool in "${TOOL_LIST[@]}"; do
-  path="${TOOL_PATHS[$tool]:-}"
-  if [[ -z "$path" ]]; then
-    if [[ "$NO_AGENT_DIR" == *" $tool "* ]]; then
-      echo "SKIP: '$tool' has no native named-subagent directory — paste the agent body into the project AGENTS.md manually." >&2
-    else
-      echo "WARN: unknown tool '$tool' (see --list-tools); skipping" >&2
-    fi
+  if [[ "$NO_AGENT_DIR" == *" $tool "* ]]; then
+    echo "SKIP: '$tool' has no native named-subagent directory — paste the agent body into the project AGENTS.md manually." >&2
     continue
+  fi
+  if [[ $GLOBAL -eq 1 ]]; then
+    path="${GLOBAL_PATHS[$tool]:-}"
+    [[ -z "$path" ]] && { echo "WARN: unknown tool '$tool' (see --list-tools); skipping" >&2; continue; }
+  else
+    path="${TOOL_PATHS[$tool]:-}"
+    [[ -z "$path" ]] && { echo "WARN: unknown tool '$tool' (see --list-tools); skipping" >&2; continue; }
   fi
 
   if [[ $REMOVE -eq 1 ]]; then

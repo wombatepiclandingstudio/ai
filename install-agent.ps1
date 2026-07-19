@@ -68,6 +68,26 @@ $ToolPaths = @{
     goose    = '.goose/agents'
     vscode   = '.github/agents'
 }
+# Map a tool key to its GLOBAL (user-home) agents path. Used when -Global is passed.
+# Verified 2026: claude ~/.claude/agents * opencode ~/.config/opencode/agents *
+#   kiro ~/.kiro/agents * gemini ~/.gemini/agents * kilo ~/.kilo/agents (legacy
+#   ~/.kilocode/agents also read) * roo ~/.roo/agents * cline ~/.cline/agents *
+#   goose ~/.goose/agents. codex/cursor have NO native global named-subagent dir
+#   (still skipped with the manual AGENTS.md hint). copilot/vscode read .github/agents
+#   per project; -Global best-effort installs under $HOME/.github/agents.
+$GlobalPaths = @{
+    claude   = '.claude/agents'
+    opencode = '.config/opencode/agents'
+    copilot  = '.github/agents'
+    kiro     = '.kiro/agents'
+    gemini   = '.gemini/agents'
+    kilocode = '.kilocode/agents'
+    kilo     = '.kilo/agents'
+    roo      = '.roo/agents'
+    cline    = '.cline/agents'
+    goose    = '.goose/agents'
+    vscode   = '.github/agents'
+}
 # Tools that have no native named-subagent directory (install skipped with guidance).
 $NoAgentDir = @('codex', 'cursor')
 
@@ -124,15 +144,23 @@ if (-not $Remove) {
 $Tools = $Tool -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
 foreach ($t in $Tools) {
-    if (-not $ToolPaths.ContainsKey($t)) {
-        if ($NoAgentDir -contains $t) {
-            Write-Warning "'$t' has no native named-subagent directory - paste the agent body into the project AGENTS.md manually."
-        } else {
-            Write-Warning "unknown tool '$t' (see -ListTools); skipping"
-        }
+    if ($NoAgentDir -contains $t) {
+        Write-Warning "'$t' has no native named-subagent directory - paste the agent body into the project AGENTS.md manually."
         continue
     }
-    $relPath = $ToolPaths[$t]
+    if ($Global) {
+        if (-not $GlobalPaths.ContainsKey($t)) {
+            Write-Warning "unknown tool '$t' (see -ListTools); skipping"
+            continue
+        }
+        $relPath = $GlobalPaths[$t]
+    } else {
+        if (-not $ToolPaths.ContainsKey($t)) {
+            Write-Warning "unknown tool '$t' (see -ListTools); skipping"
+            continue
+        }
+        $relPath = $ToolPaths[$t]
+    }
     $dest     = Join-Path $Target $relPath
 
     if ($Remove) {

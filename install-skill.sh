@@ -38,6 +38,30 @@ declare -A TOOL_PATHS=(
   [vscode]=".github/skills"
 )
 
+# Map a tool key to its GLOBAL (user-home) skills path. Used when --global is passed.
+# These mirror each tool's documented home-level discovery dir (verified 2026):
+#   claude ~/.claude/skills · codex ~/.codex/skills · opencode ~/.config/opencode/skills
+#   cursor ~/.cursor/skills · kiro ~/.kiro/skills · gemini ~/.gemini/skills
+#   kilo ~/.kilo/skills (legacy ~/.kilocode/skills also read) · roo ~/.roo/skills
+#   cline ~/.cline/skills · goose ~/.goose/skills
+#   copilot/vscode: no distinct global dir — they read .github/skills per project, so
+#   --global still installs under $HOME/.github/skills as a best-effort home location.
+declare -A GLOBAL_PATHS=(
+  [claude]=".claude/skills"
+  [codex]=".codex/skills"
+  [opencode]=".config/opencode/skills"
+  [cursor]=".cursor/skills"
+  [copilot]=".github/skills"
+  [kiro]=".kiro/skills"
+  [gemini]=".gemini/skills"
+  [kilocode]=".kilocode/skills"
+  [kilo]=".kilo/skills"
+  [roo]=".roo/skills"
+  [cline]=".cline/skills"
+  [goose]=".goose/skills"
+  [vscode]=".github/skills"
+)
+
 list_tools() {
   echo "Supported tools:"
   for k in "${!TOOL_PATHS[@]}"; do
@@ -84,8 +108,13 @@ fi
 
 IFS=',' read -ra TOOL_LIST <<< "$TOOLS"
 for tool in "${TOOL_LIST[@]}"; do
-  path="${TOOL_PATHS[$tool]:-}"
-  [[ -z "$path" ]] && { echo "WARN: unknown tool '$tool' (see --list-tools); skipping" >&2; continue; }
+  if [[ $GLOBAL -eq 1 ]]; then
+    path="${GLOBAL_PATHS[$tool]:-}"
+    [[ -z "$path" ]] && { echo "WARN: unknown tool '$tool' (see --list-tools); skipping" >&2; continue; }
+  else
+    path="${TOOL_PATHS[$tool]:-}"
+    [[ -z "$path" ]] && { echo "WARN: unknown tool '$tool' (see --list-tools); skipping" >&2; continue; }
+  fi
 
   if [[ $REMOVE -eq 1 ]]; then
     for skill_dir in "$SKILLS_DIR"/*/; do

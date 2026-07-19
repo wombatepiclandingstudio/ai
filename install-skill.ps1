@@ -69,6 +69,30 @@ $ToolPaths = @{
     vscode   = '.github/skills'
 }
 
+# Map a tool key to its GLOBAL (user-home) skills path. Used when -Global is passed.
+# Mirrors each tool's documented home-level discovery dir (verified 2026):
+#   claude ~/.claude/skills * codex ~/.codex/skills * opencode ~/.config/opencode/skills
+#   cursor ~/.cursor/skills * kiro ~/.kiro/skills * gemini ~/.gemini/skills
+#   kilo ~/.kilo/skills (legacy ~/.kilocode/skills also read) * roo ~/.roo/skills
+#   cline ~/.cline/skills * goose ~/.goose/skills
+#   copilot/vscode: no distinct global dir (they read .github/skills per project), so
+#   -Global still installs under $HOME/.github/skills as a best-effort home location.
+$GlobalPaths = @{
+    claude   = '.claude/skills'
+    codex    = '.codex/skills'
+    opencode = '.config/opencode/skills'
+    cursor   = '.cursor/skills'
+    copilot  = '.github/skills'
+    kiro     = '.kiro/skills'
+    gemini   = '.gemini/skills'
+    kilocode = '.kilocode/skills'
+    kilo     = '.kilo/skills'
+    roo      = '.roo/skills'
+    cline    = '.cline/skills'
+    goose    = '.goose/skills'
+    vscode   = '.github/skills'
+}
+
 function List-Tools {
     Write-Host 'Supported tools:'
     foreach ($k in $ToolPaths.Keys) {
@@ -108,11 +132,19 @@ if (-not $Remove) {
 $Tools = $Tool -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
 foreach ($t in $Tools) {
-    if (-not $ToolPaths.ContainsKey($t)) {
-        Write-Warning "unknown tool '$t' (see -ListTools); skipping"
-        continue
+    if ($Global) {
+        if (-not $GlobalPaths.ContainsKey($t)) {
+            Write-Warning "unknown tool '$t' (see -ListTools); skipping"
+            continue
+        }
+        $relPath = $GlobalPaths[$t]
+    } else {
+        if (-not $ToolPaths.ContainsKey($t)) {
+            Write-Warning "unknown tool '$t' (see -ListTools); skipping"
+            continue
+        }
+        $relPath = $ToolPaths[$t]
     }
-    $relPath = $ToolPaths[$t]
     $dest     = Join-Path $Target $relPath
 
     if ($Remove) {
