@@ -1,6 +1,11 @@
 ---
 const GITHUB_URL = 'https://github.com/wombatepiclandingstudio/ai';
-const home = import.meta.env.BASE_URL;
+// BASE_URL is "/" at the site root; normalize to always end with "/" so that
+// `${home}#skills` produces a valid path even if `base` is later set to a sub-path.
+const home = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+// On the homepage, jump to the in-page section; elsewhere route back to it.
+const onHome = Astro.url.pathname === home || Astro.url.pathname === home.replace(/\/$/, '');
+const sectionHref = (id: string) => (onHome ? `#${id}` : `${home}#${id}`);
 ---
 
 <header class="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
@@ -10,9 +15,9 @@ const home = import.meta.env.BASE_URL;
       <span>skills &amp; agents</span>
     </a>
     <div class="flex items-center gap-3 text-sm">
-      <a href={`${home}#skills`} class="hidden text-slate-300 hover:text-white sm:block">Skills</a>
-      <a href={`${home}#agents`} class="hidden text-slate-300 hover:text-white sm:block">Agents</a>
-      <a href={`${home}#install`} class="hidden text-slate-300 hover:text-white sm:block">Install</a>
+      <a href={sectionHref('skills')} class="hidden text-slate-300 hover:text-white sm:block">Skills</a>
+      <a href={sectionHref('agents')} class="hidden text-slate-300 hover:text-white sm:block">Agents</a>
+      <a href={sectionHref('install')} class="hidden text-slate-300 hover:text-white sm:block">Install</a>
       <a
         href={GITHUB_URL}
         target="_blank"
