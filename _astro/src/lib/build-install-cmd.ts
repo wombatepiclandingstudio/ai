@@ -87,7 +87,9 @@ function quoteWindows(value: string): string {
 // The installers are served from the site root. Resolve the base URL at runtime so
 // the generated command works both on the deployed site and on a local preview.
 function publicBaseUrl(): string {
-  if (typeof window === 'undefined') return 'https://ai.wombatepiclanding.studio';
+  if (typeof window === 'undefined') {
+    return process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+  }
   return `${window.location.origin}`;
 }
 

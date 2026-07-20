@@ -206,11 +206,22 @@ const agentNote =
   }
 
   // Open/close is wired globally so any [data-install-open] button can target a modal by kind.
+  function getFocusable(modal: HTMLElement): HTMLElement[] {
+    return Array.from(
+      modal.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    );
+  }
+
+  let previousFocus: HTMLElement | null = null;
+
   function openModal(kind: Kind, id?: string) {
     const modal = document.querySelector<HTMLElement>(
       `[data-install-modal][data-kind="${kind}"]`
     );
     if (!modal) return;
+    previousFocus = document.activeElement as HTMLElement;
     const idInput = modal.querySelector<HTMLInputElement>('[data-install-id]');
     if (idInput) {
       if (id) {
@@ -240,10 +251,16 @@ const agentNote =
     }
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    const focusable = getFocusable(modal);
+    if (focusable.length) focusable[0].focus();
   }
   function closeModal(modal: HTMLElement) {
     modal.classList.add('hidden');
     document.body.style.overflow = '';
+    if (previousFocus) {
+      previousFocus.focus();
+      previousFocus = null;
+    }
   }
 
   function init() {
@@ -269,6 +286,26 @@ const agentNote =
         document
           .querySelectorAll<HTMLElement>('[data-install-modal]:not(.hidden)')
           .forEach((m) => closeModal(m));
+        return;
+      }
+      if (e.key === 'Tab') {
+        const openModal = document.querySelector<HTMLElement>('[data-install-modal]:not(.hidden)');
+        if (!openModal) return;
+        const focusable = getFocusable(openModal);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     });
   }

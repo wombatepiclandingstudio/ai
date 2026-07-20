@@ -9,7 +9,7 @@ const sectionHref = (id: string) => (onHome ? `#${id}` : `${home}#${id}`);
 ---
 
 <header class="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
-  <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+  <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3" aria-label="Main navigation">
     <a href={home} class="flex items-center gap-2 font-semibold">
       <span class="grid h-7 w-7 place-items-center rounded-md bg-indigo-500/20 text-indigo-300">AI</span>
       <span>skills &amp; agents</span>
@@ -26,6 +26,58 @@ const sectionHref = (id: string) => (onHome ? `#${id}` : `${home}#${id}`);
       >
         ★ Star
       </a>
+      <button
+        type="button"
+        data-nav-toggle
+        class="rounded-md p-1.5 text-slate-300 hover:text-white sm:hidden"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+      >
+        <svg data-nav-open width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
+        <svg data-nav-close class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
     </div>
   </nav>
+  <div data-nav-mobile class="hidden border-t border-slate-800/80 bg-slate-950/95 backdrop-blur sm:hidden">
+    <div class="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-3">
+      <a href={sectionHref('skills')} class="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white">Skills</a>
+      <a href={sectionHref('agents')} class="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white">Agents</a>
+      <a href={sectionHref('install')} class="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white">Install</a>
+      <a
+        href={GITHUB_URL}
+        target="_blank"
+        rel="noopener"
+        class="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+      >★ Star on GitHub</a>
+    </div>
+  </div>
 </header>
+
+<script>
+  function initNav() {
+    const toggle = document.querySelector<HTMLElement>('[data-nav-toggle]');
+    const mobile = document.querySelector<HTMLElement>('[data-nav-mobile]');
+    const openIcon = toggle?.querySelector<HTMLElement>('[data-nav-open]');
+    const closeIcon = toggle?.querySelector<HTMLElement>('[data-nav-close]');
+    if (!toggle || !mobile || !openIcon || !closeIcon) return;
+
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      mobile.classList.toggle('hidden');
+      openIcon.classList.toggle('hidden');
+      closeIcon.classList.toggle('hidden');
+    });
+
+    mobile.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        toggle.setAttribute('aria-expanded', 'false');
+        mobile.classList.add('hidden');
+        openIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+      });
+    });
+  }
+
+  initNav();
+</script>
