@@ -31,6 +31,7 @@ optionally with `references/`, `evals/`, and `scripts/`.
 bash install-skill.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
 bash install-skill.sh --list-tools        # show supported tools and paths
 bash install-skill.sh --tool claude --target /path/to/project --remove
+bash install-skill.sh --tool claude --target /path/to/project --id backoffice-design   # install one skill
 ```
 
 On Windows (PowerShell):
@@ -39,7 +40,11 @@ On Windows (PowerShell):
 pwsh install-skill.ps1 -Tool claude,codex,cursor,kilocode,opencode -Target C:\path\to\project
 pwsh install-skill.ps1 -ListTools
 pwsh install-skill.ps1 -Tool claude -Target . -Remove
+pwsh install-skill.ps1 -Tool claude -Target . -Id backoffice-design   # install one skill
 ```
+
+Pass `--id <name>` (Bash) or `-Id <name>` (PowerShell) to install a single skill folder
+(`skills/<name>`); omit it to install all skills. An unknown id prints an error and exits.
 
 Install to the user's home directory so the skills apply across **all** projects (e.g. `~/.claude/skills`, `~/.codex/skills`, `~/.cursor/skills`, `~/.cline/skills`):
 
@@ -88,6 +93,7 @@ Agent definitions live in `agents/` and follow the [Claude Code subagent format]
 bash install-agent.sh --tool claude,opencode,kiro --target /path/to/project
 bash install-agent.sh --list-tools        # show supported tools and paths
 bash install-agent.sh --tool claude --target /path/to/project --remove
+bash install-agent.sh --tool claude --target /path/to/project --id bookworm   # install one agent
 ```
 
 On Windows (PowerShell):
@@ -96,7 +102,11 @@ On Windows (PowerShell):
 pwsh install-agent.ps1 -Tool claude,opencode,kiro -Target C:\path\to\project
 pwsh install-agent.ps1 -ListTools
 pwsh install-agent.ps1 -Tool claude -Target . -Remove
+pwsh install-agent.ps1 -Tool claude -Target . -Id bookworm   # install one agent
 ```
+
+Pass `--id <name>` (Bash) or `-Id <name>` (PowerShell) to install a single agent folder
+(`agents/<name>`); omit it to install all agents. An unknown id prints an error and exits.
 
 Install to the user's home directory so the agents apply across **all** projects (e.g. `~/.claude/agents`, `~/.cline/agents`). `codex` and `cursor` have no native global named-subagent directory, so they still print a manual `AGENTS.md` hint:
 
@@ -124,8 +134,11 @@ from GitHub and tell it which tools to target (replace `main` with a tag/branch 
 version):
 
 ```bash
-# Skills
+# Skills (all)
 curl -fsSL https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-skill.sh | bash -s -- --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
+
+# Skills (single)
+curl -fsSL https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-skill.sh | bash -s -- --tool claude --target /path/to/project --id backoffice-design
 
 # Agents
 curl -fsSL https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-agent.sh | bash -s -- --tool claude,opencode,kiro --target /path/to/project
@@ -134,9 +147,13 @@ curl -fsSL https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/ins
 On Windows (PowerShell), download and run the `.ps1` installer:
 
 ```powershell
-# Skills
+# Skills (all)
 irm https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-skill.ps1 -OutFile install-skill.ps1
 pwsh .\install-skill.ps1 -Tool claude,codex,cursor,kilocode,opencode -Target C:\path\to\project
+
+# Skills (single)
+irm https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-skill.ps1 -OutFile install-skill.ps1
+pwsh .\install-skill.ps1 -Tool claude -Target . -Id backoffice-design
 
 # Agents
 irm https://raw.githubusercontent.com/wombatepiclandingstudio/ai/main/install-agent.ps1 -OutFile install-agent.ps1
