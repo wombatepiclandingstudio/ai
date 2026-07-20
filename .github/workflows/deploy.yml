@@ -13,6 +13,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Canonical site URL for canonical/OG tags. Set as a repo Variable
+      # (Settings -> Secrets and variables -> Actions -> Variables) named
+      # PUBLIC_SITE_URL (e.g. https://ai.wombatepiclanding.studio). Falls back
+      # to the default *.github.io URL when unset, so the domain is never
+      # hardcoded in source.
+      PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v7
