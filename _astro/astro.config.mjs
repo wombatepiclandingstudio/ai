@@ -17,6 +17,8 @@ const site =
 export default defineConfig({
   site,
   base: '/',
+  output: 'static',
+  trailingSlash: 'always',
   vite: {
     plugins: [tailwindcss()],
   },

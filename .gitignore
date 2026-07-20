@@ -5,3 +5,7 @@ _astro/.astro/
 _astro/.env
 _astro/.env.production
 npm-debug.log*
+
+# Build-generated copies (synced from repo root by sync-installers.mjs)
+_astro/public/install-*.sh
+_astro/public/install-*.ps1
