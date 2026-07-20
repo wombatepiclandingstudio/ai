@@ -1,0 +1,25 @@
+---
+const GITHUB_URL = 'https://github.com/wombatepiclandingstudio/ai';
+---
+
+<header class="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
+  <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+    <a href={import.meta.env.BASE_URL} class="flex items-center gap-2 font-semibold">
+      <span class="grid h-7 w-7 place-items-center rounded-md bg-indigo-500/20 text-indigo-300">AI</span>
+      <span>skills &amp; agents</span>
+    </a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="#skills" class="hidden text-slate-300 hover:text-white sm:block">Skills</a>
+      <a href="#agents" class="hidden text-slate-300 hover:text-white sm:block">Agents</a>
+      <a href="#install" class="hidden text-slate-300 hover:text-white sm:block">Install</a>
+      <a
+        href={GITHUB_URL}
+        target="_blank"
+        rel="noopener"
+        class="rounded-md border border-slate-700 px-3 py-1.5 font-medium text-slate-100 hover:border-indigo-400 hover:text-white"
+      >
+        ★ Star
+      </a>
+    </div>
+  </nav>
+</header>

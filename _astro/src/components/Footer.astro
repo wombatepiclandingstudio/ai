@@ -1,0 +1,14 @@
+---
+const GITHUB_URL = 'https://github.com/wombatepiclandingstudio/ai';
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-slate-800">
+  <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-slate-400 sm:flex-row">
+    <p>© {year} · AI skills &amp; agents toolbox</p>
+    <div class="flex items-center gap-4">
+      <a href={GITHUB_URL} target="_blank" rel="noopener" class="hover:text-white">GitHub</a>
+      <a href={import.meta.env.BASE_URL} class="hover:text-white">Home</a>
+    </div>
+  </div>
+</footer>
