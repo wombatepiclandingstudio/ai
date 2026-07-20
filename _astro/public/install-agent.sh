@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# DO NOT EDIT — synced from repo root by _astro/scripts/sync-installers.mjs.
+# Edit the source at the repo root instead.
+#
 # install-agent.sh — Cross-platform installer for the AGENTS in this repo.
 #
 # Agents are folders named after the agent, each containing an agent markdown file

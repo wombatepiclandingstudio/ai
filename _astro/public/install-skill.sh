@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# DO NOT EDIT — synced from repo root by _astro/scripts/sync-installers.mjs.
+# Edit the source at the repo root instead.
+#
 # install-skill.sh — Cross-platform installer for the SKILLS in this repo.
 #
 # Skills are folders containing a SKILL.md (the open Agent Skills standard). Every

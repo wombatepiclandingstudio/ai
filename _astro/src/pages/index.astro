@@ -1,8 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
-import SkillCard from '../components/SkillCard.astro';
-import AgentCard from '../components/AgentCard.astro';
+import ContentCard from '../components/ContentCard.astro';
 import InstallModal from '../components/InstallModal.astro';
 import InstallCTA from '../components/InstallCTA.astro';
 import StarCTA from '../components/StarCTA.astro';
@@ -31,7 +30,7 @@ const agents = await getAgents();
       {
         skills.length > 0 ? (
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {skills.map((s) => <SkillCard item={s} />)}
+            {skills.map((s) => <ContentCard kind="skill" item={s} />)}
           </div>
         ) : (
           <p class="rounded-xl border border-dashed border-slate-800 p-8 text-center text-slate-500">
@@ -54,7 +53,7 @@ const agents = await getAgents();
       {
         agents.length > 0 ? (
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {agents.map((a) => <AgentCard item={a} />)}
+            {agents.map((a) => <ContentCard kind="agent" item={a} />)}
           </div>
         ) : (
           <p class="rounded-xl border border-dashed border-slate-800 p-8 text-center text-slate-500">

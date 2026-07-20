@@ -1,4 +1,6 @@
 #Requires -Version 5.1
+# DO NOT EDIT — synced from repo root by _astro/scripts/sync-installers.mjs.
+# Edit the source at the repo root instead.
 <#
 .SYNOPSIS
     Cross-platform installer for the AGENTS in this repo (PowerShell edition).

@@ -90,7 +90,7 @@ export async function getSkills(): Promise<ContentItem[]> {
   const items = await Promise.all(
     names.map((n) => buildItem(SKILLS_DIR, n, 'SKILL.md'))
   );
-  return items.filter((i): i is ContentItem => i !== null);
+  return items.filter((i): i is ContentItem => i !== null).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getAgents(): Promise<ContentItem[]> {
@@ -98,5 +98,5 @@ export async function getAgents(): Promise<ContentItem[]> {
   const items = await Promise.all(
     names.map((n) => buildItem(AGENTS_DIR, n, `${n}.md`))
   );
-  return items.filter((i): i is ContentItem => i !== null);
+  return items.filter((i): i is ContentItem => i !== null).sort((a, b) => a.name.localeCompare(b.name));
 }
