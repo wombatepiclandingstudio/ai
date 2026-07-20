@@ -1,8 +1,9 @@
 ---
-import { marked } from 'marked';
 import Base from '../../layouts/Base.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
+import InstallCTA from '../../components/InstallCTA.astro';
+import InstallModal from '../../components/InstallModal.astro';
 import { getAgents } from '../../lib/scan-content';
 
 export async function getStaticPaths() {
@@ -11,7 +12,7 @@ export async function getStaticPaths() {
 }
 
 const { item } = Astro.props;
-const html = marked.parse(item.body, { async: false }) as string;
+const body = item.body;
 ---
 
 <Base title={`${item.name} — agent`} description={item.description}>
@@ -19,9 +20,12 @@ const html = marked.parse(item.body, { async: false }) as string;
   <main class="mx-auto max-w-3xl px-4 py-12">
     <a href={`${import.meta.env.BASE_URL}#agents`} class="text-sm text-indigo-400 hover:underline">← All agents</a>
     <header class="mt-6 border-b border-slate-800 pb-6">
-      <div class="flex items-center gap-3">
-        <h1 class="text-3xl font-bold">{item.name}</h1>
-        {item.model && <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">{item.model}</span>}
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <h1 class="text-3xl font-bold">{item.name}</h1>
+          {item.model && <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">{item.model}</span>}
+        </div>
+        <InstallCTA kind="agent" />
       </div>
       <p class="mt-3 text-slate-300">{item.description}</p>
       {
@@ -42,7 +46,58 @@ const html = marked.parse(item.body, { async: false }) as string;
         )
       }
     </header>
-    <article class="prose-invert mt-8 max-w-none text-slate-200 [&_a]:text-indigo-400 [&_a]:underline [&_code]:rounded [&_code]:bg-slate-800 [&_code]:px-1 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-900 [&_pre]:p-4 [&_pre]:text-sm" set:html={html}></article>
+
+    <div class="mt-6 flex items-center gap-2" data-md-toggle>
+      <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">View</span>
+      <div class="inline-flex overflow-hidden rounded-lg border border-slate-700">
+        <button type="button" data-md-mode="rendered" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-500/20 border-r border-slate-700">Rendered</button>
+        <button type="button" data-md-mode="source" class="px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800">Source</button>
+      </div>
+    </div>
+
+    <article
+      class="prose-invert mt-4 max-w-none text-slate-200 [&_a]:text-indigo-400 [&_a]:underline [&_code]:rounded [&_code]:bg-slate-800 [&_code]:px-1 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-900 [&_pre]:p-4 [&_pre]:text-sm"
+      data-md-article
+      data-md-source={body}
+    ></article>
+
+    <pre class="hidden mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200" data-md-source-view></pre>
   </main>
   <Footer />
+  <InstallModal kind="agent" />
 </Base>
+
+<script>
+  import { marked } from 'marked';
+
+  function initMdToggle(root: HTMLElement) {
+    const article = root.querySelector<HTMLElement>('[data-md-article]')!;
+    const sourceView = root.querySelector<HTMLElement>('[data-md-source-view]')!;
+    const raw = article.dataset.mdSource ?? '';
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-md-mode]');
+
+    article.innerHTML = marked.parse(raw, { async: false }) as string;
+    sourceView.textContent = raw;
+
+    function setMode(mode: 'rendered' | 'source') {
+      const isSource = mode === 'source';
+      article.classList.toggle('hidden', isSource);
+      sourceView.classList.toggle('hidden', !isSource);
+      buttons.forEach((b) => {
+        const active = b.dataset.mdMode === mode;
+        b.classList.toggle('bg-indigo-500/20', active);
+        b.classList.toggle('text-white', active);
+        b.classList.toggle('text-slate-300', !active);
+      });
+    }
+
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => setMode(b.dataset.mdMode as 'rendered' | 'source'))
+    );
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-md-toggle]').forEach((t) => {
+    const root = t.closest('main') as HTMLElement;
+    if (root) initMdToggle(root);
+  });
+</script>

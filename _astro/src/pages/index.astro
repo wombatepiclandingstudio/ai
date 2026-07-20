@@ -1,29 +1,20 @@
 ---
-import { marked } from 'marked';
 import Base from '../layouts/Base.astro';
 import Navbar from '../components/Navbar.astro';
 import Hero from '../components/Hero.astro';
 import SkillCard from '../components/SkillCard.astro';
 import AgentCard from '../components/AgentCard.astro';
-import InstallSnippet from '../components/InstallSnippet.astro';
+import InstallModal from '../components/InstallModal.astro';
+import InstallCTA from '../components/InstallCTA.astro';
 import StarCTA from '../components/StarCTA.astro';
 import Footer from '../components/Footer.astro';
 import { getSkills, getAgents } from '../lib/scan-content';
 
 const skills = await getSkills();
 const agents = await getAgents();
-
-const skillCmd =
-  'bash install-skill.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project';
-const agentCmd =
-  'bash install-agent.sh --tool claude,opencode,kiro --target /path/to/project';
-const skillCmdWin =
-  'pwsh install-skill.ps1 -Tool claude,codex,cursor,kilocode,opencode -Target C:\\path\\to\\project';
-const agentCmdWin =
-  'pwsh install-agent.ps1 -Tool claude,opencode,kiro -Target C:\\path\\to\\project';
 ---
 
-<Base title="AI skills & agents — reusable toolbox for your coding tools">
+<Base title="Skills & agents for your coding tools — Wombat Epic Landing Studio AI">
   <Navbar />
   <main>
     <Hero />
@@ -32,7 +23,10 @@ const agentCmdWin =
       <div class="mb-8 flex items-end justify-between">
         <div>
           <h2 class="text-2xl font-bold sm:text-3xl">Skills</h2>
-          <p class="mt-2 text-slate-400">Reusable capabilities following the open Agent Skills standard.</p>
+          <p class="mt-2 text-slate-400">
+            Ready-made skills — point the installer at a project or your home folder
+            and they show up in your tools.
+          </p>
         </div>
         <span class="text-sm text-slate-500">{skills.length} available</span>
       </div>
@@ -53,7 +47,9 @@ const agentCmdWin =
       <div class="mb-8 flex items-end justify-between">
         <div>
           <h2 class="text-2xl font-bold sm:text-3xl">Agents</h2>
-          <p class="mt-2 text-slate-400">Named subagent definitions you can drop into your tools.</p>
+          <p class="mt-2 text-slate-400">
+            Hand-written agent definitions you add to a tool's agents directory.
+          </p>
         </div>
         <span class="text-sm text-slate-500">{agents.length} available</span>
       </div>
@@ -71,27 +67,28 @@ const agentCmdWin =
     </section>
 
     <section id="install" class="mx-auto max-w-5xl px-4 py-16">
-      <h2 class="text-2xl font-bold sm:text-3xl">Install in seconds</h2>
-      <p class="mt-2 text-slate-400">
-        Skills and agents are exposed by symlinking their folders into each tool's discovery path.
-        No code generation, no rewrites — one canonical file works everywhere.
+      <h2 class="text-2xl font-bold sm:text-3xl">Install</h2>
+      <p class="mt-2 max-w-2xl text-slate-400">
+        Each skill and agent installs by symlinking its folder into a tool's discovery
+        path — no code generation, no rewrites. Hit <strong class="text-slate-200">Install</strong>
+        on any card or detail page to build the exact command for your tools and copy it.
       </p>
-      <div class="mt-8 grid gap-6 lg:grid-cols-2">
-        <div>
-          <h3 class="mb-3 text-lg font-semibold text-white">Skills</h3>
-          <InstallSnippet command={skillCmd} />
-          <p class="mt-3 text-xs text-slate-500">Windows (PowerShell):</p>
-          <div class="mt-1">
-            <InstallSnippet command={skillCmdWin} />
-          </div>
+      <p class="mt-3 text-sm text-slate-500">
+        Prefer to run it directly? The installers are also served from this site:
+        <a class="text-indigo-400 hover:underline" href={`${import.meta.env.BASE_URL}install-skill.sh`}>install-skill.sh</a>,
+        <a class="text-indigo-400 hover:underline" href={`${import.meta.env.BASE_URL}install-agent.sh`}>install-agent.sh</a>
+        (plus <code class="rounded bg-slate-800 px-1">.ps1</code> variants for Windows).
+      </p>
+      <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+          <h3 class="font-semibold text-white">Install a skill</h3>
+          <p class="mt-1 text-sm text-slate-400">Builds a command for install-skill.sh.</p>
+          <div class="mt-4"><InstallCTA kind="skill" full /></div>
         </div>
-        <div>
-          <h3 class="mb-3 text-lg font-semibold text-white">Agents</h3>
-          <InstallSnippet command={agentCmd} />
-          <p class="mt-3 text-xs text-slate-500">Windows (PowerShell):</p>
-          <div class="mt-1">
-            <InstallSnippet command={agentCmdWin} />
-          </div>
+        <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+          <h3 class="font-semibold text-white">Install an agent</h3>
+          <p class="mt-1 text-sm text-slate-400">Builds a command for install-agent.sh.</p>
+          <div class="mt-4"><InstallCTA kind="agent" full /></div>
         </div>
       </div>
     </section>
@@ -99,4 +96,7 @@ const agentCmdWin =
     <StarCTA />
   </main>
   <Footer />
+
+  <InstallModal kind="skill" />
+  <InstallModal kind="agent" />
 </Base>
