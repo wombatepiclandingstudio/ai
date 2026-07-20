@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/sync-installers.mjs",
     "dev": "astro dev",
+    "prebuild": "node scripts/sync-installers.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check"
@@ -15,7 +17,10 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.9",
     "@tailwindcss/vite": "^4.0.0",
-    "tailwindcss": "^4.0.0"
+    "@types/node": "^26.1.1",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.9.3"
   }
 }
