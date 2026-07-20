@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import Navbar from '../components/Navbar.astro';
 import Hero from '../components/Hero.astro';
 import SkillCard from '../components/SkillCard.astro';
 import AgentCard from '../components/AgentCard.astro';
@@ -15,7 +14,6 @@ const agents = await getAgents();
 ---
 
 <Base title="Skills & agents for your coding tools — Wombat Epic Landing Studio AI">
-  <Navbar />
   <main>
     <Hero />
 
