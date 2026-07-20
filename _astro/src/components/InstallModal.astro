@@ -1,0 +1,241 @@
+---
+import type { Kind, ToolKey } from '../lib/build-install-cmd';
+import { toolsForKind } from '../lib/build-install-cmd';
+
+interface Props {
+  kind: Kind;
+}
+
+const { kind } = Astro.props;
+const tools = toolsForKind(kind);
+const title = kind === 'skill' ? 'Install skill' : 'Install agent';
+const agentNote =
+  kind === 'agent'
+    ? 'Note: codex and cursor have no native global named-subagent directory, so for those tools the installer prints a manual AGENTS.md hint instead of linking a file.'
+    : '';
+---
+
+<div
+  class="install-modal hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+  data-install-modal
+  data-kind={kind}
+  role="dialog"
+  aria-modal="true"
+  aria-label={title}
+>
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" data-install-close></div>
+
+  <div
+    class="relative w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl"
+  >
+    <div class="flex items-start justify-between">
+      <div>
+        <h3 class="text-lg font-bold text-white">{title}</h3>
+        <p class="mt-1 text-sm text-slate-400">
+          Pick your tools and where to install, then copy the command.
+        </p>
+      </div>
+      <button
+        type="button"
+        data-install-close
+        class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+        aria-label="Close"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+
+    <div class="mt-5 space-y-5">
+      <div>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Tools</p>
+        <div class="flex flex-wrap gap-2" data-install-tools>
+          {
+            tools.map((t: ToolKey) => (
+              <label class="cursor-pointer select-none rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
+                <input type="checkbox" class="sr-only" value={t} checked />
+                {t}
+              </label>
+            ))
+          }
+        </div>
+      </div>
+
+      <div>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Where</p>
+        <div class="grid grid-cols-2 gap-2" data-install-scope>
+          <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
+            <input type="radio" name={`scope-${kind}`} class="sr-only" value="project" checked />
+            <span class="font-medium">Project</span>
+            <span class="block text-xs text-slate-400">into a project folder</span>
+          </label>
+          <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
+            <input type="radio" name={`scope-${kind}`} class="sr-only" value="global" />
+            <span class="font-medium">Global</span>
+            <span class="block text-xs text-slate-400">across every project (home)</span>
+          </label>
+        </div>
+        <input
+          type="text"
+          data-install-target
+          placeholder="/path/to/project"
+          class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-400 focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Platform</p>
+        <div class="grid grid-cols-2 gap-2" data-install-platform>
+          <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
+            <input type="radio" name={`platform-${kind}`} class="sr-only" value="unix" checked />
+            macOS / Linux
+          </label>
+          <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
+            <input type="radio" name={`platform-${kind}`} class="sr-only" value="windows" />
+            Windows (PowerShell)
+          </label>
+        </div>
+      </div>
+
+      {
+        agentNote && (
+          <p class="rounded-lg border border-slate-800 bg-slate-800/40 p-3 text-xs text-slate-400">
+            {agentNote}
+          </p>
+        )
+      }
+
+      <div>
+        <div class="mb-2 flex items-center justify-between">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Command</p>
+          <button
+            type="button"
+            data-install-copy
+            class="rounded-lg bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Copy command
+          </button>
+        </div>
+        <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code data-install-output></code></pre>
+        <p data-install-hint class="mt-2 hidden text-xs text-amber-400">Select at least one tool to build a command.</p>
+        <p data-install-copied class="mt-2 hidden text-xs text-emerald-400">Copied to clipboard.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { buildCommand, type Kind, type Platform, type Scope, type ToolKey } from '../lib/build-install-cmd';
+
+  function initModal(root: HTMLElement) {
+    const kind = root.dataset.kind as Kind;
+    const toolsWrap = root.querySelector<HTMLElement>('[data-install-tools]')!;
+    const scopeWrap = root.querySelector<HTMLElement>('[data-install-scope]')!;
+    const platformWrap = root.querySelector<HTMLElement>('[data-install-platform]')!;
+    const targetInput = root.querySelector<HTMLInputElement>('[data-install-target]')!;
+    const output = root.querySelector<HTMLElement>('[data-install-output]')!;
+    const copyBtn = root.querySelector<HTMLButtonElement>('[data-install-copy]')!;
+    const copiedMsg = root.querySelector<HTMLElement>('[data-install-copied]')!;
+    const hint = root.querySelector<HTMLElement>('[data-install-hint]')!;
+
+    function selectedTools(): ToolKey[] {
+      return Array.from(toolsWrap.querySelectorAll('input:checked')).map(
+        (el) => (el as HTMLInputElement).value as ToolKey
+      );
+    }
+    function selectedScope(): Scope {
+      const checked = scopeWrap.querySelector<HTMLInputElement>('input:checked');
+      return (checked?.value as Scope) ?? 'project';
+    }
+    function selectedPlatform(): Platform {
+      const checked = platformWrap.querySelector<HTMLInputElement>('input:checked');
+      return (checked?.value as Platform) ?? 'unix';
+    }
+    function render() {
+      const scope = selectedScope();
+      targetInput.classList.toggle('hidden', scope === 'global');
+      const tools = selectedTools();
+      if (tools.length === 0) {
+        output.textContent = '';
+        copyBtn.disabled = true;
+        hint.classList.remove('hidden');
+        return;
+      }
+      copyBtn.disabled = false;
+      hint.classList.add('hidden');
+      output.textContent = buildCommand(kind, {
+        tool: tools,
+        scope,
+        platform: selectedPlatform(),
+        target: targetInput.value,
+      });
+    }
+
+    root.querySelectorAll('input').forEach((el) =>
+      el.addEventListener('change', render)
+    );
+    targetInput.addEventListener('input', render);
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(output.textContent ?? '');
+        copiedMsg.classList.remove('hidden');
+        setTimeout(() => copiedMsg.classList.add('hidden'), 2000);
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(output);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        document.execCommand('copy');
+        sel?.removeAllRanges();
+        copiedMsg.classList.remove('hidden');
+        setTimeout(() => copiedMsg.classList.add('hidden'), 2000);
+      }
+    });
+
+    render();
+  }
+
+  // Open/close is wired globally so any [data-install-open] button can target a modal by kind.
+  function openModal(kind: Kind) {
+    const modal = document.querySelector<HTMLElement>(
+      `[data-install-modal][data-kind="${kind}"]`
+    );
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(modal: HTMLElement) {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  function init() {
+    document
+      .querySelectorAll<HTMLElement>('[data-install-modal]')
+      .forEach((m) => initModal(m));
+
+    document.querySelectorAll<HTMLElement>('[data-install-open]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal(btn.dataset.installOpen as Kind);
+      });
+    });
+
+    document.querySelectorAll<HTMLElement>('[data-install-modal]').forEach((modal) => {
+      modal.querySelectorAll('[data-install-close]').forEach((c) =>
+        c.addEventListener('click', () => closeModal(modal))
+      );
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document
+          .querySelectorAll<HTMLElement>('[data-install-modal]:not(.hidden)')
+          .forEach((m) => closeModal(m));
+      }
+    });
+  }
+
+  init();
+</script>

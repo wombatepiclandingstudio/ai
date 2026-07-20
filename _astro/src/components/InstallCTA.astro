@@ -1,0 +1,28 @@
+---
+import type { Kind } from '../lib/build-install-cmd';
+
+interface Props {
+  kind: Kind;
+  label?: string;
+  variant?: 'solid' | 'outline';
+  full?: boolean;
+}
+
+const { kind, label = 'Install', variant = 'solid', full = false } = Astro.props;
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition';
+const styles =
+  variant === 'solid'
+    ? 'bg-indigo-500 text-white hover:bg-indigo-400 shadow-lg shadow-indigo-500/20'
+    : 'border border-slate-700 text-slate-100 hover:border-indigo-400';
+const width = full ? ' w-full' : '';
+---
+
+<button
+  type="button"
+  data-install-open={kind}
+  class={base + ' ' + styles + width}
+>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+  {label}
+</button>
