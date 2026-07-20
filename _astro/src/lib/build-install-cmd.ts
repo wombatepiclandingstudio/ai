@@ -25,6 +25,7 @@ export interface BuildOptions {
   scope: Scope;
   platform: Platform;
   target?: string;
+  id?: string;
 }
 
 interface KindMeta {
@@ -95,18 +96,20 @@ export function buildCommand(kind: Kind, opts: BuildOptions): string {
   const tools = opts.tool.length > 0 ? opts.tool.join(',') : meta.tools.join(',');
   const base = publicBaseUrl();
   const url = `${base}/${meta.scriptBash}`;
+  const id = opts.id?.trim();
 
   if (opts.platform === 'windows') {
     const parts = [
-      `irm ${quoteWindows(url)} -OutFile install-${meta.scriptPs1}`,
-      `pwsh .\\install-${meta.scriptPs1} -Tool ${tools}`,
+      `irm ${quoteWindows(url)} -OutFile ${meta.scriptPs1}`,
+      `pwsh .\\${meta.scriptPs1} -Tool ${tools}`,
     ];
     if (opts.scope === 'global') {
       parts[1] += ' -Global';
     } else {
-      const target = opts.target?.trim() || 'C:\\path\\to\\project';
+      const target = opts.target?.trim() || '.';
       parts[1] += ` -Target ${quoteWindows(target)}`;
     }
+    if (id) parts[1] += ` -Id ${quoteWindows(id)}`;
     return parts.join('\n');
   }
 
@@ -117,8 +120,9 @@ export function buildCommand(kind: Kind, opts: BuildOptions): string {
   if (opts.scope === 'global') {
     parts[1] += ' --global';
   } else {
-    const target = opts.target?.trim() || '/path/to/project';
+    const target = opts.target?.trim() || '.';
     parts[1] += ` --target ${quoteUnix(target)}`;
   }
+  if (id) parts[1] += ` --id ${quoteUnix(id)}`;
   return parts.join('\n');
 }

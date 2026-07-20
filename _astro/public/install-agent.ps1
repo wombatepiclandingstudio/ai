@@ -32,11 +32,15 @@
 .PARAMETER ListTools
     List supported tools and their discovery paths, then exit.
 
+.PARAMETER Id
+    Install only the agent folder agents/<name> (omit to install all agents).
+
 .EXAMPLE
     pwsh install-agent.ps1 -Tool claude -Target C:\projects\myapp
     pwsh install-agent.ps1 -Tool claude,opencode,kiro -Target . -Copy
     pwsh install-agent.ps1 -Tool claude -Target . -Remove
     pwsh install-agent.ps1 -Tool claude,cline -Global
+    pwsh install-agent.ps1 -Tool claude -Target . -Id my-agent
     pwsh install-agent.ps1 -ListTools
 #>
 [CmdletBinding(DefaultParameterSetName = 'Install')]
@@ -46,7 +50,8 @@ param(
     [switch]   $Global,
     [switch]   $Remove,
     [switch]   $Copy,
-    [switch]   $ListTools
+    [switch]   $ListTools,
+    [string]   $Id
 )
 
 $ErrorActionPreference = 'Stop'
@@ -112,9 +117,10 @@ function List-Tools {
 }
 
 function Usage {
-    Write-Host 'Usage: pwsh install-agent.ps1 -Tool <key[,key...]> -Target <dir> [-Remove] [-Copy]'
+    Write-Host 'Usage: pwsh install-agent.ps1 -Tool <key[,key...]> -Target <dir> [-Remove] [-Copy] [-Id <name>]'
     Write-Host '       pwsh install-agent.ps1 -ListTools'
     Write-Host ('Tool keys: ' + ($ToolPaths.Keys -join ','))
+    Write-Host '  -Id <name> installs only agents/<name> (default: all agents).'
 }
 
 function Resolve-AgentFile {
@@ -152,6 +158,18 @@ if (-not $Remove) {
 
 $Tools = $Tool -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
+# Resolve the set of source agent folders. With -Id, install only that one folder.
+if ($Id) {
+    $src = Join-Path $AgentsDir $Id
+    if (-not (Test-Path -LiteralPath $src -PathType Container)) {
+        Write-Error "ERROR: no agent with id '$Id' (expected $src)"
+        exit 1
+    }
+    $SourceDirs = @($src)
+} else {
+    $SourceDirs = Get-ChildItem -LiteralPath $AgentsDir -Directory
+}
+
 foreach ($t in $Tools) {
     if ($NoAgentDir -contains $t) {
         Write-Warning "'$t' has no native named-subagent directory - paste the agent body into the project AGENTS.md manually."
@@ -174,7 +192,7 @@ foreach ($t in $Tools) {
 
     if ($Remove) {
         if (Test-Path -LiteralPath $dest -PathType Container) {
-            foreach ($agentDir in Get-ChildItem -LiteralPath $AgentsDir -Directory) {
+            foreach ($agentDir in $SourceDirs) {
                 $link = Join-Path $dest $agentDir.Name
                 if (Test-Path -LiteralPath $link) {
                     Remove-Item -LiteralPath $link -Recurse -Force
@@ -186,7 +204,7 @@ foreach ($t in $Tools) {
     }
 
     New-Item -ItemType Directory -Path $dest -Force | Out-Null
-    foreach ($agentDir in Get-ChildItem -LiteralPath $AgentsDir -Directory) {
+    foreach ($agentDir in $SourceDirs) {
         $name = $agentDir.Name
         $src  = Resolve-AgentFile -Dir $agentDir.FullName
         if (-not $src) {

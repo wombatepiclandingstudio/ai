@@ -14,7 +14,8 @@
 #   bash install-skill.sh --tool claude,codex,cursor --target /path/to/project
 #   bash install-skill.sh --tool claude --target /path/to/project --remove
 #   bash install-skill.sh --list-tools
-#   bash install-skill.sh --tool claude,cursor,cline --global
+#   bash install-skill.sh --tool claude --global
+#   bash install-skill.sh --tool claude --target /path/to/project --id my-skill
 #
 set -euo pipefail
 
@@ -79,20 +80,23 @@ list_tools() {
 }
 
 usage() {
-  echo "Usage: bash install-skill.sh --tool <key[,key...]> --target <dir> [--remove] [--global]"
+  echo "Usage: bash install-skill.sh --tool <key[,key...]> --target <dir> [--remove] [--global] [--id <name>]"
   echo "       bash install-skill.sh --list-tools"
   echo "Tool keys: $(IFS=,; echo "${!TOOL_PATHS[*]}")"
   echo "--global installs under \$HOME so skills apply to all projects."
+  echo "--id <name> installs only the skill folder skills/<name> (default: all skills)."
 }
 
 TOOLS=""
 TARGET=""
 REMOVE=0
 GLOBAL=0
+ID=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tool) TOOLS="${2:-}"; shift 2 ;;
     --target) TARGET="${2:-}"; shift 2 ;;
+    --id) ID="${2:-}"; shift 2 ;;
     --remove) REMOVE=1; shift ;;
     --global) GLOBAL=1; shift ;;
     --list-tools) list_tools; exit 0 ;;
@@ -102,6 +106,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -z "$TOOLS" && $REMOVE -eq 0 ]] && { usage >&2; exit 1; }
+
+# Resolve the set of source skill folders. With --id, install only that one folder.
+if [[ -n "$ID" ]]; then
+  SRC="$SKILLS_DIR/$ID"
+  [[ -d "$SRC" ]] || { echo "ERROR: no skill with id '$ID' (expected $SRC)" >&2; exit 1; }
+  SOURCE_DIRS=("$SRC")
+else
+  SOURCE_DIRS=("$SKILLS_DIR"/*/)
+fi
 
 if [[ $GLOBAL -eq 1 ]]; then
   [[ -z "$HOME" ]] && { echo "ERROR: --global requires HOME to be set" >&2; exit 1; }
@@ -126,7 +139,7 @@ for tool in "${TOOL_LIST[@]}"; do
   fi
 
   if [[ $REMOVE -eq 1 ]]; then
-    for skill_dir in "$SKILLS_DIR"/*/; do
+    for skill_dir in "${SOURCE_DIRS[@]}"; do
       name="$(basename "$skill_dir")"
       link="$TARGET/$path/$name"
       if [[ -e "$link" || -L "$link" ]]; then
@@ -139,7 +152,7 @@ for tool in "${TOOL_LIST[@]}"; do
 
   dest="$TARGET/$path"
   mkdir -p "$dest"
-  for skill_dir in "$SKILLS_DIR"/*/; do
+  for skill_dir in "${SOURCE_DIRS[@]}"; do
     name="$(basename "$skill_dir")"
     link="$dest/$name"
     if [[ -e "$link" || -L "$link" ]]; then

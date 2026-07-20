@@ -30,11 +30,15 @@
 .PARAMETER ListTools
     List supported tools and their discovery paths, then exit.
 
+.PARAMETER Id
+    Install only the skill folder skills/<name> (omit to install all skills).
+
 .EXAMPLE
     pwsh install-skill.ps1 -Tool claude -Target C:\projects\myapp
     pwsh install-skill.ps1 -Tool claude,codex,cursor -Target . -Copy
     pwsh install-skill.ps1 -Tool claude -Target . -Remove
     pwsh install-skill.ps1 -Tool claude,cursor,cline -Global
+    pwsh install-skill.ps1 -Tool claude -Target . -Id my-skill
     pwsh install-skill.ps1 -ListTools
 #>
 [CmdletBinding(DefaultParameterSetName = 'Install')]
@@ -44,7 +48,8 @@ param(
     [switch]   $Global,
     [switch]   $Remove,
     [switch]   $Copy,
-    [switch]   $ListTools
+    [switch]   $ListTools,
+    [string]   $Id
 )
 
 $ErrorActionPreference = 'Stop'
@@ -110,9 +115,10 @@ function List-Tools {
 }
 
 function Usage {
-    Write-Host 'Usage: pwsh install-skill.ps1 -Tool <key[,key...]> -Target <dir> [-Remove] [-Copy]'
+    Write-Host 'Usage: pwsh install-skill.ps1 -Tool <key[,key...]> -Target <dir> [-Remove] [-Copy] [-Id <name>]'
     Write-Host '       pwsh install-skill.ps1 -ListTools'
     Write-Host ('Tool keys: ' + ($ToolPaths.Keys -join ','))
+    Write-Host '  -Id <name> installs only skills/<name> (default: all skills).'
 }
 
 if ($ListTools) { List-Tools; exit 0 }
@@ -140,6 +146,18 @@ if (-not $Remove) {
 
 $Tools = $Tool -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
+# Resolve the set of source skill folders. With -Id, install only that one folder.
+if ($Id) {
+    $src = Join-Path $SkillsDir $Id
+    if (-not (Test-Path -LiteralPath $src -PathType Container)) {
+        Write-Error "ERROR: no skill with id '$Id' (expected $src)"
+        exit 1
+    }
+    $SourceDirs = @($src)
+} else {
+    $SourceDirs = Get-ChildItem -LiteralPath $SkillsDir -Directory
+}
+
 foreach ($t in $Tools) {
     if ($Global) {
         if (-not $GlobalPaths.ContainsKey($t)) {
@@ -158,7 +176,7 @@ foreach ($t in $Tools) {
 
     if ($Remove) {
         if (Test-Path -LiteralPath $dest -PathType Container) {
-            foreach ($skillDir in Get-ChildItem -LiteralPath $SkillsDir -Directory) {
+            foreach ($skillDir in $SourceDirs) {
                 $link = Join-Path $dest $skillDir.Name
                 if (Test-Path -LiteralPath $link) {
                     Remove-Item -LiteralPath $link -Recurse -Force
@@ -170,7 +188,7 @@ foreach ($t in $Tools) {
     }
 
     New-Item -ItemType Directory -Path $dest -Force | Out-Null
-    foreach ($skillDir in Get-ChildItem -LiteralPath $SkillsDir -Directory) {
+    foreach ($skillDir in $SourceDirs) {
         $name = $skillDir.Name
         $link = Join-Path $dest $name
         if (Test-Path -LiteralPath $link) {

@@ -52,7 +52,7 @@ const agentNote =
           {
             tools.map((t: ToolKey) => (
               <label class="cursor-pointer select-none rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
-                <input type="checkbox" class="sr-only" value={t} checked />
+                <input type="checkbox" class="sr-only" value={t} />
                 {t}
               </label>
             ))
@@ -77,7 +77,13 @@ const agentNote =
         <input
           type="text"
           data-install-target
-          placeholder="/path/to/project"
+          placeholder=". (current directory)"
+          class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-400 focus:outline-none"
+        />
+        <input
+          type="text"
+          data-install-id
+          placeholder="skill or agent id (optional)"
           class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-400 focus:outline-none"
         />
       </div>
@@ -132,6 +138,7 @@ const agentNote =
     const scopeWrap = root.querySelector<HTMLElement>('[data-install-scope]')!;
     const platformWrap = root.querySelector<HTMLElement>('[data-install-platform]')!;
     const targetInput = root.querySelector<HTMLInputElement>('[data-install-target]')!;
+    const idInput = root.querySelector<HTMLInputElement>('[data-install-id]')!;
     const output = root.querySelector<HTMLElement>('[data-install-output]')!;
     const copyBtn = root.querySelector<HTMLButtonElement>('[data-install-copy]')!;
     const copiedMsg = root.querySelector<HTMLElement>('[data-install-copied]')!;
@@ -167,6 +174,7 @@ const agentNote =
         scope,
         platform: selectedPlatform(),
         target: targetInput.value,
+        id: idInput.value,
       });
     }
 
@@ -174,6 +182,7 @@ const agentNote =
       el.addEventListener('change', render)
     );
     targetInput.addEventListener('input', render);
+    idInput.addEventListener('input', render);
 
     copyBtn.addEventListener('click', async () => {
       try {
@@ -197,11 +206,38 @@ const agentNote =
   }
 
   // Open/close is wired globally so any [data-install-open] button can target a modal by kind.
-  function openModal(kind: Kind) {
+  function openModal(kind: Kind, id?: string) {
     const modal = document.querySelector<HTMLElement>(
       `[data-install-modal][data-kind="${kind}"]`
     );
     if (!modal) return;
+    const idInput = modal.querySelector<HTMLInputElement>('[data-install-id]');
+    if (idInput) {
+      if (id) {
+        idInput.value = id;
+        idInput.readOnly = true;
+        idInput.classList.add('opacity-70', 'cursor-not-allowed');
+      } else {
+        idInput.readOnly = false;
+        idInput.classList.remove('opacity-70', 'cursor-not-allowed');
+      }
+    }
+    const out = modal.querySelector<HTMLElement>('[data-install-output]');
+    if (out) {
+      const tools = modal.querySelectorAll<HTMLInputElement>('[data-install-tools] input:checked');
+      const scope = modal.querySelector<HTMLInputElement>('[data-install-scope] input:checked')?.value;
+      const platform = modal.querySelector<HTMLInputElement>('[data-install-platform] input:checked')?.value;
+      const target = modal.querySelector<HTMLInputElement>('[data-install-target]')?.value ?? '';
+      out.textContent = tools.length
+        ? buildCommand(kind, {
+            tool: Array.from(tools).map((t) => t.value as ToolKey),
+            scope: (scope as Scope) ?? 'project',
+            platform: (platform as Platform) ?? 'unix',
+            target,
+            id: idInput?.value,
+          })
+        : '';
+    }
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   }
@@ -218,7 +254,7 @@ const agentNote =
     document.querySelectorAll<HTMLElement>('[data-install-open]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        openModal(btn.dataset.installOpen as Kind);
+        openModal(btn.dataset.installOpen as Kind, btn.dataset.installId);
       });
     });
 

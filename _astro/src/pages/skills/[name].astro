@@ -25,7 +25,7 @@ const body = item.body;
           <h1 class="text-3xl font-bold">{item.name}</h1>
           {item.version && <span class="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">v{item.version}</span>}
         </div>
-        <InstallCTA kind="skill" />
+        <InstallCTA kind="skill" id={item.slug} />
       </div>
       <p class="mt-3 text-slate-300">{item.description}</p>
       {
