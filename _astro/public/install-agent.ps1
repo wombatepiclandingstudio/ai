@@ -52,6 +52,15 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot  = Split-Path -Parent $MyInvocation.MyCommand.Definition
+# When this script is downloaded standalone (e.g. from the site root) there is no
+# agents/ directory next to it. In that case clone the repo into a temp dir so the
+# canonical agent files can still be installed.
+if (-not (Test-Path (Join-Path $RepoRoot 'agents'))) {
+    $CloneDir = Join-Path $env:TEMP ("ai-agents-" + [guid]::NewGuid().ToString('N'))
+    Write-Host "Downloading agents from the repository into $CloneDir ..."
+    git clone --depth 1 https://github.com/wombatepiclandingstudio/ai "$CloneDir" | Out-Null
+    $RepoRoot = $CloneDir
+}
 $AgentsDir = Join-Path $RepoRoot 'agents'
 
 # Map a tool key to the relative agents path inside a target project.

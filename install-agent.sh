@@ -21,6 +21,15 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# When this script is downloaded standalone (e.g. from the site root) there is no
+# agents/ directory next to it. In that case clone the repo into a temp dir so the
+# canonical agent files can still be installed.
+if [[ ! -d "$REPO_ROOT/agents" ]]; then
+  CLONE_DIR="$(mktemp -d)"
+  echo "Downloading agents from the repository into $CLONE_DIR ..."
+  git clone --depth 1 https://github.com/wombatepiclandingstudio/ai "$CLONE_DIR" >/dev/null
+  REPO_ROOT="$CLONE_DIR"
+fi
 AGENTS_DIR="$REPO_ROOT/agents"
 
 # Map a tool key to the relative agents path inside a target project.

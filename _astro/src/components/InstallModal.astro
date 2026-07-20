@@ -64,12 +64,12 @@ const agentNote =
         <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Where</p>
         <div class="grid grid-cols-2 gap-2" data-install-scope>
           <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
-            <input type="radio" name="scope" class="sr-only" value="project" checked />
+            <input type="radio" name={`scope-${kind}`} class="sr-only" value="project" checked />
             <span class="font-medium">Project</span>
             <span class="block text-xs text-slate-400">into a project folder</span>
           </label>
           <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
-            <input type="radio" name="scope" class="sr-only" value="global" />
+            <input type="radio" name={`scope-${kind}`} class="sr-only" value="global" />
             <span class="font-medium">Global</span>
             <span class="block text-xs text-slate-400">across every project (home)</span>
           </label>
@@ -86,11 +86,11 @@ const agentNote =
         <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Platform</p>
         <div class="grid grid-cols-2 gap-2" data-install-platform>
           <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
-            <input type="radio" name="platform" class="sr-only" value="unix" checked />
+            <input type="radio" name={`platform-${kind}`} class="sr-only" value="unix" checked />
             macOS / Linux
           </label>
           <label class="cursor-pointer rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 transition has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white">
-            <input type="radio" name="platform" class="sr-only" value="windows" />
+            <input type="radio" name={`platform-${kind}`} class="sr-only" value="windows" />
             Windows (PowerShell)
           </label>
         </div>
@@ -110,12 +110,13 @@ const agentNote =
           <button
             type="button"
             data-install-copy
-            class="rounded-lg bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-indigo-400"
+            class="rounded-lg bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Copy command
           </button>
         </div>
         <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code data-install-output></code></pre>
+        <p data-install-hint class="mt-2 hidden text-xs text-amber-400">Select at least one tool to build a command.</p>
         <p data-install-copied class="mt-2 hidden text-xs text-emerald-400">Copied to clipboard.</p>
       </div>
     </div>
@@ -134,6 +135,7 @@ const agentNote =
     const output = root.querySelector<HTMLElement>('[data-install-output]')!;
     const copyBtn = root.querySelector<HTMLButtonElement>('[data-install-copy]')!;
     const copiedMsg = root.querySelector<HTMLElement>('[data-install-copied]')!;
+    const hint = root.querySelector<HTMLElement>('[data-install-hint]')!;
 
     function selectedTools(): ToolKey[] {
       return Array.from(toolsWrap.querySelectorAll('input:checked')).map(
@@ -151,8 +153,17 @@ const agentNote =
     function render() {
       const scope = selectedScope();
       targetInput.classList.toggle('hidden', scope === 'global');
+      const tools = selectedTools();
+      if (tools.length === 0) {
+        output.textContent = '';
+        copyBtn.disabled = true;
+        hint.classList.remove('hidden');
+        return;
+      }
+      copyBtn.disabled = false;
+      hint.classList.add('hidden');
       output.textContent = buildCommand(kind, {
-        tool: selectedTools(),
+        tool: tools,
         scope,
         platform: selectedPlatform(),
         target: targetInput.value,

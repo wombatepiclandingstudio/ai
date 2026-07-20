@@ -50,6 +50,15 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot   = Split-Path -Parent $MyInvocation.MyCommand.Definition
+# When this script is downloaded standalone (e.g. from the site root) there is no
+# skills/ directory next to it. In that case clone the repo into a temp dir so the
+# canonical SKILL.md files can still be installed.
+if (-not (Test-Path (Join-Path $RepoRoot 'skills'))) {
+    $CloneDir = Join-Path $env:TEMP ("ai-skills-" + [guid]::NewGuid().ToString('N'))
+    Write-Host "Downloading skills from the repository into $CloneDir ..."
+    git clone --depth 1 https://github.com/wombatepiclandingstudio/ai "$CloneDir" | Out-Null
+    $RepoRoot = $CloneDir
+}
 $SkillsDir  = Join-Path $RepoRoot 'skills'
 
 # Map a tool key to the relative skills path inside a target project.

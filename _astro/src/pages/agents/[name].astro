@@ -68,36 +68,7 @@ const body = item.body;
 </Base>
 
 <script>
-  import { marked } from 'marked';
+  import { initMarkdownToggles } from '../../lib/md-toggle';
 
-  function initMdToggle(root: HTMLElement) {
-    const article = root.querySelector<HTMLElement>('[data-md-article]')!;
-    const sourceView = root.querySelector<HTMLElement>('[data-md-source-view]')!;
-    const raw = article.dataset.mdSource ?? '';
-    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-md-mode]');
-
-    article.innerHTML = marked.parse(raw, { async: false }) as string;
-    sourceView.textContent = raw;
-
-    function setMode(mode: 'rendered' | 'source') {
-      const isSource = mode === 'source';
-      article.classList.toggle('hidden', isSource);
-      sourceView.classList.toggle('hidden', !isSource);
-      buttons.forEach((b) => {
-        const active = b.dataset.mdMode === mode;
-        b.classList.toggle('bg-indigo-500/20', active);
-        b.classList.toggle('text-white', active);
-        b.classList.toggle('text-slate-300', !active);
-      });
-    }
-
-    buttons.forEach((b) =>
-      b.addEventListener('click', () => setMode(b.dataset.mdMode as 'rendered' | 'source'))
-    );
-  }
-
-  document.querySelectorAll<HTMLElement>('[data-md-toggle]').forEach((t) => {
-    const root = t.closest('main') as HTMLElement;
-    if (root) initMdToggle(root);
-  });
+  initMarkdownToggles();
 </script>

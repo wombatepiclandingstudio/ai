@@ -72,27 +72,53 @@ const META: Record<Kind, KindMeta> = {
   agent: { scriptBash: 'install-agent.sh', scriptPs1: 'install-agent.ps1', tools: AGENT_TOOLS },
 };
 
+// Single-quote a Unix path, escaping any embedded single quotes via the
+// 'foo'\''bar' shell idiom so user input cannot break out of the quotes.
+function quoteUnix(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+// Double-quote a PowerShell path, escaping embedded double quotes by doubling them.
+function quoteWindows(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+// The installers are served from the site root. Resolve the base URL at runtime so
+// the generated command works both on the deployed site and on a local preview.
+function publicBaseUrl(): string {
+  if (typeof window === 'undefined') return 'https://ai.wombatepiclanding.studio';
+  return `${window.location.origin}`;
+}
+
 export function buildCommand(kind: Kind, opts: BuildOptions): string {
   const meta = META[kind];
   const tools = opts.tool.length > 0 ? opts.tool.join(',') : meta.tools.join(',');
+  const base = publicBaseUrl();
+  const url = `${base}/${meta.scriptBash}`;
 
   if (opts.platform === 'windows') {
-    const parts = [`pwsh ${meta.scriptPs1} -Tool ${tools}`];
+    const parts = [
+      `irm ${quoteWindows(url)} -OutFile install-${meta.scriptPs1}`,
+      `pwsh .\\install-${meta.scriptPs1} -Tool ${tools}`,
+    ];
     if (opts.scope === 'global') {
-      parts.push('-Global');
+      parts[1] += ' -Global';
     } else {
       const target = opts.target?.trim() || 'C:\\path\\to\\project';
-      parts.push(`-Target ${target}`);
+      parts[1] += ` -Target ${quoteWindows(target)}`;
     }
-    return parts.join(' ');
+    return parts.join('\n');
   }
 
-  const parts = [`bash ${meta.scriptBash} --tool ${tools}`];
+  const parts = [
+    `curl -fsSL ${url} -o /tmp/${meta.scriptBash}`,
+    `bash /tmp/${meta.scriptBash} --tool ${tools}`,
+  ];
   if (opts.scope === 'global') {
-    parts.push('--global');
+    parts[1] += ' --global';
   } else {
     const target = opts.target?.trim() || '/path/to/project';
-    parts.push(`--target ${target}`);
+    parts[1] += ` --target ${quoteUnix(target)}`;
   }
-  return parts.join(' ');
+  return parts.join('\n');
 }
