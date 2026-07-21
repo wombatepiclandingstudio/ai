@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import ContentCard from '../../components/ContentCard.astro';
+import Footer from '../../components/Footer.astro';
+import InstallModal from '../../components/InstallModal.astro';
+import { getAgents } from '../../lib/scan-content';
+
+const agents = await getAgents();
+---
+
+<Base title="Agents — Wombat Epic Landing Studio AI" description="Hand-written agent definitions you can drop into Claude, Codex, Cursor, Kilo, OpenCode and more.">
+  <main class="mx-auto max-w-5xl px-4 py-16">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <h1 class="text-3xl font-bold">Agents</h1>
+        <p class="mt-2 text-slate-400">
+          Hand-written agent definitions you add to a tool's agents directory.
+        </p>
+      </div>
+      <span class="text-sm text-slate-500">{agents.length} available</span>
+    </div>
+    {
+      agents.length > 0 ? (
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {agents.map((a) => <ContentCard kind="agent" item={a} />)}
+        </div>
+      ) : (
+        <p class="rounded-xl border border-dashed border-slate-800 p-8 text-center text-slate-500">
+          No agents found in the repository yet.
+        </p>
+      )
+    }
+  </main>
+  <Footer />
+  <InstallModal kind="agent" />
+</Base>
