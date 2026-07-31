@@ -19,7 +19,7 @@ const badgePrefix = kind === 'skill' ? 'v' : '';
 ---
 
 <Base title={`${item.name} — ${kind}`} description={item.description}>
-  <main class="mx-auto max-w-3xl px-4 py-12">
+  <main id="main-content" class="mx-auto max-w-3xl px-4 py-12">
     <nav aria-label="Breadcrumb" class="mb-6">
       <ol class="flex items-center gap-2 text-sm text-slate-400">
         <li><a href={`${import.meta.env.BASE_URL}`} class="hover:text-white">Home</a></li>
@@ -66,7 +66,7 @@ const badgePrefix = kind === 'skill' ? 'v' : '';
     </div>
 
     <article
-      class="prose-invert mt-4 max-w-none text-slate-200 [&_a]:text-indigo-400 [&_a]:underline [&_code]:rounded [&_code]:bg-slate-800 [&_code]:px-1 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-900 [&_pre]:p-4 [&_pre]:text-sm"
+      class="prose prose-invert mt-4 max-w-none"
       data-md-article
       data-md-source={item.body}
     ></article>

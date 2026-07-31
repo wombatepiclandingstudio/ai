@@ -36,8 +36,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <body class="min-h-screen">
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <Navbar />
-    <main id="main-content">
-      <slot />
-    </main>
+    <slot />
   </body>
 </html>

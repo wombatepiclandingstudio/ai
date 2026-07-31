@@ -72,11 +72,10 @@ const currentPath = Astro.url.pathname.replace(/\/?$/, '/');
 
 <script>
   function initNav() {
-    const toggle = document.querySelector<HTMLElement>('[data-nav-toggle]');
-    const mobile = document.querySelector<HTMLElement>('[data-nav-mobile]');
-    const openIcon = toggle?.querySelector<HTMLElement>('[data-nav-open]');
-    const closeIcon = toggle?.querySelector<HTMLElement>('[data-nav-close]');
-    if (!toggle || !mobile || !openIcon || !closeIcon) return;
+    const toggle = document.querySelector<HTMLElement>('[data-nav-toggle]')!;
+    const mobile = document.querySelector<HTMLElement>('[data-nav-mobile]')!;
+    const openIcon = toggle.querySelector<HTMLElement>('[data-nav-open]')!;
+    const closeIcon = toggle.querySelector<HTMLElement>('[data-nav-close]')!;
 
     function open() {
       toggle.setAttribute('aria-expanded', 'true');

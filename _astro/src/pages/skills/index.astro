@@ -9,7 +9,7 @@ const skills = await getSkills();
 ---
 
 <Base title="Skills" description="Ready-made skills you can drop into Claude, Codex, Cursor, Kilo, OpenCode and more.">
-  <main class="mx-auto max-w-5xl px-4 py-16">
+  <main id="main-content" class="mx-auto max-w-5xl px-4 py-16">
     <div class="mb-8">
       <h1 class="text-3xl font-bold">Skills</h1>
       <p class="mt-2 text-slate-400">
@@ -45,14 +45,13 @@ const skills = await getSkills();
 </Base>
 
 <script>
-  document.querySelectorAll('[data-search]').forEach((input) => {
-    const targetId = input.dataset.searchTarget;
-    const list = document.getElementById(targetId);
-    if (!list) return;
+  document.querySelectorAll<HTMLInputElement>('[data-search]').forEach((input) => {
+    const targetId = input.dataset.searchTarget!;
+    const list = document.getElementById(targetId)!;
 
     function filter() {
       const query = input.value.toLowerCase();
-      list.querySelectorAll('[data-search-list] > *').forEach((card) => {
+      list.querySelectorAll<HTMLElement>('[data-search-list] > *').forEach((card) => {
         const text = card.textContent?.toLowerCase() ?? '';
         card.style.display = text.includes(query) ? '' : 'none';
       });
