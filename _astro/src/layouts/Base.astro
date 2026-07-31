@@ -7,7 +7,10 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Skills and agents you can drop into Claude, Codex, Cursor, Kilo, OpenCode and more.' } = Astro.props;
+const {
+  title,
+  description = 'Skills and agents you can drop into Claude, Codex, Cursor, Kilo, OpenCode and more.',
+} = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -31,7 +34,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="canonical" href={canonical} />
   </head>
   <body class="min-h-screen">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <Navbar />
-    <slot />
+    <main id="main-content">
+      <slot />
+    </main>
   </body>
 </html>

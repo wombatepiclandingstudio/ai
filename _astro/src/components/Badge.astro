@@ -1,0 +1,21 @@
+---
+export interface Props {
+  variant?: 'default' | 'outline' | 'subtle';
+  size?: 'sm' | 'md';
+}
+
+const { variant = 'default', size = 'sm' } = Astro.props;
+
+const variants = {
+  default: 'bg-slate-800 text-slate-300',
+  outline: 'border border-slate-700 text-slate-300',
+  subtle: 'bg-indigo-500/10 text-indigo-300',
+};
+
+const sizes = {
+  sm: 'px-2 py-0.5 text-xs',
+  md: 'px-2.5 py-1 text-sm',
+};
+---
+
+<span class={`inline-flex items-center rounded-full ${variants[variant]} ${sizes[size]}`}><slot /></span>
