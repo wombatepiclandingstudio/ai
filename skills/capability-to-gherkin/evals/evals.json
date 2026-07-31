@@ -1,0 +1,49 @@
+{
+  "skill_name": "capability-to-gherkin",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a capability map at /home/z/my-project/capability-output/a6-domain-model.md from a legacy-capability-extractor run. It has 6 L1 capabilities with L2 sub-capabilities, descriptions, and actors. Convert all of them to Gherkin Feature files and save them to /home/z/my-project/features/.",
+      "expected_output": "Gherkin .feature files in /home/z/my-project/features/, one per L1 capability. Each Feature has the L1 capability name as title, the description and As-a/I-want/So-that narrative, a Background with shared preconditions, and at least one Scenario per L2 sub-capability (happy path). Scenarios use business language. Tags (@capability, @level1, @level2, per-L2 tag) are applied. Feature file syntax is valid.",
+      "files": [],
+      "expectations": [
+        "One .feature file per L1 capability (6 features total)",
+        "Each Feature has the As-a / I-want / So-that narrative with a real business actor",
+        "Each Feature has a Background with shared preconditions",
+        "Each L2 capability has at least one Scenario, with happy-path scenarios for all",
+        "Scenarios use business language, not technical implementation details (no DB table names, class names, HTTP codes)",
+        "Tags @capability, @level1, @level2 and a per-L2 tag are applied consistently",
+        "Feature file syntax is valid (proper Given/When/Then indentation, colons after Feature/Scenario/Background)",
+        "Cross-capability dependencies from the input are reflected as Given preconditions linking to other Features"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our project uses OpenSpec. The capability map is in /home/z/my-project/openspec/specs/domain-model.md. Convert the Customer Management and Order Processing L1 capabilities to Gherkin, create an OpenSpec change proposal, and place the feature files in the specs directory. Link the specs to tasks in tasks.md.",
+      "expected_output": "An OpenSpec proposal created with /opsx:propose containing two .feature files for Customer Management and Order Processing placed in the OpenSpec specs/ directory. The feature files have proper Feature/Scenario structure with business language. Tasks.md is updated with step-definition and test-data tasks. The proposal links back to the original domain model.",
+      "files": [],
+      "expectations": [
+        ".feature files are placed in the OpenSpec specs/ directory",
+        "An OpenSpec proposal (/opsx:propose) is created linking the Gherkin specs",
+        "tasks.md is updated with implementation tasks (step definitions, test data)",
+        "The proposal references the original capability map for traceability",
+        "Feature files still follow all Gherkin conventions (narrative, Background, scenarios, tags)",
+        "Cross-capability dependency scenarios (e.g., Order Processing depends on Customer Management) are included"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review the generated Gherkin files in /home/z/my-project/features/ for quality issues. The project had 6 L1 capabilities with 18 total L2 sub-capabilities. Check for anti-patterns: technical language in scenarios, missing actors or business value, duplicate scenarios, and L2 capabilities with no scenarios. Write findings to /home/z/my-project/gherkin-review.md.",
+      "expected_output": "A review document mapping findings to the skill's anti-patterns. Identifies any scenarios with technical jargon (DB names, class names, HTTP codes), Features missing the As-a/I-want/So-that narrative, duplicate scenarios across Feature files, and any L2 capability from the original map that lacks a corresponding Scenario. Each finding includes the file, line number, anti-pattern category, and remediation step.",
+      "files": [],
+      "expectations": [
+        "Flags any scenario steps that use technical implementation details instead of business language",
+        "Flags any Feature missing the As-a / I-want / So-that narrative",
+        "Identifies duplicate scenarios across Feature files",
+        "Cross-references the original capability map to find L2 capabilities with no Scenario",
+        "Each finding includes file path, line number, anti-pattern category, and a concrete remediation step",
+        "Review output is formatted as findings mapped to the skill's anti-pattern categories"
+      ]
+    }
+  ]
+}
