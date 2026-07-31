@@ -1,0 +1,44 @@
+---
+export interface Props {
+  variant?: 'solid' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  class?: string;
+  'aria-label'?: string;
+}
+
+const {
+  variant = 'solid',
+  size = 'md',
+  href,
+  type = 'button',
+  disabled = false,
+  class: className = '',
+  'aria-label': ariaLabel,
+} = Astro.props;
+
+const variants = {
+  solid: 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-400',
+  outline: 'border border-slate-700 text-slate-100 hover:border-indigo-400 hover:text-white',
+  ghost: 'text-slate-300 hover:bg-slate-800 hover:text-white',
+};
+
+const sizes = {
+  sm: 'px-3 py-1.5 text-sm',
+  md: 'px-4 py-2 text-sm',
+  lg: 'px-6 py-3 text-base',
+};
+
+const base = 'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400';
+const classes = `${base} ${variants[variant]} ${sizes[size]} ${className}`;
+---
+
+{href ? (
+  <a href={href} class={classes} aria-label={ariaLabel}><slot /></a>
+) : (
+  <button type={type} class={classes} disabled={disabled} aria-label={ariaLabel}>
+    <slot />
+  </button>
+)}

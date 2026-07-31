@@ -21,7 +21,7 @@ const agentNote =
   data-kind={kind}
   role="dialog"
   aria-modal="true"
-  aria-label={title}
+  aria-labelledby={`install-modal-title-${kind}`}
 >
   <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" data-install-close></div>
 
@@ -30,7 +30,7 @@ const agentNote =
   >
     <div class="flex items-start justify-between">
       <div>
-        <h3 class="text-lg font-bold text-white">{title}</h3>
+        <h3 id={`install-modal-title-${kind}`} class="text-lg font-bold text-white">{title}</h3>
         <p class="mt-1 text-sm text-slate-400">
           Pick your tools and where to install, then copy the command.
         </p>
@@ -39,9 +39,9 @@ const agentNote =
         type="button"
         data-install-close
         class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-        aria-label="Close"
+        aria-label="Close dialog"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </button>
     </div>
 
