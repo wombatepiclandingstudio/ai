@@ -116,27 +116,3 @@ or
 
 The agent recognizes the intent from the skill's `description` and applies the capability-page
 structure plus the design-pattern and web-quality disciplines.
-
-## Eval Scenarios
-
-`evals/evals.json` defines two scenarios:
-
-1. **Build** — scaffold a multi-capability operator console; checks expect multiple capability pages
-   (not one dashboard), server-side pagination, required states, a config page, an AI-assistant
-   surface with no-silent-mutation, accessibility basics, performance budgets, and a security baseline.
-2. **Review** — audit an existing admin dashboard; checks expect defects mapped to the
-   design-pattern and web-quality disciplines (focus, contrast, hover-only, unbounded lists,
-   color-only charts, CLS/INP regressions, missing CSP/SRI).
-
-## Credits
-
-Synthesized from three public skills:
-
-- `backoffice-workflow-ux` (authenticfake/clike) — operational backoffice UX structure.
-- `ui-ux-pro-max` (nextlevelbuilder/ui-ux-pro-max-skill) — UI/UX design-pattern intelligence,
-  ported as curated patterns/checklists only (no search script, no stack-specific data) to keep the
-  skill tech-agnostic.
-- `web-quality-skills` (addyosmani/web-quality-skills, MIT) — accessibility (WCAG 2.2), performance &
-  Core Web Vitals, and security best-practices, ported as framework-neutral principles into
-  `references/web-quality.md`. SEO and the upstream CLI audit script were intentionally excluded as
-  out of scope for internal tools / our "patterns only, no script" constraint.

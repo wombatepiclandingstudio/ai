@@ -92,24 +92,3 @@ Open any supported AI coding tool in a project where the skill is installed and 
 > "Extract the business capabilities from this codebase"
 
 The agent recognizes the intent from the skill's `description` and follows the full 7-phase pipeline.
-
-## Adding More Skills
-
-1. Create `skills/your-skill-name/SKILL.md` with YAML frontmatter (`name`, `description`) and the skill instructions
-2. Optionally add `references/`, `evals/`, `scripts/` subdirectories
-3. Run `bash install.sh --tool <keys> --target <dir>` to expose it to your tools
-
-## Evaluated Performance
-
-Tested against 3 scenarios (Java monolith, Python API-only, Node.js microservices):
-
-| Metric | With Skill | Without Skill (baseline) |
-|--------|-----------|--------------------------|
-| Pass rate | **100%** (3/3) | 59% (7/12 expectations met) |
-
-## Credits
-
-Based on the EPAM article "Using AI to Extract Business Capabilities from Legacy Code" with
-independent improvements: change coupling analysis (A1.5), hallucination validation,
-anti-pattern detection, and adaptive pipeline behavior. Evaluated at 100% vs 59% baseline
-pass rate.
