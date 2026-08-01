@@ -48,7 +48,8 @@ Scenario: Order Placement — insufficient inventory
 
 ## 4. Boundary / Edge
 
-Minimum, maximum, or threshold values.
+Minimum, maximum, or threshold values. Use `Scenario Outline` with `Examples:` when the
+same boundary rule applies across multiple values.
 
 ```gherkin
 @capability @level2 @order-creation @boundary
@@ -65,7 +66,84 @@ Scenario Outline: Order Placement — quantity boundaries
     | 0        | the order should be rejected as invalid   |
 ```
 
-## 5. Cross-Capability
+### Data-Driven Boundary Example — Rate Limits
+
+```gherkin
+@capability @level2 @api-rate-limiting @boundary
+Scenario Outline: API request rate limit enforcement
+  Given the rate limit window is "<window>"
+  And "<request-count>" requests have already been made
+  When the client sends one more request
+  Then the response should be "<status>"
+  And the response metadata should include a "Retry-After" header of "<retry-after>" seconds
+
+  Examples:
+    | window   | request-count | status         | retry-after |
+    | 1 minute | 49           | 200 OK         | 0           |
+    | 1 minute | 50           | 200 OK         | 0           |
+    | 1 minute | 51           | 429 Too Many   | 60          |
+    | 1 minute | 100          | 429 Too Many   | 60          |
+```
+
+### Data-Driven Example — Media Types
+
+```gherkin
+@capability @level2 @file-upload @boundary
+Scenario Outline: File upload media type acceptance
+  Given the user is authenticated
+  When the user uploads a file of type "<media-type>"
+  Then the upload should be "<outcome>"
+  And the response metadata should include an "Accept" header listing supported types
+
+  Examples:
+    | media-type | outcome     |
+    | image/jpeg | accepted    |
+    | image/png  | accepted    |
+    | application/pdf | accepted |
+    | application/exe  | rejected    |
+    | text/html  | rejected    |
+```
+
+## 5. Security
+
+Authentication, authorization, PII handling, and access control constraints.
+
+```gherkin
+@capability @level2 @customer-data-access @security
+Scenario: Customer record access — unauthorized user
+  Given a customer record exists
+  And a user without "CUSTOMER_READ" permission is authenticated
+  When the user requests the customer record
+  Then the request should be rejected with "403 Forbidden"
+  And an audit log entry should be created with "UNAUTHORIZED_ACCESS_ATTEMPT"
+  And no customer data should be returned in the response
+
+@capability @level2 @customer-data-access @security
+Scenario: Customer record access — PII redaction
+  Given a customer record with PII fields (SSN, date of birth)
+  And a user with "CUSTOMER_READ" but not "PII_READ" permission
+  When the user requests the customer record
+  Then the response should include non-PII fields only
+  And the PII fields should be redacted
+  And an audit log entry should be created with "PII_REDACTED_ACCESS"
+```
+
+## 6. Concurrency
+
+Race conditions, simultaneous writes, and rate-limit behavior under concurrent load.
+
+```gherkin
+@capability @level2 @inventory-management @concurrency
+Scenario: Simultaneous inventory reservation
+  Given a product with 5 units in stock
+  When two concurrent requests each reserve 3 units
+  Then exactly 5 units should be reserved in total
+  And one request should succeed
+  And the other should fail with a concurrency conflict
+  And an audit log entry should be created with "CONCURRENT_RESERVATION_CONFLICT"
+```
+
+## 7. Cross-Capability
 
 Exercises dependencies between capabilities (from the capability map's dependency map).
 
@@ -79,11 +157,119 @@ Scenario: Order Placement — customer profile must exist
   And the original cart contents should be preserved
 ```
 
+## 8. Split Composite Scenario (Anti-Pattern → Correct)
+
+Never test multiple operations in one Scenario. Split into individual Scenarios.
+
+### Anti-pattern (DO NOT USE)
+
+```gherkin
+Scenario: Customer record lifecycle management
+  Given no customer exists with identifier "C-999"
+  When a new customer is created with identifier "C-999"
+  And the customer's email is updated
+  And the customer record is archived
+  Then all changes should be reflected correctly
+```
+
+### Correct Split
+
+```gherkin
+@capability @level2 @customer-management @happy-path
+Scenario: Customer record creation
+  Given no customer exists with identifier "C-999"
+  When a new customer is registered with identifier "C-999"
+  Then the customer record should exist
+  And an audit log entry should be created with "CUSTOMER_CREATED"
+  And the response metadata should include a creation timestamp
+
+@capability @level2 @customer-management @happy-path
+Scenario: Customer record email update
+  Given an existing customer record with identifier "C-999"
+  When the customer's email is updated to "new@example.com"
+  Then the record should reflect the new email address
+  And the previous email should be preserved in the change history
+  And an audit log entry should be created with "CUSTOMER_EMAIL_UPDATED"
+
+@capability @level2 @customer-management @happy-path
+Scenario: Customer record archival
+  Given an existing customer record with identifier "C-999"
+  When the customer record is archived
+  Then the record status should be "archived"
+  And the record should be excluded from active customer listings
+  And an audit log entry should be created with "CUSTOMER_ARCHIVED"
+  And the response metadata should include an archival timestamp
+```
+
+### Data-Driven Example — Setting Keys
+
+```gherkin
+@capability @level2 @system-configuration @boundary
+Scenario Outline: System setting key validation
+  Given the system is initialized with default settings
+  When the administrator sets "<setting-key>" to "<setting-value>"
+  Then the setting should be "<outcome>"
+  And the response metadata should include an "X-Config-Version" header
+
+  Examples:
+    | setting-key         | setting-value     | outcome      |
+    | max-login-attempts  | 5                | accepted     |
+    | max-login-attempts  | -1               | rejected     |
+    | session-timeout     | 30               | accepted     |
+    | session-timeout     | 999999           | rejected     |
+    | feature-flag-dark-mode | true          | accepted     |
+```
+
+### Data-Driven Example — Filter Values
+
+```gherkin
+@capability @level2 @record-search @boundary
+Scenario Outline: Search filter value acceptance
+  Given a set of customer records with various attributes
+  When the user searches with filter "<filter-name>" = "<filter-value>"
+  Then the result set should be "<result-size>"
+  And the response metadata should include an "X-Record-Count" header
+
+  Examples:
+    | filter-name    | filter-value | result-size    |
+    | status         | active       | some records   |
+    | status         | pending      | some records   |
+    | status         | archived     | some records   |
+    | status         | nonexistent  | empty          |
+    | created-after  | 2024-01-01   | some records   |
+```
+
+## 9. Standardized Verification Steps
+
+Every state-changing Scenario ends with a consistent set of `And` verification steps drawn
+from these four types. Apply the subset relevant to the capability.
+
+```gherkin
+@capability @level2 @order-fulfillment @happy-path
+Scenario: Order shipment dispatch
+  Given an order with status "ready_to_ship"
+  When the fulfillment team marks it as shipped
+  Then the order status should be "shipped"
+  And an audit log entry should be created with "ORDER_SHIPPED"
+  And the UI should show "Shipped — tracking <tracking-number>"
+  And the downstream invoice should be marked as finalized
+  And the response metadata should include an "X-Shipped-At" timestamp
+```
+
+### Verification step reference
+
+| Type                  | Pattern                                                  | Use when                          |
+|-----------------------|----------------------------------------------------------|-----------------------------------|
+| Audit log entry       | `And an audit log entry should be created with "<action>"` | Any write or state change         |
+| UI state confirmation | `And the UI should show "<expected-state>"`              | UI-facing capabilities            |
+| Cascade effects       | `And the downstream "<related-record>" should reflect the change` | Change propagates to related records |
+| Response metadata     | `And the response metadata should include "<header>"`     | Any API-facing action             |
+
 ## Scenario Naming Conventions
 
 - **Title format:** `<L2 Capability Name> — <flow type>`
 - **Flow type suffix:** `happy path`, `error case`, `alternative flow`, `boundary values`,
-  `cross-capability`
+  `cross-capability`, `security`, `concurrency`
 - **Scenario Outline titles:** Include the varying aspect, e.g.
   `Customer Communication — by channel preference`
 
@@ -95,6 +281,24 @@ Every generated scenario carries at minimum:
 - `@level2` — identifies the granularity level
 - `@<l2-tag>` — kebab-case descriptor of the L2 capability
 - `@<flow-type>` — one of: `@happy-path`, `@alternative`, `@exception`, `@boundary`,
-  `@cross-capability`
+  `@cross-capability`, `@security`, `@concurrency`
 
 Features (L1) carry `@capability` and `@level1`.
+
+### Tag usage for CI filtering
+
+Use the semantic flow-type tags to run targeted test subsets:
+
+```bash
+# Pen-test / security scan
+cucumber --tags @security
+
+# Load / concurrency validation
+cucumber --tags @concurrency
+
+# Nightly edge-case run
+cucumber --tags @boundary
+
+# Full integration suite
+cucumber --tags @cross-capability
+```
