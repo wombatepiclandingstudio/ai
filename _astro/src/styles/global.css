@@ -27,12 +27,3 @@ body {
   clip-path: inset(50%);
   margin: -1px;
 }
-
-.skip-link {
-  @apply fixed top-4 left-4 z-[100] rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition-transform;
-  transform: translateY(-120%);
-}
-
-.skip-link:focus {
-  transform: translateY(0);
-}

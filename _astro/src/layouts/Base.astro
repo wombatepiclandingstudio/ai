@@ -33,8 +33,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:description" content={description} />
     <link rel="canonical" href={canonical} />
   </head>
-  <body class="min-h-screen">
-    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <body class="min-h-screen">
     <Navbar />
     <slot />
   </body>
