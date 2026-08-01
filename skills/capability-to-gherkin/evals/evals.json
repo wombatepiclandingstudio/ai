@@ -14,7 +14,9 @@
         "Scenarios use business language, not technical implementation details (no DB table names, class names, HTTP codes)",
         "Tags @capability, @level1, @level2 and a per-L2 tag are applied consistently",
         "Feature file syntax is valid (proper Given/When/Then indentation, colons after Feature/Scenario/Background)",
-        "Cross-capability dependencies from the input are reflected as Given preconditions linking to other Features"
+        "Cross-capability dependencies from the input are reflected as Given preconditions linking to other Features",
+        "No composite scenarios exist — each Scenario tests a single operation or business rule",
+        "State-changing Scenarios end with verification And steps: audit log entry, response metadata"
       ]
     },
     {
@@ -28,21 +30,50 @@
         "tasks.md is updated with implementation tasks (step definitions, test data)",
         "The proposal references the original capability map for traceability",
         "Feature files still follow all Gherkin conventions (narrative, Background, scenarios, tags)",
-        "Cross-capability dependency scenarios (e.g., Order Processing depends on Customer Management) are included"
+        "Cross-capability dependency scenarios (e.g., Order Processing depends on Customer Management) are included",
+        "Every state-changing Scenario includes verification And steps (audit log, response metadata)"
       ]
     },
     {
       "id": 3,
-      "prompt": "Review the generated Gherkin files in /home/z/my-project/features/ for quality issues. The project had 6 L1 capabilities with 18 total L2 sub-capabilities. Check for anti-patterns: technical language in scenarios, missing actors or business value, duplicate scenarios, and L2 capabilities with no scenarios. Write findings to /home/z/my-project/gherkin-review.md.",
-      "expected_output": "A review document mapping findings to the skill's anti-patterns. Identifies any scenarios with technical jargon (DB names, class names, HTTP codes), Features missing the As-a/I-want/So-that narrative, duplicate scenarios across Feature files, and any L2 capability from the original map that lacks a corresponding Scenario. Each finding includes the file, line number, anti-pattern category, and remediation step.",
+      "prompt": "Review the generated Gherkin files in /home/z/my-project/features/ for quality issues. The project had 6 L1 capabilities with 18 total L2 sub-capabilities. Check for anti-patterns: technical language in scenarios, missing actors or business value, duplicate scenarios, composite scenarios testing multiple operations, missing verification steps, and L2 capabilities with no scenarios. Write findings to /home/z/my-project/gherkin-review.md.",
+      "expected_output": "A review document mapping findings to the skill's anti-patterns. Identifies any scenarios with technical jargon (DB names, class names, HTTP codes), Features missing the As-a/I-want/So-that narrative, duplicate scenarios across Feature files, composite scenarios testing multiple operations in one Scenario, state-changing Scenarios missing verification And steps, and any L2 capability from the original map that lacks a corresponding Scenario. Each finding includes the file, line number, anti-pattern category, and remediation step.",
       "files": [],
       "expectations": [
         "Flags any scenario steps that use technical implementation details instead of business language",
         "Flags any Feature missing the As-a / I-want / So-that narrative",
         "Identifies duplicate scenarios across Feature files",
+        "Identifies composite Scenarios that test multiple operations (should be split)",
+        "Identifies state-changing Scenarios missing verification And steps (audit, metadata)",
         "Cross-references the original capability map to find L2 capabilities with no Scenario",
         "Each finding includes file path, line number, anti-pattern category, and a concrete remediation step",
         "Review output is formatted as findings mapped to the skill's anti-pattern categories"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The capability map shows 10 cross-capability dependency relationships across 6 L1 capabilities but only 2 cross-capability Scenarios were generated. Review the generated Gherkin files in /home/z/my-project/features/, identify the missing dependency edges, and generate the missing @cross-capability Scenarios for all 10 relationships.",
+      "expected_output": "Updated .feature files with @cross-capability Scenarios for all 10 dependency edges. Each missing Scenario references the dependent capability in its Given preconditions, tests the dependency interaction, and ends with relevant verification steps. A report lists all 10 edges and confirms each has a corresponding Scenario.",
+      "files": [],
+      "expectations": [
+        "Every dependency edge in the capability map's cross-capability section has a corresponding @cross-capability Scenario",
+        "Each @cross-capability Scenario references the dependent capability in its Given preconditions",
+        "Each @cross-capability Scenario has the @cross-capability tag",
+        "Cross-capability Scenarios end with cascade-effect and audit-log verification And steps",
+        "A summary report confirms all 10 dependency edges are covered"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "A rate-limiting capability has only one Scenario testing rate limit behavior. Convert it to use Scenario Outline with Examples tables covering at least 4 distinct data values (within-limit, at-limit, one-over-limit, way-over-limit). Add a similar Scenario Outline for file upload media type acceptance (image/jpeg, image/png, application/pdf accepted; application/exe, text/html rejected).",
+      "expected_output": "Two Scenario Outlines: one for rate limits with 4+ Examples rows and one for media types with 5+ Examples rows. Both use <angle-bracket> placeholders matching the Examples column names. Each row independently verifies the expected behavior. Response metadata checks confirm headers are present.",
+      "files": [],
+      "expectations": [
+        "Rate limit Scenario Outline has at least 4 Examples rows (within-limit, at-limit, over-limit, way-over-limit)",
+        "Media type Scenario Outline has at least 5 Examples rows covering accepted and rejected types",
+        "Both use Scenario Outline with Examples table and <angle-bracket> placeholders",
+        "Each row independently tests the expected behavior",
+        "Both include response metadata verification And steps"
       ]
     }
   ]

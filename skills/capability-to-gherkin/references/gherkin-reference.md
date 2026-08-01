@@ -109,9 +109,75 @@ Feature: Customer Management
 
 - Tags annotate Features and Scenarios for filtering and organization.
 - Place tags on the line(s) immediately above the element they annotate.
-- Recommended tags for this skill: `@capability`, `@level1`, `@level2`, a per-L2 descriptor
-  tag (e.g. `@registration`), and a flow-type tag (`@happy-path`, `@alternative`,
-  `@exception`, `@boundary`).
+- Required base tags: `@capability`, `@level1`, `@level2`, a per-L2 descriptor tag (e.g.
+  `@registration`), and a semantic flow-type tag.
+- Semantic flow-type tags: `@happy-path`, `@alternative`, `@exception`, `@boundary`,
+  `@cross-capability`, `@security`, `@concurrency`.
+- Use `@openspec` when the feature originated from an OpenSpec proposal.
+
+### Semantic tag reference
+
+| Tag               | Purpose                                              | CI use case                    |
+|-------------------|------------------------------------------------------|--------------------------------|
+| `@happy-path`     | Standard successful execution                        | Always run                     |
+| `@alternative`    | Valid but non-default path                           | Regression suite               |
+| `@exception`      | Error handling and validation failures               | Error-path suite               |
+| `@boundary`       | Edge values, rate limits, threshold checks           | Nightly edge-case run          |
+| `@cross-capability` | Exercises dependency on another capability           | Integration suite              |
+| `@security`       | AuthZ, authN, PII handling, access control           | Pen-test / security scan       |
+| `@concurrency`    | Race conditions, simultaneous writes, load behavior  | Concurrency / load test suite  |
+
+## Standardized Verification Steps
+
+Every Scenario that mutates state must end with relevant `And` verification steps. Apply the
+subset appropriate to the capability. These steps are mandatory for all write operations.
+
+### Audit log entry
+
+```gherkin
+And an audit log entry should be created with "ORDER_SHIPPED"
+```
+
+Records the action in the system audit trail. Use the business action name in all-caps.
+
+### UI state confirmation
+
+```gherkin
+And the UI should show "Shipped — tracking ABC123"
+```
+
+Confirms the end-user-facing state after an operation. Use for any UI-facing capability.
+
+### Cascade effects
+
+```gherkin
+And the downstream invoice should be marked as finalized
+```
+
+Confirms that related records or downstream systems reflect the state change.
+
+### Response metadata
+
+```gherkin
+And the response metadata should include an "X-Shipped-At" timestamp
+```
+
+Confirms API-level headers or metadata returned with the response. Use for all API-facing
+capabilities.
+
+### Combined example
+
+```gherkin
+@capability @level2 @order-fulfillment @happy-path
+Scenario: Order shipment dispatch
+  Given an order with status "ready_to_ship"
+  When the fulfillment team marks it as shipped
+  Then the order status should be "shipped"
+  And an audit log entry should be created with "ORDER_SHIPPED"
+  And the UI should show "Shipped — tracking ABC123"
+  And the downstream invoice should be marked as finalized
+  And the response metadata should include an "X-Shipped-At" timestamp
+```
 
 ## Step-Definition Conventions by Framework
 
@@ -215,19 +281,30 @@ def new_customer():
 ## Best Practices
 
 1. **One rule per scenario** — Don't combine multiple business rules in a single Scenario.
-2. **Business language** — Write steps in terms stakeholders understand. Avoid "click button"
+2. **Split composite scenarios** — A Scenario that walks a CRUD lifecycle or multiple
+   operations must be split into one Scenario per operation. Each split Scenario has its own
+   Given/When/Then and ends with verification `And` steps.
+3. **Use Scenario Outline + Examples for variable data** — When the same rule applies to
+   multiple distinct data values (rate limits, media types, PII types, setting keys, filter
+   values), use `Scenario Outline` with `Examples:`. Each row is an independent test
+   execution.
+4. **Standardized verification steps** — Every state-changing Scenario must end with `And`
+   verification steps: audit log entry, UI state confirmation, cascade effects, and response
+   metadata. These are mandatory for write operations.
+5. **Semantic tags** — Every Scenario carries a flow-type tag: `@happy-path`, `@alternative`,
+   `@exception`, `@boundary`, `@cross-capability`, `@security`, `@concurrency`. These enable
+   targeted CI execution (e.g. `cucumber --tags @security`).
+6. **Cross-capability coverage** — For each dependency edge in the capability map, generate a
+   `@cross-capability` Scenario. Missing dependency coverage is a gate violation.
+7. **Business language** — Write steps in terms stakeholders understand. Avoid "click button"
    or "POST to /api" — describe the business action instead.
-3. **Declarative, not imperative** — Describe *what* should happen, not *how* to click through
+8. **Declarative, not imperative** — Describe *what* should happen, not *how* to click through
    a UI. ("The customer can log in" instead of "Click the login button and enter text.")
-4. **Use Background sparingly** — Only for preconditions shared by ALL scenarios.
-5. **Prefer Scenario Outline** when the same logic applies to multiple data sets.
-6. **Data tables for complex input** — More readable than chains of `And` steps.
-7. **Meaningful scenario titles** — Names should describe the business situation being tested.
-8. **Consistent step wording** — Reuse the same Given/When/Then phrasing across scenarios so
-   step definitions can be shared.
-9. **Never assert UI state in business terms** — If a step says "Then the customer should be
-   added to the database," the definition can check the DB; the stakeholder only sees the
-   business outcome.
+9. **Use Background sparingly** — Only for preconditions shared by ALL scenarios.
+10. **Data tables for complex input** — More readable than chains of `And` steps.
+11. **Meaningful scenario titles** — Names should describe the business situation being tested.
+12. **Consistent step wording** — Reuse the same Given/When/Then phrasing across scenarios so
+    step definitions can be shared.
 
 ## Common Syntax Pitfalls
 
@@ -239,3 +316,8 @@ def new_customer():
 | Mixing step types | `Given` after `Then` | Reorder: Given → When → Then |
 | Using "should" in Given/When | `Given the customer should exist` | `Given the customer exists` ("should" is for Then) |
 | Scenario outside Feature | `Scenario:` at top level | Scenarios must be inside a `Feature:` |
+| Composite scenario (CRUD in one) | Create + read + update + delete in one Scenario | Split: one Scenario per operation |
+| Missing verification steps | Write Scenario ends with only primary `Then` | Add `And` audit log, UI state, cascade, metadata checks |
+| Data-driven capability as plain Scenario | One Scenario for all rate limit values | Use `Scenario Outline` + `Examples:` with one row per value |
+| Missing semantic tag | Only `@capability @level2` on a Scenario | Add `@happy-path`, `@boundary`, `@security`, etc. |
+| Missing cross-capability Scenario | Dependency edge in map with no `@cross-capability` Scenario | Add one Scenario per dependency edge |

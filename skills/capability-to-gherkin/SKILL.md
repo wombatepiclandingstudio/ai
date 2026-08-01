@@ -13,7 +13,7 @@ license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [bdd, gherkin, testing, specification, capabilities, openspec]
+  tags: [bdd, gherkin, testing, specification, capabilities, openspec, scenario-outline, data-tables, cross-capability]
 ---
 
 # Business Capability to Gherkin Converter
@@ -130,20 +130,14 @@ Feature: <L1 Capability Name>
     Given the system is in a valid initial state
     And standard test data is loaded
 
-  @capability @level2 @happy-path
+  @capability @level2 @<l2-tag> @happy-path
   Scenario: <L2 Capability Name> — happy path
     Given <preconditions from capability>
     When <triggering event>
     Then <expected outcome>
     And <additional verification>
 
-  @capability @level2 @alternative
-  Scenario: <L2 Capability Name> — alternative flow
-    Given <alternative preconditions>
-    When <alternative action>
-    Then <alternative outcome>
-
-  @capability @level2 @exception
+  @capability @level2 @<l2-tag> @exception
   Scenario: <L2 Capability Name> — error case
     Given <error-triggering preconditions>
     When <invalid or failing action>
@@ -163,6 +157,110 @@ capability description or dependencies suggest meaningful alternatives:
 4. **Boundary / Edge** — Minimum, maximum, or threshold values (optional, for high-risk capabilities).
 5. **Cross-Capability** — Scenarios that exercise dependencies between capabilities, if the
    capability map documents cross-capability relationships.
+6. **Security** — Authentication, authorization, PII handling, and access control constraints.
+7. **Concurrency** — Race conditions, simultaneous writes, and rate-limit behavior under load.
+
+#### Split composite scenarios
+
+**Never** combine multiple operations or business rules into a single Scenario. A composite
+scenario that walks through an entire CRUD lifecycle (create → read → update → delete in one
+Scenario) must be split into four independent Scenarios, each with its own Given/When/Then.
+Composite scenarios obscure which operation failed when a test breaks, making failure isolation
+and debugging difficult.
+
+**Anti-pattern:**
+```gherkin
+Scenario: Customer lifecycle management
+  Given a new customer is created
+  And the customer's details are updated
+  And the customer is archived
+  Then all changes are reflected correctly   # which step failed?
+```
+
+**Correct:**
+```gherkin
+Scenario: Customer record creation
+  Given no customer with that identifier exists
+  When a new customer is registered
+  Then the customer record should exist
+  And an audit log entry should be created
+  And the response metadata should include a creation timestamp
+
+Scenario: Customer record update
+  Given an existing customer record
+  When the customer's details are updated
+  Then the record should reflect the new values
+  And the previous values should be preserved in the change history
+```
+
+#### Scenario Outline with Examples tables
+
+Use `Scenario Outline` with `Examples:` tables whenever the same business rule applies across
+multiple distinct data values. This is especially applicable for:
+- **Rate limits** — requests-per-window thresholds
+- **Media types** — accepted/rejected content types
+- **PII types** — personal data classification handling
+- **Setting keys** — configuration option validation
+- **Filter values** — query filter acceptance behavior
+
+Each row in the `Examples:` table is an independent test run. Keep columns descriptive with
+business-meaningful names.
+
+**Example — rate limits:**
+```gherkin
+@capability @level2 @api-rate-limiting @boundary
+Scenario Outline: API request rate limit enforcement
+  Given the rate limit window is "<window>"
+  And "<request-count>" requests have already been made
+  When the client sends one more request
+  Then the response should be "<status>"
+  And the response metadata should include a "Retry-After" header of "<retry-after>" seconds
+
+  Examples:
+    | window  | request-count | status      | retry-after |
+    | 1 minute | 49           | 200 OK      | 0           |
+    | 1 minute | 50           | 200 OK      | 0           |
+    | 1 minute | 51           | 429 Too Many| 60          |
+    | 1 minute | 100          | 429 Too Many| 60          |
+```
+
+#### Standardized verification steps
+
+Every scenario that exercises a state change or side effect should end with consistent `And`
+verification steps. Apply the subset relevant to the capability:
+
+| Verification type   | Gherkin step pattern                                         | When to use                         |
+|---------------------|--------------------------------------------------------------|-------------------------------------|
+| Audit log entry     | `And an audit log entry should be created with "<action>"`   | Any write or state-changing action  |
+| UI state confirmation | `And the UI should show "<expected-state>"`                  | UI-facing capabilities              |
+| Cascade effects     | `And the downstream "<related-record>" should reflect the change` | When a change propagates to related entities |
+| Response metadata   | `And the response metadata should include "<header>"`         | Any API-facing action               |
+
+Use these as trailing `And` steps after the primary `Then` outcome. Do not omit them from
+write operations — they are mandatory for any Scenario that mutates state.
+
+**Example with all four verification types:**
+```gherkin
+@capability @level2 @order-fulfillment @happy-path
+Scenario: Order shipment dispatch
+  Given an order with status "ready_to_ship"
+  When the fulfillment team marks it as shipped
+  Then the order status should be "shipped"
+  And an audit log entry should be created with "ORDER_SHIPPED"
+  And the UI should show "Shipped — tracking <tracking-number>"
+  And the downstream invoice should be marked as finalized
+  And the response metadata should include an "X-Shipped-At" timestamp
+```
+
+#### Cross-capability scenarios
+
+If the dependency map shows cross-capability relationships, generate scenarios that exercise
+those dependencies. These scenarios should live in the most relevant Feature and reference the
+dependent capability in their `Given` preconditions.
+
+**Rule:** For every dependency edge in the capability map's dependency section, produce at
+least one `@cross-capability` Scenario. If 10 cross-capability relationships exist, 10
+cross-capability Scenarios must exist — not 2.
 
 ### Stage 4: Step Definition Mapping
 
@@ -177,7 +275,11 @@ After generating Feature files, plan the step definitions that will make them ex
    long `And` chains.
 4. **Tags** — Apply tags consistently: `@capability`, `@level1`, `@level2`, plus a descriptive
    tag per L2 (e.g. `@registration`, `@profile-management`). Use `@openspec` when the feature
-   originated from an OpenSpec proposal.
+   originated from an OpenSpec proposal. Add semantic tags from this set based on the scenario
+   type: `@happy-path`, `@alternative`, `@exception`, `@boundary`, `@cross-capability`,
+   `@security`, `@concurrency`. These tags enable CI filtering (e.g. `@security` for
+   penetration runs, `@concurrency` for load-aware suites, `@boundary` for nightly edge-case
+   runs).
 
 See `references/gherkin-reference.md` for the full Gherkin syntax guide and framework-specific
 step-definition conventions.
@@ -210,12 +312,30 @@ Follow these conventions for all generated Gherkin:
 - **Language** — Write in **business terms**, not implementation terms. Avoid framework,
   database, or class names in scenario steps.
 - **One rule per scenario** — Each scenario should test one business rule or outcome.
+- **Split composite scenarios** — A scenario that performs multiple operations (e.g. a full
+  CRUD lifecycle in one Scenario) must be split into one Scenario per operation. Each split
+  scenario has its own Given/When/Then and ends with standardized verification steps. This
+  gives better failure isolation and faster root-cause identification.
 - **Scenario names** — Descriptive but concise. Include the flow type ("happy path,"
   "error case") as a suffix.
 - **Background** — Use for shared preconditions across ALL scenarios in a Feature. Do not
   put feature-specific setup here.
 - **Data tables** — Use for complex multi-field inputs. Keep columns ordered logically
   (e.g., field name, type, valid value, invalid value).
+- **Scenario Outline with Examples** — Use `Scenario Outline:` + `Examples:` when the same
+  scenario applies across multiple discrete data values. Target at least 10 scenarios per
+  Feature for data-driven capabilities (rate limits, media types, PII classification, setting
+  keys, filter values). Each row in the `Examples:` table is an independent test execution.
+- **Standardized verification steps** — Every Scenario that mutates state must end with
+  relevant `And` verification steps drawn from this set:
+  - `And an audit log entry should be created with "<action>"`
+  - `And the UI should show "<expected-state>"`
+  - `And the downstream "<related-record>" should reflect the change`
+  - `And the response metadata should include "<header>"`
+- **Tags** — Every scenario carries `@capability`, `@level2`, a per-L2 descriptor tag, and a
+  semantic flow-type tag from this set: `@happy-path`, `@alternative`, `@exception`,
+  `@boundary`, `@cross-capability`, `@security`, `@concurrency`. These enable targeted CI
+  execution (e.g. `cucumber --tags @security`).
 
 ---
 
@@ -243,15 +363,48 @@ are missing from the input, infer them from the capability description or flag f
 ### 4. One giant scenario per capability
 
 **Symptom:** A single scenario tries to test the entire happy path AND all error cases.
-**Fix:** Split into granular scenarios. One business rule → one scenario.
+**Fix:** Split into granular scenarios. One business rule → one scenario. A CRUD lifecycle
+spawns four scenarios (create, read, update, delete), each with its own Given/When/Then and
+standardized verification steps.
 
-### 5. Duplicated scenarios across Features
+### 5. Composite scenario testing multiple operations
 
-**Symptom:** The same precondition/action/outcome appears in multiple Feature files.
-**Fix:** Consolidate cross-capability scenarios into the most relevant Feature. Use tags to
-indicate cross-cutting concerns rather than duplicating scenarios.
+**Symptom:** A Scenario performs create → read → update → delete in one flow.
+**Fix:** Split into one Scenario per operation. Each split scenario must have independent
+preconditions and a clear single outcome. This gives better failure isolation in CI: when
+the update step fails, only the update Scenario fails — not the entire lifecycle.
 
-### 6. No OpenSpec linkage (when OpenSpec is in use)
+### 6. Missing standardized verification steps
+
+**Symptom:** A write Scenario ends after the primary `Then` outcome with no audit, UI,
+cascade, or metadata checks.
+**Fix:** Every state-changing Scenario must end with relevant `And` verification steps from
+this set: audit log entry, UI state confirmation, cascade effects, response metadata.
+
+### 7. Insufficient data-driven coverage
+
+**Symptom:** Only one scenario exists for a capability that varies by input (rate limits,
+media types, PII types).
+**Fix:** Use `Scenario Outline` with `Examples:` tables. Each distinct data value is a
+separate test execution. Target at least 10 data-driven scenarios for variable-input
+capabilities.
+
+### 8. Under-tagged scenarios
+
+**Symptom:** Scenarios carry only `@capability @level2` with no semantic flow-type tag.
+**Fix:** Every Scenario must carry one of: `@happy-path`, `@alternative`, `@exception`,
+`@boundary`, `@cross-capability`, `@security`, `@concurrency`. Tags enable CI to run
+targeted subsets (e.g. `cucumber --tags @security` for pen-test runs).
+
+### 9. Missing cross-capability scenarios
+
+**Symptom:** The dependency map shows 10 cross-capability relationships but only 2 are
+tested.
+**Fix:** For each dependency edge in the capability map, generate at least one
+`@cross-capability` Scenario. These live in the most relevant Feature and reference the
+dependent capability in their `Given` preconditions.
+
+### 10. No OpenSpec linkage (when OpenSpec is in use)
 
 **Symptom:** Gherkin files are generated but not linked to OpenSpec proposals.
 **Fix:** Always create or update an OpenSpec change when the project uses OpenSpec. This
@@ -268,7 +421,16 @@ Before declaring a capability-to-Gherkin conversion complete:
 - [ ] Each Feature includes the "As a / I want / So that" narrative with a real business actor
 - [ ] Scenarios are written in business language (no technical implementation details)
 - [ ] Each scenario has clear, testable Given/When/Then steps
-- [ ] Tags are applied consistently (`@capability`, `@level1`, `@level2`, per-L2 tag)
+- [ ] **No composite scenarios exist** — each Scenario tests a single operation or business rule
+- [ ] **Data-driven capabilities** (rate limits, media types, PII, settings, filters) use
+      `Scenario Outline` with `Examples:` tables (target ≥10 data-driven scenarios where applicable)
+- [ ] Every state-changing Scenario ends with relevant verification `And` steps:
+      audit log, UI state, cascade effects, response metadata
+- [ ] Tags are applied consistently (`@capability`, `@level1`, `@level2`, per-L2 tag, and a
+      semantic flow-type tag from: `@happy-path`, `@alternative`, `@exception`, `@boundary`,
+      `@cross-capability`, `@security`, `@concurrency`)
+- [ ] Every dependency edge in the capability map's cross-capability section has a
+      corresponding `@cross-capability` Scenario
 - [ ] Cross-capability dependencies from the input are reflected as Given preconditions
 - [ ] No duplicate scenarios exist across Features
 - [ ] If OpenSpec is in use, `.feature` files are in `specs/` and linked to a proposal
@@ -287,13 +449,24 @@ The gate must **BLOCK** the conversion when:
 - A Feature is missing the "As a / I want / So that" narrative
 - Scenarios contain technical jargon (database names, class names, HTTP codes) instead of
   business language
+- A composite Scenario tests multiple operations (CRUD lifecycle in one Scenario) without
+  being split
 - The same scenario appears duplicated across multiple Feature files
 - OpenSpec is in use but Gherkin files are not linked to an OpenSpec proposal
 - Feature file syntax is invalid (missing colons, mismatched indentation, orphaned steps)
+- A dependency edge in the cross-capability dependency map has no corresponding
+  `@cross-capability` Scenario
+- A state-changing Scenario lacks standardized verification `And` steps (audit log, UI state,
+  cascade effects, response metadata)
 
-The gate may **WARN** when:
+The gate must **WARN** when:
 
+- A data-driven capability (rate limits, media types, PII types, setting keys, filter values)
+  does not use `Scenario Outline` with `Examples:` tables
+- A Scenario Outline has fewer than 3 data rows where more would improve coverage
 - A high-risk capability has no exception/boundary scenario (happy path only)
+- A scenario lacks one of the required semantic tags: `@happy-path`, `@alternative`,
+  `@exception`, `@boundary`, `@cross-capability`, `@security`, `@concurrency`
 - Tags use inconsistent naming across Features
 - Step definition stubs are not yet planned (but Feature syntax is valid)
 - The capability map had low-confidence items that were included without flagging
@@ -307,8 +480,15 @@ A conversion using this skill should produce:
 - The generated `.feature` file(s) — one per L1 capability, with Scenarios per L2
 - A mapping table showing which capability → which Feature/Scenario (traceability)
 - A list of step definitions needed (new stubs vs. matched existing steps)
+- Confirmation that no composite scenarios exist (each Scenario covers one operation/rule)
+- Confirmation that data-driven capabilities use `Scenario Outline` + `Examples:` tables
+- Confirmation that every state-changing Scenario includes verification `And` steps (audit log,
+  UI state, cascade effects, response metadata)
+- Confirmation that every cross-capability dependency edge from the dependency map has a
+  corresponding `@cross-capability` Scenario
 - If OpenSpec is in use: the OpenSpec proposal and the linkage between specs and tasks
-- A validation report noting any missing capabilities, duplicates, or syntax issues
+- A validation report noting any missing capabilities, duplicates, syntax issues, or gate
+  violations
 
 ---
 
