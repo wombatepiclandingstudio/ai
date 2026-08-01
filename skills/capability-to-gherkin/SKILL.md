@@ -8,7 +8,7 @@ description: >
   (from legacy-capability-extractor or similar output) and need BDD specs; when the
   user asks to convert capabilities to Gherkin, Cucumber, or BDD tests; or when
   integrating capability analysis with an OpenSpec specification-driven workflow.
-version: "1.0"
+version: "1.1"
 license: MIT
 metadata:
   author: personal
