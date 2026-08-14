@@ -21,9 +21,9 @@ Feature: <L1 Capability Name>
     Given <preconditions from capability>
     When <triggering event>
     Then <expected outcome>
-    And an audit log entry should be created with "<action>"
+    And an audit log entry should be recorded for the <event>
     And the response metadata should include a timestamp
-    # For UI-facing capabilities, also add: And the UI should show "<expected-state>"
+    # For user-facing capabilities, also add: And the <thing> should appear in the <view/list/feed>
 
   # --- Exception / Error ---
   @capability @level2 @<l2-tag> @exception
@@ -31,8 +31,8 @@ Feature: <L1 Capability Name>
     Given <error-triggering preconditions>
     When <invalid or failing action>
     Then <error is handled>
-    And <system state is consistent>
-    And an audit log entry should be created with "<error-action>"
+    And <a single observable state assertion, e.g. the record remains unchanged>
+    And an audit log entry should be recorded for the rejected <action>
 
   # --- Boundary / Edge (Scenario Outline) ---
   @capability @level2 @<l2-tag> @boundary
@@ -68,8 +68,8 @@ Feature: <L1 Capability Name>
     Given an existing <entity>
     And a user without "<required-permission>" is authenticated
     When the user attempts the <operation>
-    Then the request should be rejected with "403 Forbidden"
-    And an audit log entry should be created with "UNAUTHORIZED_ACCESS_ATTEMPT"
+    Then the request should be rejected as unauthorized
+    And an audit log entry should be recorded for the denied access attempt
     And no sensitive data should be returned in the response
 
   # --- Concurrency ---
@@ -79,7 +79,7 @@ Feature: <L1 Capability Name>
     When two concurrent operations modify <entity> simultaneously
     Then exactly one operation should succeed
     And the other should fail with a concurrency conflict
-    And an audit log entry should be created with "CONCURRENT_MODIFICATION_CONFLICT"
+    And an audit log entry should be recorded for the concurrency conflict
 
   # --- Cross-Capability ---
   @capability @level2 @<l2-tag> @cross-capability
@@ -88,15 +88,16 @@ Feature: <L1 Capability Name>
     When <operation in this capability>
     Then <outcome>
     And the downstream <related-entity> should reflect the change
-    And an audit log entry should be created with "<cross-action>"
+    And an audit log entry should be recorded for the cross-capability change
 
   # RULE: Never combine multiple operations (composite lifecycle) in one Scenario.
   # Split CRUD or lifecycle flows into separate Scenarios, each with its own Given/When/Then
-  # and verification steps (audit log, UI state confirmation, cascade effects, response metadata).
+  # and verification steps (audit log, visible state, cascade effects, response metadata).
   # See assets/scenario-examples.md section 8 for anti-pattern vs. correct split examples.
 
   # Add additional scenarios for:
   #   @alternative   — valid but different path
-  #   UI-facing: add "And the UI should show <expected-state>" to the Then steps
+  #   User-facing: add "And the <thing> should appear in the <view>" to the Then steps
+#   @regression  — bug finding from the map, stated as the required business outcome
   #   Data-driven: use Scenario Outline + Examples for rate limits, media types, PII,
   #   setting keys, and filter values

@@ -8,19 +8,22 @@ description: >
   (from legacy-capability-extractor or similar output) and need BDD specs; when the
   user asks to convert capabilities to Gherkin, Cucumber, or BDD tests; or when
   integrating capability analysis with an OpenSpec specification-driven workflow.
-version: "1.1"
+version: "1.2"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [bdd, gherkin, testing, specification, capabilities, openspec, scenario-outline, data-tables, cross-capability]
+  tags: [bdd, gherkin, testing, specification, capabilities, openspec, scenario-outline, data-tables, cross-capability, triage, regression]
 ---
 
 # Business Capability to Gherkin Converter
 
 Transforms a structured business capability map into **executable Gherkin specifications**
 (Features + Scenarios), creating a traceable bridge between enterprise architecture
-artifacts and behavior-driven development (BDD) test suites.
+  artifacts and behavior-driven development (BDD) test suites. Includes
+  triage of non-feature capabilities (invariants, NFRs, deferred items),
+  regression scenarios from bug findings, and machine validation of the
+  generated Gherkin.
 
 This skill is designed to consume the output of the [legacy-capability-extractor](https://github.com/agentskills/agentskills)
 skill — a two-level capability map with L1 capabilities, L2 sub-capabilities, descriptions,
@@ -54,7 +57,10 @@ Cucumber, SpecFlow, Behat, and other BDD runners can execute.
    business actors, and value statements.
 2. **Domain understanding** — familiarity with the business actors and the outcomes they seek.
    If actors are not explicit in the input, infer them from the capability descriptions or ask.
-3. **OpenSpec (optional)** — if the project uses OpenSpec for specification-driven development,
+3. **Known findings (optional but valuable)** — bug lists, HIGH-severity findings, incident
+   history, or "dead code" notes attached to the capability map. These become regression
+   scenarios in Stage 3.
+4. **OpenSpec (optional)** — if the project uses OpenSpec for specification-driven development,
    the Gherkin files can be placed into the OpenSpec `specs/` directory and linked from a
    proposal. If OpenSpec is absent, the skill generates `.feature` files directly.
 
@@ -75,12 +81,39 @@ produced by legacy-capability-extractor.
 
 ## Conversion Pipeline
 
-The conversion follows a five-stage pipeline. Each stage produces an intermediate artifact
+The conversion follows a seven-stage pipeline. Each stage produces an intermediate artifact
 that feeds the next. If a context break occurs, resume from the last completed output.
 
 ```
-Input Analysis → Feature Mapping → Scenario Generation → Step Definition Mapping → OpenSpec Integration
+Triage & Disposition → Input Analysis → Feature Mapping → Scenario Generation → Step Definition Planning → OpenSpec Integration → Validation & Self-Review
 ```
+
+### Stage 0: Triage & Disposition (mandatory)
+
+Real capability maps are not pure feature wishlists: they contain dead code, architecture
+concerns posing as capabilities, cross-cutting invariants, and items deferred by earlier
+decisions. **Never generate scenarios from an undispositioned map** — a scenario for a
+deferred or dead capability creates a false test obligation.
+
+Assign every L2 (and any L1 without L2s) exactly one disposition before Stage 1:
+
+| Disposition | Meaning | Handling |
+|---|---|---|
+| `feature` | Testable business behavior | Proceeds to Feature/Scenario generation |
+| `invariant` | A rule that must hold, not a thing users do | Merged as acceptance criteria / named scenarios into the `feature` that owns that data (e.g. "stats read transactions, not plan templates") |
+| `nfr-doc` | Architecture, data-layer, or policy concern | Documented in the traceability report; NOT a Feature (e.g. "role-enum layering policy", "timezone storage rule") |
+| `deferred(reason)` | Out of scope by an explicit decision | No scenarios; the reason (owner decision, phase, version) is recorded in the traceability report |
+
+Rules:
+
+- **Account for every L2.** The traceability report must show a disposition for 100% of
+  input items; nothing is silently dropped or silently converted.
+- **Invariants ship with their owner.** An invariant dispositioned away from its owning
+  feature is lost — bind it to the feature whose data it protects.
+- **Bug findings ride along.** If the map carries severity findings (HIGH bugs, sync gaps,
+  dead paths), disposition the capability as `feature` and tag the finding for Stage 3
+  regression scenarios.
+- Flag low-confidence dispositions in the report rather than guessing silently.
 
 ### Stage 1: Input Analysis
 
@@ -100,7 +133,7 @@ Map capability elements to Gherkin structures using this transformation:
 
 | Capability Element        | Gherkin Element            | Example                                        |
 |---------------------------|----------------------------|------------------------------------------------|
-| L1 Capability             | Feature                    | `Feature: Customer Management`                 |
+| L1 Capability             | Feature (or feature set if multi-seam) | `Feature: Customer Management`       |
 | L2 Capability             | Scenario                   | `Scenario: Customer Registration`              |
 | Capability description    | Feature description line   | `Manages all customer-related activities`       |
 | Business actor            | "As a" in Feature          | `As a Customer Service Representative`         |
@@ -110,8 +143,13 @@ Map capability elements to Gherkin structures using this transformation:
 | Expected outcomes         | `Then` steps               | `Then the customer should be added to the DB`   |
 | Capability dependencies   | `Given` in Background      | `Given the Customer Management capability...`  |
 
-**Rule:** L1 capabilities always become Features. Each L2 sub-capability becomes at least
-one Scenario (plus additional scenarios for alternative and exception flows).
+**Rule:** A Feature carries exactly **one business actor and one value proposition**
+("As a X / I want / So that"). An L1 with a single actor becomes one Feature. An L1
+with multiple actor or rule seams (e.g. recurring generation vs. conflict prevention vs.
+per-occurrence overrides) is split into sub-features — `<l1>a-`, `<l1>b-` … — each with a
+lineage tag back to the L1. A Feature that needs two "As a" personas is an anti-pattern
+(see Anti-Pattern 11). Each `feature`-dispositioned L2 becomes at least one Scenario
+(plus additional scenarios for alternative and exception flows).
 
 ### Stage 3: Scenario Generation
 
@@ -159,6 +197,11 @@ capability description or dependencies suggest meaningful alternatives:
    capability map documents cross-capability relationships.
 6. **Security** — Authentication, authorization, PII handling, and access control constraints.
 7. **Concurrency** — Race conditions, simultaneous writes, and rate-limit behavior under load.
+8. **Regression** — If the capability map carries bug findings (Stage 0), each meaningful bug
+   becomes a named scenario that pins the bug's business outcome as a requirement — stated
+   as what the business observes, never as the broken implementation ("writes to wrong
+   table" becomes "enrolling from the member profile changes nothing else about the member").
+   Tag `@regression`. The point: yesterday's defects are tomorrow's acceptance criteria.
 
 #### Split composite scenarios
 
@@ -206,6 +249,12 @@ multiple distinct data values. This is especially applicable for:
 Each row in the `Examples:` table is an independent test run. Keep columns descriptive with
 business-meaningful names.
 
+**Size by outcome, not by count.** One row per distinct business outcome (one per status
+value, one per threshold side, one per accepted/rejected input). There is no numeric target:
+fewer than 3 rows usually means the rule is not really data-driven — question the outline;
+more than ~10 rows usually means several rules are masquerading as one — question the split.
+Never pad rows to hit a number; padded rows are noise that slows every CI run.
+
 **Example — rate limits:**
 ```gherkin
 @capability @level2 @api-rate-limiting @boundary
@@ -227,14 +276,22 @@ Scenario Outline: API request rate limit enforcement
 #### Standardized verification steps
 
 Every scenario that exercises a state change or side effect should end with consistent `And`
-verification steps. Apply the subset relevant to the capability:
+verification steps. Apply the subset relevant to the capability. Prefer **outcome-descriptive**
+phrasing — assert the observable business outcome, not literal strings:
 
-| Verification type   | Gherkin step pattern                                         | When to use                         |
-|---------------------|--------------------------------------------------------------|-------------------------------------|
-| Audit log entry     | `And an audit log entry should be created with "<action>"`   | Any write or state-changing action  |
-| UI state confirmation | `And the UI should show "<expected-state>"`                  | UI-facing capabilities              |
+| Verification type   | Outcome-descriptive pattern (preferred)                       | When to use                         |
+|---------------------|---------------------------------------------------------------|-------------------------------------|
+| Audit log entry     | `And an audit log entry should be recorded for the <event>`   | Any write or state-changing action  |
+| Visible state       | `And the <thing> should appear in the <view/list/feed>`       | User-facing capabilities            |
 | Cascade effects     | `And the downstream "<related-record>" should reflect the change` | When a change propagates to related entities |
 | Response metadata   | `And the response metadata should include "<header>"`         | Any API-facing action               |
+
+**Exact strings only when the string IS the business rule.** An audit code like
+`AUTHZ_REJECTED` may be pinned exactly if auditing denials under that code is itself a
+requirement; otherwise exact codes, UI copy, and button labels must NOT appear — they
+couple the spec to a vocabulary (or a marketing rename) that does not exist yet. Asserting
+"the UI should show 'Booked!'" breaks the day copywriting changes; asserting "the booking
+appears with its reference" does not.
 
 Use these as trailing `And` steps after the primary `Then` outcome. Do not omit them from
 write operations — they are mandatory for any Scenario that mutates state.
@@ -246,10 +303,10 @@ Scenario: Order shipment dispatch
   Given an order with status "ready_to_ship"
   When the fulfillment team marks it as shipped
   Then the order status should be "shipped"
-  And an audit log entry should be created with "ORDER_SHIPPED"
-  And the UI should show "Shipped — tracking <tracking-number>"
+  And an audit log entry should be recorded for the shipment
+  And the shipment appears in the customer's order feed
   And the downstream invoice should be marked as finalized
-  And the response metadata should include an "X-Shipped-At" timestamp
+  And the response metadata should include a "X-Shipped-At" timestamp
 ```
 
 #### Cross-capability scenarios
@@ -266,6 +323,12 @@ cross-capability Scenarios must exist — not 2.
 
 After generating Feature files, plan the step definitions that will make them executable:
 
+0. **Greenfield projects (no runner, no existing step definitions)** — skip framework-specific
+   stubs entirely; they are speculation. Instead, group the generated steps by **harness
+   need** (auth/tenancy context, audit assertions, clock control, concurrency helpers,
+   notification capture, report/export harness) so the team knows what test infrastructure
+   to build when a runner is chosen. One generic step can often cover dozens of uses —
+   design for that (e.g. a single audit assertion step parameterized by event).
 1. **Reuse existing steps** — If the project already has step definitions (stepdefs, step
    definitions), match Gherkin steps to existing step methods before creating new ones.
 2. **Create new steps** — For steps that have no existing definition, generate stubs using the
@@ -277,9 +340,8 @@ After generating Feature files, plan the step definitions that will make them ex
    tag per L2 (e.g. `@registration`, `@profile-management`). Use `@openspec` when the feature
    originated from an OpenSpec proposal. Add semantic tags from this set based on the scenario
    type: `@happy-path`, `@alternative`, `@exception`, `@boundary`, `@cross-capability`,
-   `@security`, `@concurrency`. These tags enable CI filtering (e.g. `@security` for
-   penetration runs, `@concurrency` for load-aware suites, `@boundary` for nightly edge-case
-   runs).
+   `@security`, `@concurrency`, `@regression`. These tags enable CI filtering (e.g. `@security` for
+   penetration runs, `@concurrency` for load-aware suites, `@regression` for bug-pin suites).
 
 See `references/gherkin-reference.md` for the full Gherkin syntax guide and framework-specific
 step-definition conventions.
@@ -300,15 +362,48 @@ directory and report that OpenSpec integration was skipped.
 
 See `references/openspec-integration.md` for the full workflow.
 
+### Stage 6: Machine Validation & Adversarial Self-Review (mandatory)
+
+A checklist filled in by the same agent that wrote the specs is not a gate. Two passes,
+both mandatory, before declaring the conversion complete:
+
+**Pass 1 — Machine validation.** Run the generated files through a real Gherkin parser
+(e.g. `@cucumber/gherkin` for Node, `gherkin-parser`/`behave` equivalents for other stacks)
+and report the output: file count, scenario count, outline count, data-driven execution
+count, parse errors. Malformed tables, broken indentation, and orphaned steps must be
+fixed before delivery. Syntax validity is the floor, not the bar.
+
+**Pass 2 — Adversarial self-review.** Re-read the generated specs as a skeptic and check:
+
+1. **Contradictory windows** — do any threshold/outline values contradict each other
+   (a "sent at 25 hours" row in a "within 24 hours" rule is an off-by-one)?
+2. **Invented attributes** — does any step reference a field, type, or enum the domain
+   model does not have?
+3. **Uniquely observable outcomes** — is every `Then` a single checkable fact? An OR
+   ("rejected or waitlisted") cannot be asserted; pin the policy.
+4. **Exact-string coupling** — do exact codes/labels appear where the string is not
+   itself the business rule?
+5. **Vague assertions** — "system state is consistent" or "a spot becomes available"
+   name no observable; rewrite as a count/state assertion.
+6. **Persona leakage** — does any Feature quietly serve two actors?
+
+Findings are fixed in place; the validation report records both passes' results.
+
 ---
 
 ## Gherkin Conventions
 
 Follow these conventions for all generated Gherkin:
 
-- **Feature titles** — Use the L1 capability name verbatim. Keep it concise.
+- **Feature titles** — Use the L1 capability name (or sub-capability name after an
+  actor-seam split, Stage 2). Keep it concise.
 - **Feature descriptions** — Start with the capability description from the input. If
   business value is available, include it as a "So that" line.
+- **One actor per Feature** — If a second "As a" persona appears, split the Feature
+  (Stage 2 rule).
+- **`Rule:` grouping** — Use `Rule:` blocks (Gherkin 6) to group related scenarios
+  inside a Feature (e.g. one Rule per business regulation). Sub-features that end up
+  with many scenarios are a signal the split should have gone further.
 - **Language** — Write in **business terms**, not implementation terms. Avoid framework,
   database, or class names in scenario steps.
 - **One rule per scenario** — Each scenario should test one business rule or outcome.
@@ -323,19 +418,19 @@ Follow these conventions for all generated Gherkin:
 - **Data tables** — Use for complex multi-field inputs. Keep columns ordered logically
   (e.g., field name, type, valid value, invalid value).
 - **Scenario Outline with Examples** — Use `Scenario Outline:` + `Examples:` when the same
-  scenario applies across multiple discrete data values. Target at least 10 scenarios per
-  Feature for data-driven capabilities (rate limits, media types, PII classification, setting
-  keys, filter values). Each row in the `Examples:` table is an independent test execution.
+  scenario applies across multiple discrete data values. Size by outcome: one row per distinct
+  business outcome; <3 rows questions the outline, >10 questions the split (see Stage 3).
 - **Standardized verification steps** — Every Scenario that mutates state must end with
-  relevant `And` verification steps drawn from this set:
-  - `And an audit log entry should be created with "<action>"`
-  - `And the UI should show "<expected-state>"`
+  relevant `And` verification steps drawn from the outcome-descriptive set:
+  - `And an audit log entry should be recorded for the <event>`
+  - `And the <thing> should appear in the <view/list/feed>`
   - `And the downstream "<related-record>" should reflect the change`
   - `And the response metadata should include "<header>"`
+  Exact strings are reserved for cases where the string itself is the business rule.
 - **Tags** — Every scenario carries `@capability`, `@level2`, a per-L2 descriptor tag, and a
   semantic flow-type tag from this set: `@happy-path`, `@alternative`, `@exception`,
-  `@boundary`, `@cross-capability`, `@security`, `@concurrency`. These enable targeted CI
-  execution (e.g. `cucumber --tags @security`).
+  `@boundary`, `@cross-capability`, `@security`, `@concurrency`, `@regression`. These enable
+  targeted CI execution (e.g. `cucumber --tags @security`).
 
 ---
 
@@ -385,9 +480,8 @@ this set: audit log entry, UI state confirmation, cascade effects, response meta
 
 **Symptom:** Only one scenario exists for a capability that varies by input (rate limits,
 media types, PII types).
-**Fix:** Use `Scenario Outline` with `Examples:` tables. Each distinct data value is a
-separate test execution. Target at least 10 data-driven scenarios for variable-input
-capabilities.
+**Fix:** Use `Scenario Outline` with `Examples:` tables. Each distinct business outcome is a
+separate row; size by outcome, not by count (Stage 3).
 
 ### 8. Under-tagged scenarios
 
@@ -410,22 +504,55 @@ dependent capability in their `Given` preconditions.
 **Fix:** Always create or update an OpenSpec change when the project uses OpenSpec. This
 maintains the traceability chain from business capability → Gherkin spec → implementation.
 
+### 11. Multi-persona Feature
+
+**Symptom:** A Feature needs two "As a" lines (e.g. one for prospects, one for enrolled
+members) — usually after mechanically mapping one L1 to one Feature.
+**Fix:** Split along actor seams into sub-features with lineage back to the L1 (Stage 2).
+A Feature is one actor pursuing one value.
+
+### 12. OR-shaped outcome
+
+**Symptom:** A `Then` step offers alternatives — "the enrollment is rejected or waitlisted",
+"succeeds or returns an error".
+**Fix:** Pin the policy. An OR cannot be asserted; decide (or surface to the owner) which
+branch the business requires, and write that.
+
+### 13. Exact-string coupling to an unborn vocabulary
+
+**Symptom:** Steps assert audit codes, error codes, or UI labels that no product decision
+has defined yet — one rename breaks dozens of scenarios.
+**Fix:** Use outcome-descriptive steps (Stage 3). Reserve exact strings for when the string
+itself is the business rule.
+
+### 14. Skipping validation
+
+**Symptom:** The generated specs are delivered on the strength of a self-graded checklist,
+unparsed and unreviewed.
+**Fix:** Run Stage 6: machine-parse every file, then adversarially re-read for contradictory
+windows, invented attributes, vague assertions, and persona leakage.
+
 ---
 
 ## Pre-Delivery Checklist
 
 Before declaring a capability-to-Gherkin conversion complete:
 
-- [ ] Every L1 capability in the input has a corresponding `.feature` file
-- [ ] Every L2 sub-capability has at least one Scenario (happy path)
+- [ ] Every L2 in the input has an explicit disposition (Stage 0) — feature, invariant,
+      nfr-doc, or deferred(reason) — and 100% are accounted for in the traceability report
+- [ ] Every `feature`-dispositioned L1 has a corresponding `.feature` file; multi-seam L1s
+      split with lineage, one actor per Feature
+- [ ] Every `feature`-dispositioned L2 has at least one Scenario (happy path)
+- [ ] Bug findings from the map have `@regression` scenarios stating the business outcome
 - [ ] Each Feature includes the "As a / I want / So that" narrative with a real business actor
 - [ ] Scenarios are written in business language (no technical implementation details)
 - [ ] Each scenario has clear, testable Given/When/Then steps
 - [ ] **No composite scenarios exist** — each Scenario tests a single operation or business rule
 - [ ] **Data-driven capabilities** (rate limits, media types, PII, settings, filters) use
-      `Scenario Outline` with `Examples:` tables (target ≥10 data-driven scenarios where applicable)
+      `Scenario Outline` with `Examples:` tables sized by distinct business outcome
 - [ ] Every state-changing Scenario ends with relevant verification `And` steps:
-      audit log, UI state, cascade effects, response metadata
+      audit log, visible state, cascade effects, response metadata
+- [ ] Machine validation ran (Stage 6 Pass 1): parser output reported, 0 parse errors
 - [ ] Tags are applied consistently (`@capability`, `@level1`, `@level2`, per-L2 tag, and a
       semantic flow-type tag from: `@happy-path`, `@alternative`, `@exception`, `@boundary`,
       `@cross-capability`, `@security`, `@concurrency`)
@@ -444,9 +571,13 @@ Before declaring a capability-to-Gherkin conversion complete:
 
 The gate must **BLOCK** the conversion when:
 
-- An L1 capability lacks a corresponding Feature file
-- An L2 capability has no Scenario generated
-- A Feature is missing the "As a / I want / So that" narrative
+- An L2 lacks an explicit Stage 0 disposition, or dispositions do not account for 100%
+  of input items
+- A deferred item (D-decision, phase-out, owner decision) has scenarios generated for it
+- An invariant was dispositioned but not bound to an owning feature
+- A `feature`-dispositioned L1 lacks a corresponding Feature file
+- A `feature`-dispositioned L2 has no Scenario generated
+- A Feature is missing the "As a / I want / So that" narrative, or carries two personas
 - Scenarios contain technical jargon (database names, class names, HTTP codes) instead of
   business language
 - A composite Scenario tests multiple operations (CRUD lifecycle in one Scenario) without
@@ -454,19 +585,26 @@ The gate must **BLOCK** the conversion when:
 - The same scenario appears duplicated across multiple Feature files
 - OpenSpec is in use but Gherkin files are not linked to an OpenSpec proposal
 - Feature file syntax is invalid (missing colons, mismatched indentation, orphaned steps)
+  or machine validation was not run
 - A dependency edge in the cross-capability dependency map has no corresponding
   `@cross-capability` Scenario
-- A state-changing Scenario lacks standardized verification `And` steps (audit log, UI state,
-  cascade effects, response metadata)
+- A state-changing Scenario lacks standardized verification `And` steps (audit log, visible
+  state, cascade effects, response metadata)
 
 The gate must **WARN** when:
 
+- An OR-shaped outcome appears in a `Then` step ("rejected or waitlisted")
+- A vague, non-observable assertion appears ("system state is consistent")
+- Exact codes or labels are asserted where the string is not itself the business rule
 - A data-driven capability (rate limits, media types, PII types, setting keys, filter values)
   does not use `Scenario Outline` with `Examples:` tables
-- A Scenario Outline has fewer than 3 data rows where more would improve coverage
+- A Scenario Outline has fewer than 3 data rows (question whether the rule is data-driven)
+  or more than ~10 (question whether it is several rules)
 - A high-risk capability has no exception/boundary scenario (happy path only)
+- A bug finding in the map has no corresponding `@regression` scenario
 - A scenario lacks one of the required semantic tags: `@happy-path`, `@alternative`,
-  `@exception`, `@boundary`, `@cross-capability`, `@security`, `@concurrency`
+  `@exception`, `@boundary`, `@cross-capability`, `@security`, `@concurrency`,
+  `@regression`
 - Tags use inconsistent naming across Features
 - Step definition stubs are not yet planned (but Feature syntax is valid)
 - The capability map had low-confidence items that were included without flagging
@@ -477,15 +615,21 @@ The gate must **WARN** when:
 
 A conversion using this skill should produce:
 
-- The generated `.feature` file(s) — one per L1 capability, with Scenarios per L2
-- A mapping table showing which capability → which Feature/Scenario (traceability)
-- A list of step definitions needed (new stubs vs. matched existing steps)
+- The Stage 0 disposition table (every L2: feature / invariant / nfr-doc / deferred+reason)
+- The generated `.feature` file(s) — one per single-actor Feature, with Scenarios per L2
+- A mapping table showing which capability → which Feature/Scenario (traceability), including
+  sub-feature lineage back to the L1
+- A bug-finding → `@regression` scenario mapping (when the map carried findings)
+- A list of step definitions needed (new stubs vs. matched existing steps), or a
+  harness-need grouping for greenfield projects
 - Confirmation that no composite scenarios exist (each Scenario covers one operation/rule)
 - Confirmation that data-driven capabilities use `Scenario Outline` + `Examples:` tables
 - Confirmation that every state-changing Scenario includes verification `And` steps (audit log,
-  UI state, cascade effects, response metadata)
+  visible state, cascade effects, response metadata)
 - Confirmation that every cross-capability dependency edge from the dependency map has a
   corresponding `@cross-capability` Scenario
+- The Stage 6 validation report: parser output (counts + 0 errors) and adversarial
+  self-review findings with their fixes
 - If OpenSpec is in use: the OpenSpec proposal and the linkage between specs and tasks
 - A validation report noting any missing capabilities, duplicates, syntax issues, or gate
   violations

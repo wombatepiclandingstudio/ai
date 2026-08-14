@@ -116,6 +116,7 @@ Scenario: Customer record access — unauthorized user
   When the user requests the customer record
   Then the request should be rejected with "403 Forbidden"
   And an audit log entry should be created with "UNAUTHORIZED_ACCESS_ATTEMPT"
+    # ^ exact code is justified ONLY because auditing denials under this code is itself the requirement
   And no customer data should be returned in the response
 
 @capability @level2 @customer-data-access @security
@@ -125,7 +126,7 @@ Scenario: Customer record access — PII redaction
   When the user requests the customer record
   Then the response should include non-PII fields only
   And the PII fields should be redacted
-  And an audit log entry should be created with "PII_REDACTED_ACCESS"
+  And an audit log entry should be recorded for the redacted access
 ```
 
 ## 6. Concurrency
@@ -140,7 +141,7 @@ Scenario: Simultaneous inventory reservation
   Then exactly 5 units should be reserved in total
   And one request should succeed
   And the other should fail with a concurrency conflict
-  And an audit log entry should be created with "CONCURRENT_RESERVATION_CONFLICT"
+  And an audit log entry should be recorded for the reservation conflict
 ```
 
 ## 7. Cross-Capability
@@ -180,7 +181,7 @@ Scenario: Customer record creation
   Given no customer exists with identifier "C-999"
   When a new customer is registered with identifier "C-999"
   Then the customer record should exist
-  And an audit log entry should be created with "CUSTOMER_CREATED"
+  And an audit log entry should be recorded for the customer creation
   And the response metadata should include a creation timestamp
 
 @capability @level2 @customer-management @happy-path
@@ -189,7 +190,7 @@ Scenario: Customer record email update
   When the customer's email is updated to "new@example.com"
   Then the record should reflect the new email address
   And the previous email should be preserved in the change history
-  And an audit log entry should be created with "CUSTOMER_EMAIL_UPDATED"
+  And an audit log entry should be recorded for the email update
 
 @capability @level2 @customer-management @happy-path
 Scenario: Customer record archival
@@ -197,7 +198,7 @@ Scenario: Customer record archival
   When the customer record is archived
   Then the record status should be "archived"
   And the record should be excluded from active customer listings
-  And an audit log entry should be created with "CUSTOMER_ARCHIVED"
+  And an audit log entry should be recorded for the archival
   And the response metadata should include an archival timestamp
 ```
 
@@ -250,8 +251,8 @@ Scenario: Order shipment dispatch
   Given an order with status "ready_to_ship"
   When the fulfillment team marks it as shipped
   Then the order status should be "shipped"
-  And an audit log entry should be created with "ORDER_SHIPPED"
-  And the UI should show "Shipped — tracking <tracking-number>"
+  And an audit log entry should be recorded for the shipment
+  And the shipment appears in the customer's order feed with its tracking number
   And the downstream invoice should be marked as finalized
   And the response metadata should include an "X-Shipped-At" timestamp
 ```
@@ -260,8 +261,8 @@ Scenario: Order shipment dispatch
 
 | Type                  | Pattern                                                  | Use when                          |
 |-----------------------|----------------------------------------------------------|-----------------------------------|
-| Audit log entry       | `And an audit log entry should be created with "<action>"` | Any write or state change         |
-| UI state confirmation | `And the UI should show "<expected-state>"`              | UI-facing capabilities            |
+| Audit log entry       | `And an audit log entry should be recorded for the <event>` | Any write or state change         |
+| Visible state         | `And the <thing> should appear in the <view/list/feed>`   | User-facing capabilities          |
 | Cascade effects       | `And the downstream "<related-record>" should reflect the change` | Change propagates to related records |
 | Response metadata     | `And the response metadata should include "<header>"`     | Any API-facing action             |
 
