@@ -8,11 +8,44 @@ Personal repository for all things AI — agents and reusable skills.
 .
 ├── agents/           # Custom agent definitions (Claude Code subagent format: <name>/<name>.md)
 ├── skills/           # Reusable skills following the open Agent Skills standard
+├── bin/ + lib/       # find-ai-configs CLI (npx-runnable, zero dependencies)
+├── package.json      # bin manifest so `npx github:wombatepiclandingstudio/ai` works
 ├── install-skill.sh  # Bash installer — symlinks skills into target projects
 ├── install-agent.sh  # Bash installer — symlinks agents into target projects
 ├── install-skill.ps1 # PowerShell installer — same, for Windows (pwsh)
 └── install-agent.ps1 # PowerShell installer — same, for Windows (pwsh)
 ```
+
+## find-ai-configs — locate AI provider/model configs
+
+A zero-dependency Node CLI that reports where all your AI provider/model configuration files
+live — at **project** level (current folder + subfolders), **user** level (`~`), and
+**system/managed** level — for ~20 tools: Claude Code, Codex, Gemini CLI, GitHub Copilot CLI,
+OpenCode, Cursor, Windsurf, Cline, Roo Code, Continue, Kilo Code, Goose, Amp, Kiro, Ollama,
+LM Studio, LiteLLM, Aider, Hugging Face, Jan (run `--list-tools` for ids). It also peeks
+inside the files it finds to show which model/provider settings they contain, and honors
+config-relocation env vars (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `GEMINI_CLI_HOME`,
+`KILO_CONFIG_DIR`, `OLLAMA_MODELS`, ...). Secret values are never printed — key/token
+values are always redacted, and `.env` files are reported as variable names only.
+
+```bash
+npx github:wombatepiclandingstudio/ai                                  # scan cwd + home + system
+npx github:wombatepiclandingstudio/ai --tools claude-code,codex,cursor  # filter tools
+npx github:wombatepiclandingstudio/ai --level user                      # only home-level configs
+npx github:wombatepiclandingstudio/ai --path /some/monorepo --max-depth 6
+npx github:wombatepiclandingstudio/ai --json                            # machine-readable
+npx github:wombatepiclandingstudio/ai --list-tools                      # supported tool ids
+```
+
+Options: `--path`, `--level project,user,system`, `--tools <ids>`, `--max-depth`,
+`--no-ignore`, `--all` (also list checked-but-missing defaults), `--json`, `--list-tools`.
+Within this repo you can also run `node bin/find-ai-configs.js`.
+
+Notes: the project scan recurses through subfolders but skips heavy/vendored dirs
+(`node_modules`, `.git`, `vendor`, ...) unless `--no-ignore` is passed, and never follows
+symlinks. Roo Code / Cline-family API keys live in VS Code SecretStorage (OS keychain),
+not files — the report says so instead of pretending to read them. Cursor/Windsurf model
+selection is UI-managed; their known state files are flagged as undocumented.
 
 ## Skills
 

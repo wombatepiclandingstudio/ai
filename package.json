@@ -1,0 +1,25 @@
+{
+  "name": "ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI agents & skills collection — includes find-ai-configs, an npx-runnable locator for AI provider/model config files (project / user / system level)",
+  "bin": {
+    "find-ai-configs": "bin/find-ai-configs.js"
+  },
+  "files": [
+    "bin",
+    "lib"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wombatepiclandingstudio/ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wombatepiclandingstudio/ai/issues"
+  },
+  "homepage": "https://github.com/wombatepiclandingstudio/ai#readme"
+}
