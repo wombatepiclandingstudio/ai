@@ -25,6 +25,11 @@ optionally with `references/`, `evals/`, and `scripts/`.
 | `skills/legacy-capability-extractor` | Extract a traceable business capability map from legacy codebases |
 | `skills/capability-to-gherkin` | Convert business capability maps into executable Gherkin specifications for BDD, with OpenSpec integration |
 | `skills/backoffice-design` | Design and review enterprise backoffice / operator-console UIs (capability pages, list/detail workflows, and tech-agnostic UI/UX design patterns) |
+| `skills/refactoring-catalog` | Apply Martin Fowler's refactoring catalog — code smells, behavior-preserving transformations, and the full catalog of named techniques |
+| `skills/clean-code-review` | Review and enforce Robert C. Martin's Clean Code principles — naming, functions, SOLID, TDD, and the boy scout rule |
+| `skills/legacy-code-workshop` | Apply Michael Feathers' techniques for working with legacy code — characterization tests, dependency breaking, sprout/wrap methods, and the Mikado method |
+| `skills/pragmatic-development` | Apply Hunt & Thomas' Pragmatic Programmer principles — DRY, orthogonality, tracer bullets, breaking coupling, and the pragmatic starter kit |
+| `skills/software-metrics-quality` | Apply CK metrics, cyclomatic complexity, Halstead measures, maintainability index, Fagan inspection, ISO 9126/25010 quality model, and common pitfalls |
 
 ### Install a skill into a project
 
@@ -86,7 +91,11 @@ Agent definitions live in `agents/` and follow the [Claude Code subagent format]
 
 | Agent | Purpose |
 |-------|---------|
+| `agents/software-engineering-analyst` | **Primary** — Unified analyst that orchestrates all quality skills as an integrated system (metrics → diagnosis → testability → refactoring → process → quality model) |
 | `agents/bookworm` | Hyper-skeptical reviewer that distrusts both others' claims and its own memory; verifies language/framework-specific facts against live sources (web, Context7 MCP, sigmap) before asserting them |
+| `agents/code-quality-reviewer` | Comprehensive code quality reviewer combining Fowler, Uncle Bob, Feathers, and Pragmatic Programmer principles — structured reviews with actionable recommendations |
+| `agents/refactoring-guide` | Guides refactoring using Fowler's catalog and Feathers' legacy code techniques — step-by-step with specific refactoring patterns and the Mikado method |
+| `agents/metrics-analyst` | Quantitative software quality analyst using CK metrics, cyclomatic complexity, Halstead measures, maintainability index, Fagan inspection, and ISO 9126/25010 |
 
 ### Install an agent into a project
 
