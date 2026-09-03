@@ -220,6 +220,29 @@ Every refactoring follows this process:
 
 ---
 
+## Automated Smell Detection
+
+Use tools to find smells before manual review:
+
+| Smell | Tool/Technique | What to Look For |
+|-------|---------------|------------------|
+| Long Method | `wc -l` per function, IDE "method length" | Functions > 20 lines |
+| Large Class | `wc -l` per class, LCOM metric | Classes > 300 lines or LCOM > 10 |
+| Duplicate Code | `jscpd`, `CPD` (PMD), `sonarqube` | Copy-pasted blocks > 5 lines |
+| Deep Nesting | `radon` (Python), `CodeClimate` | Nesting depth > 3 |
+| Magic Numbers | `grep -n '[0-9]\{3,\}' src/` | Numeric literals > 2 digits |
+| Long Parameter List | AST analysis, IDE inspection | Methods > 3 parameters |
+| Feature Envy | LCOM/CBO metrics | Methods using another class's data more than own |
+| Dead Code | `deadcode` (Python), `ts-prune` (TS) | Unused exports, unreachable code |
+
+**Workflow:**
+1. Run automated tools first (fast, comprehensive)
+2. Prioritize findings by risk (high CC + high change frequency = fix first)
+3. Apply refactoring catalog techniques to each prioritized smell
+4. Verify with tests after each change
+
+---
+
 ## Pre-Delivery Checklist
 
 Before declaring a refactoring complete:
@@ -283,22 +306,4 @@ to orchestrate them as an integrated system.
 
 **Orchestrated by:** `software-engineering-analyst` agent
 
----
 
-## Cross-Tool Compatibility
-
-This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any
-compatible tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`,
-`.opencode/skills/`, `.cursor/skills/`, `.github/skills/`, `.kiro/skills/`,
-`.gemini/skills/`, `.kilocode/skills/`). The `SKILL.md` above is the single source of
-truth; it is installed unmodified into each tool.
-
-To expose this skill to a target project, run the repo's `install-skill.sh`:
-
-```bash
-bash install-skill.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
-bash install-skill.sh --tool claude --target /path/to/project --id refactoring-catalog
-bash install-skill.sh --list-tools
-```
-
-For tools that do not read `SKILL.md` natively, point them at `references/condensed.md`.

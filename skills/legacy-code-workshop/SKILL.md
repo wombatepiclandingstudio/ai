@@ -119,6 +119,38 @@ dependencies to enable testing.
 **Problem:** A class depends on a complex subsystem.
 **Solution:** Create a facade that simplifies the interface.
 
+### Link by Contract
+
+**Problem:** A class depends on another class through inheritance, and you can't easily
+break the dependency.
+**Solution:** Define an interface that captures what you need from the dependency. Depend on
+the interface, not the concrete class. This is often the first step before other techniques.
+
+### Dependency-Breaking Decision Tree
+
+Use this to choose the right technique:
+
+```
+Can you change the constructor?
+├── YES → Parameterize Constructor (2.2)
+└── NO → Can you change the class hierarchy?
+    ├── YES → Extract Interface (2.1) + Link by Contract
+    └── NO → Can you override a method?
+        ├── YES → Extract and Override (2.4)
+        └── NO → Can you inject a factory?
+            ├── YES → Factory Injection (2.3)
+            └── NO → Can you wrap the dependency?
+                ├── YES → Adapter (2.6) or Facade (2.7)
+                └── NO → Can you replace with primitives?
+                    ├── YES → Primitivization (2.5)
+                    └── NO → Use Sprout Method/Wrap Method to
+                             add behavior around the dependency
+```
+
+**Priority order:** Try techniques that produce the most testable result with the least
+code change first. Parameterize Constructor and Extract Interface are usually best.
+Adapter and Facade are last resorts for third-party code you can't modify.
+
 ---
 
 ## Step 3: Add Behavior Safely
@@ -135,6 +167,21 @@ too risky to modify directly.
 4. Call the sprout method from the original method
 
 **Benefits:** New code is tested in isolation without disturbing existing logic.
+
+### Sprout Class
+
+**When:** The new functionality you need to add is substantial enough that a sprout method
+would grow into a method that does too many things, or the new behavior has its own state.
+
+**How:**
+1. Create a new class for the new functionality
+2. Write tests for the new class in isolation
+3. Implement the new class
+4. Create an instance of the new class from the original code
+5. Delegate to the new class from the original method
+
+**Benefits:** Keeps the original class stable while adding well-tested, well-structured new code.
+Use when Sprout Method would create a method longer than ~20 lines.
 
 ### Wrap Method
 
@@ -278,22 +325,4 @@ to orchestrate them as an integrated system.
 
 **Orchestrated by:** `software-engineering-analyst` agent
 
----
 
-## Cross-Tool Compatibility
-
-This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any
-compatible tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`,
-`.opencode/skills/`, `.cursor/skills/`, `.github/skills/`, `.kiro/skills/`,
-`.gemini/skills/`, `.kilocode/skills/`). The `SKILL.md` above is the single source of
-truth; it is installed unmodified into each tool.
-
-To expose this skill to a target project, run the repo's `install-skill.sh`:
-
-```bash
-bash install-skill.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
-bash install-skill.sh --tool claude --target /path/to/project --id legacy-code-workshop
-bash install-skill.sh --list-tools
-```
-
-For tools that do not read `SKILL.md` natively, point them at `references/condensed.md`.

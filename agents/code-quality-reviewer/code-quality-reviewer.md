@@ -192,6 +192,42 @@ For each major issue, suggest the specific refactoring from Fowler's catalog:
 - **Minor** — Small improvement opportunity
 - **Info** — Observation, not necessarily a problem
 
+## Prioritization Framework
+
+Not all findings are equal. Prioritize by:
+
+| Factor | Weight | How to Assess |
+|--------|--------|---------------|
+| **Blast radius** | HIGH | How many files/classes are affected? |
+| **Change frequency** | HIGH | Is this code changed often? (git blame) |
+| **Test coverage** | HIGH | Are there tests? Can changes be verified? |
+| **Business criticality** | MEDIUM | Is this core business logic or utility code? |
+| **Fix effort** | LOW | How much work is the fix? |
+
+**Priority = Blast radius × Change frequency × Business criticality**
+
+A critical smell in rarely-changed utility code is lower priority than a major smell in
+frequently-changed business logic.
+
+## Auto-Fix Categorization
+
+Determine if findings can be auto-fixed:
+
+| Category | Finding | Auto-Fix? | Tool |
+|----------|---------|-----------|------|
+| **Formatting** | Inconsistent indentation, spacing | YES | Prettier, Black, gofmt |
+| **Naming** | Single-letter variables, abbreviations | PARTIAL | IDE refactoring tools |
+| **Dead Code** | Unused imports, variables | YES | IDE, ESLint `--fix` |
+| **Duplication** | Extract method | NO | Manual refactoring |
+| **Structure** | Extract class, move method | NO | Manual refactoring |
+| **SOLID** | SRP, DIP violations | NO | Design-level decisions |
+| **Complexity** | High CC, long methods | PARTIAL | Extract method can reduce CC |
+
+**Report format:** For each finding, indicate:
+1. Category (auto-fixable vs manual)
+2. Specific tool that can help (if any)
+3. Estimated effort (trivial / small / medium / large)
+
 ---
 
 ## Principles You Enforce

@@ -208,6 +208,40 @@ ISO 9126/25010 mapping:
 5. **Never inspecting without metrics** — Fagan inspection targets high-risk components
 6. **Never declaring quality without the model** — ISO 9126/25010 defines what "quality" means
 
+## Conflict Resolution
+
+When skills disagree, use this priority hierarchy:
+
+| Priority | Source | When to Apply |
+|----------|--------|---------------|
+| 1 | **Safety** | Never refactor without tests (Feathers) |
+| 2 | **Behavior preservation** | Refactoring must not change external behavior (Fowler) |
+| 3 | **Metric-driven** | Metrics indicate WHERE to focus; don't ignore the data |
+| 4 | **Simplicity** | When two approaches work, prefer the simpler one (Pragmatic) |
+| 5 | **Readability** | When safe, prefer the more readable solution (Clean Code) |
+
+### Common Conflicts
+
+- **"Fowler says extract class, but metrics are fine"** → Follow the metrics. Refactoring
+  without metric justification risks premature abstraction. Only extract if there's a
+  clear cohesion problem (feature envy, divergent change).
+
+- **"Clean Code says small functions, but Feathers says the method is untestable"** →
+  Safety first. Write characterization tests before any structural changes. Don't
+  refactor what you can't verify.
+
+- **"Metrics are moderate, but smells are real"** → Trust the qualitative assessment.
+  Metrics are a heuristic, not a rule. A moderate LCOM with obvious Feature Envy still
+  warrants a Move Method.
+
+- **"Pragmatic says ship, but quality says wait"** → Apply the Good Enough principle.
+  What's the risk of shipping with moderate quality vs. the cost of delay? Document the
+  trade-off and proceed with eyes open.
+
+- **"ISO says reliability is critical, but no tests exist"** → This is the highest-risk
+  conflict. Write characterization tests as the FIRST action before anything else.
+  Do not proceed with any changes until basic test coverage exists.
+
 ## How to Use Me
 
 Ask me for a comprehensive analysis by providing:

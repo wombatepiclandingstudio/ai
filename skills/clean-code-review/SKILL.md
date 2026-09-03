@@ -266,6 +266,56 @@ Write Failing Test → Make Test Pass → Refactor
 
 ---
 
+## 10. Immutability
+
+> "If you don't need to change it, make it immutable."
+
+### Rules
+
+- Use `const` / `final` / `readonly` by default; only use mutable when mutation is the point
+- Prefer pure functions (no side effects, same input → same output)
+- Use immutable data structures (tuples, records, frozen objects) for shared state
+- Avoid reassigning parameters; use local variables instead
+- When mutation is necessary, make it explicit and contained in a single method
+
+### Benefits
+
+- Easier to reason about (no hidden state changes)
+- Thread-safe by default
+- Easier to test (no setup/teardown for shared state)
+- Prevents a class of bugs (accidental mutation, race conditions)
+
+---
+
+## Test Coverage Strategy
+
+### What to test
+
+| Priority | What | Why |
+|----------|------|-----|
+| 1 | Business logic / domain rules | Highest value, most fragile |
+| 2 | Edge cases and error paths | Where bugs hide |
+| 3 | Integration points | Where systems break |
+| 4 | UI components (critical paths) | User-facing behavior |
+| 5 | Utility functions | Low risk, easy to test |
+
+### Coverage targets
+
+- **New code:** 80%+ coverage (measured by line/branch)
+- **Existing code:** Don't lower the bar; improve incrementally
+- **Critical paths:** 100% (payment, auth, data integrity)
+- **Legacy code:** Characterization tests first, then improve
+
+### FIRST principles reminder
+
+- **Fast** — Tests run in milliseconds
+- **Independent** — Tests don't depend on each other
+- **Repeatable** — Same result every time
+- **Self-Validating** — Boolean pass/fail
+- **Timely** — Written at the right time (before or alongside production code)
+
+---
+
 ## Pre-Delivery Checklist
 
 Before declaring code clean:
@@ -334,22 +384,4 @@ to orchestrate them as an integrated system.
 
 **Orchestrated by:** `software-engineering-analyst` agent
 
----
 
-## Cross-Tool Compatibility
-
-This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any
-compatible tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`,
-`.opencode/skills/`, `.cursor/skills/`, `.github/skills/`, `.kiro/skills/`,
-`.gemini/skills/`, `.kilocode/skills/`). The `SKILL.md` above is the single source of
-truth; it is installed unmodified into each tool.
-
-To expose this skill to a target project, run the repo's `install-skill.sh`:
-
-```bash
-bash install-skill.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
-bash install-skill.sh --tool claude --target /path/to/project --id clean-code-review
-bash install-skill.sh --list-tools
-```
-
-For tools that do not read `SKILL.md` natively, point them at `references/condensed.md`.

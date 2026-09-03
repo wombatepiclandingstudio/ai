@@ -358,6 +358,53 @@ the OG image but must not omit it.
 
 ---
 
+## Advanced Architecture Patterns
+
+### Micro-frontend considerations
+
+When the project uses micro-frontends (Module Federation, single-spa, or framework-native):
+
+- each micro-frontend owns its own routes within its bounded context;
+- the shell layout remains the single source of truth for shared navigation, footer, and meta;
+- shared dependencies (React, Vue, design system) are hoisted to the shell — not duplicated;
+- navigation updates propagate from the shell, not from individual micro-frontends;
+- styles must be scoped to the micro-frontend (CSS Modules, shadow DOM, or unique class prefix);
+- never let a micro-frontend redefine global styles, fonts, or CSS custom properties.
+
+### Monorepo structural patterns
+
+For projects using monorepo tooling (Turborepo, Nx, Lerna, pnpm workspaces):
+
+- shared packages (UI library, utilities, config) live in `packages/` or `libs/`;
+- each app imports shared code — never copy-paste between apps;
+- the layout component is shared via a package, not duplicated per app;
+- lint rules enforce import boundaries (apps can import from packages, not from each other);
+- CI builds only affected packages, not the entire monorepo.
+
+### Internationalization (i18n) routing patterns
+
+For multilingual web projects:
+
+- locale prefix in the URL: `/en/about`, `/es/about`, or domain-based: `en.example.com`;
+- the layout reads the locale from the URL and applies the correct language;
+- translation files live in a `locales/` or `i18n/` directory, not inline in components;
+- the navigation component renders links for the current locale;
+- `hreflang` alternate links in `<head>` for SEO;
+- default locale redirects (e.g., `/` → `/en/`) are handled by the router, not the page.
+
+### Performance architecture
+
+For route-level performance optimization:
+
+- code-split by route: each page loads only its own JavaScript;
+- lazy-load components below the fold (accordion content, modal bodies, tab panels);
+- preload the LCP element (hero image, main heading) with `fetchpriority="high"`;
+- reserve space for async content (skeleton screens, aspect-ratio on images);
+- move non-critical CSS to `media="print"` swap or inline critical styles;
+- use `loading="lazy"` for images below the fold; `loading="eager"` for LCP.
+
+---
+
 ## Pre-Delivery Checklist
 
 Before declaring a page addition or structural change complete, verify:
@@ -425,24 +472,4 @@ When a structural change adds or modifies a page, navigation item, or route:
   after the change
 - Prefer testing navigation through the shared nav component, not through per-page nav markup
 
----
 
-## Cross-Tool Compatibility
-
-This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any compatible
-tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`, `.opencode/skills/`,
-`.cursor/skills/`, `.github/skills/`, `.kiro/skills/`, `.gemini/skills/`, `.kilocode/skills/`). The
-`SKILL.md` above is the single source of truth; it is installed unmodified into each tool.
-
-To expose this skill to a target project, run the repo's `install.sh` (it symlinks this folder
-into the chosen tool's path):
-
-```bash
-bash install.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
-bash install.sh --list-tools          # show all supported tools and their paths
-```
-
-For tools that do not read `SKILL.md` natively (they only consume a project memory file such as
-`AGENTS.md` / `CLAUDE.md` / `.windsurfrules`), point them at `references/condensed.md` — a flattened
-copy of the structure above. Full install details and the progressive-disclosure model are in this
-folder's `README.md`.

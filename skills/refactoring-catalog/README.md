@@ -1,0 +1,77 @@
+# Refactoring Catalog
+
+A portable, cross-tool AI coding agent **skill** (open [Agent Skills](https://github.com/agentskills/agentskills)
+standard) that applies **Martin Fowler's refactoring catalog**. The `SKILL.md` in this folder is
+the single source of truth — the same file is exposed to any compatible tool via discovery paths,
+no text rewriting required.
+
+## What It Does
+
+Given code that needs restructuring, the skill guides the agent through:
+
+- **Code Smell Detection** — Identify Bloaters, OO Abusers, Change Preventers, Dispensables, and Couplers
+- **Refactoring Techniques** — Full catalog: Composing Methods, Moving Features, Organizing Data, Simplifying Conditionals, Simplifying Method Calls, Dealing with Generalization
+- **Safe Refactoring Process** — Tests-first, small incremental steps, behavior preservation
+- **When to Refactor** — Rule of Three, before/after features, during bug fixes, code review
+
+## Install to a Target Project
+
+```bash
+# Install for one tool
+bash install-skill.sh --tool claude --target /path/to/project
+
+# Install for several tools at once
+bash install-skill.sh --tool claude,codex,cursor --target /path/to/project
+
+# Install only this skill
+bash install-skill.sh --tool claude --target /path/to/project --id refactoring-catalog
+
+# List supported tools and their install paths
+bash install-skill.sh --list-tools
+
+# Uninstall
+bash install-skill.sh --tool claude --target /path/to/project --remove
+```
+
+### Supported tools
+
+| Tool | Installs into |
+|------|---------------|
+| Claude Code | `.claude/skills/` |
+| OpenAI Codex | `.codex/skills/` |
+| OpenCode | `.opencode/skills/` |
+| Kilo Code | `.kilocode/skills/` |
+| Cursor | `.cursor/skills/` |
+| GitHub Copilot / VS Code | `.github/skills/` |
+| Kiro (AWS) | `.kiro/skills/` |
+| Gemini CLI | `.gemini/skills/` |
+| Roo Code / Cline | `.roo/skills/` |
+| Goose | `.goose/skills/` |
+
+### Tools without native SKILL.md support
+
+For agents that only read a project memory file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
+`.windsurfrules`, etc.), point them at `references/condensed.md` or paste its content into the
+tool's rules file.
+
+## Use It
+
+Open any supported AI coding tool in a project where the skill is installed and ask:
+
+> "This method is too long — refactor it"
+
+or
+
+> "Identify code smells in this module and suggest refactorings"
+
+The agent recognizes the intent from the skill's `description` and applies the appropriate
+refactoring technique from Fowler's catalog.
+
+## Companion Skills
+
+| Skill | Connection |
+|-------|------------|
+| `clean-code-review` | Clean Code defines the goal state after refactoring — naming, functions, SOLID |
+| `legacy-code-workshop` | Legacy Code techniques enable refactoring by breaking dependencies and adding tests |
+| `pragmatic-development` | Pragmatic principles (DRY, orthogonality) are both causes and solutions for code smells |
+| `software-metrics-quality` | Metrics tell you WHERE to refactor (high CC → Extract Method, high LCOM → Extract Class) |

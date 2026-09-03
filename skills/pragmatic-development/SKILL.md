@@ -63,12 +63,18 @@ practicality, simplicity, adaptability, communication, and quality.
 | **Algorithm duplication** | Same logic in multiple places | Extract into shared functions/libraries |
 | **Specification duplication** | Same interface in multiple places | Use contracts, interfaces, schemas |
 
-### Practical Tips
+### DRY Violation Detection
 
-- Use functions to encapsulate logic
-- Create data abstractions
-- Write self-documenting code
-- Use metaprogramming when appropriate
+Check for these patterns:
+- **Copy-pasted blocks** — Same 5+ line block in 3+ places
+- **Similar method signatures** — Methods with 80%+ identical parameter lists
+- **Parallel hierarchies** — Two class hierarchies that mirror each other
+- **Magic values** — Same string/number literal repeated (use named constants)
+- **Boilerplate repetition** — Same setup/teardown code in multiple tests
+
+**When to extract:** If you find yourself copying and pasting, that's duplication.
+If the same value appears in 3+ places, name it. If the same logic appears in 2+ places,
+extract it. If the same structure appears in 3+ places, abstract it.
 
 ---
 
@@ -167,15 +173,37 @@ practicality, simplicity, adaptability, communication, and quality.
 
 ## 7. Breaking Coupling
 
-### Techniques
+### When to Use Which Technique
 
-| Technique | Description |
-|-----------|-------------|
-| **Use interfaces** | Program to interfaces, not implementations |
-| **Dependency injection** | Pass dependencies rather than creating them |
-| **Event-driven architecture** | Use events to decouple components |
-| **Message passing** | Communicate through messages instead of direct calls |
-| **Shared abstractions** | Use common interfaces for different implementations |
+| Situation | Technique | Example |
+|-----------|-----------|---------|
+| Component A directly creates B | **Dependency injection** | Pass DB connection instead of creating it |
+| Multiple implementations needed | **Use interfaces** | PaymentProcessor interface, Stripe/PayPal impls |
+| Components need notification without direct calls | **Event-driven** | OrderPlaced event triggers inventory update |
+| Cross-service communication | **Message passing** | RabbitMQ between Order and Shipping services |
+| Multiple classes share similar behavior | **Shared abstractions** | Extract common base class or utility |
+
+### Coupling Detection
+
+Look for these signals:
+- **God objects** — One class that knows about everything
+- **Change ripple** — Changing one class requires changing 3+ others
+- **Test difficulty** — Can't test a class without mocking 5+ dependencies
+- **Feature envy** — Method uses another class's data more than its own
+- **Shotgun surgery** — One feature change touches many unrelated files
+
+### Pragmatic Spikes
+
+When facing uncertainty about an approach, timebox a **spike**:
+1. Define the question ("Can we use WebSocket for real-time updates?")
+2. Set a time limit (2–4 hours max)
+3. Build the narrowest possible prototype
+4. Evaluate results against criteria
+5. Document the decision and rationale
+6. Throw away the spike code (it's exploration, not production)
+
+**Rule:** A spike that grows beyond its time limit has not answered the question — it has
+become a feature. Reset and scope down.
 
 ---
 
@@ -328,22 +356,4 @@ to orchestrate them as an integrated system.
 
 **Orchestrated by:** `software-engineering-analyst` agent
 
----
 
-## Cross-Tool Compatibility
-
-This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any
-compatible tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`,
-`.opencode/skills/`, `.cursor/skills/`, `.github/skills/`, `.kiro/skills/`,
-`.gemini/skills/`, `.kilocode/skills/`). The `SKILL.md` above is the single source of
-truth; it is installed unmodified into each tool.
-
-To expose this skill to a target project, run the repo's `install-skill.sh`:
-
-```bash
-bash install-skill.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
-bash install-skill.sh --tool claude --target /path/to/project --id pragmatic-development
-bash install-skill.sh --list-tools
-```
-
-For tools that do not read `SKILL.md` natively, point them at `references/condensed.md`.

@@ -153,171 +153,34 @@ lineage tag back to the L1. A Feature that needs two "As a" personas is an anti-
 
 ### Stage 3: Scenario Generation
 
-For each L2 capability, generate scenarios using this template:
+For each L2 capability, generate at minimum a happy-path scenario. Add additional scenario
+types when the capability description or dependencies suggest them:
 
-```gherkin
-@capability @level2 @<l2-tag>
-Feature: <L1 Capability Name>
-  <L1 description>
+1. **Happy Path** — Standard successful execution (mandatory for every L2)
+2. **Alternative Flow** — Valid but different path
+3. **Exception / Error** — Error conditions, validation failures
+4. **Boundary / Edge** — Threshold values (for high-risk capabilities)
+5. **Cross-Capability** — Exercises dependencies between capabilities
+6. **Security** — Authentication, authorization, PII handling
+7. **Concurrency** — Race conditions, rate-limit behavior
+8. **Regression** — Pins bug findings as acceptance criteria (`@regression`)
 
-  As a <business actor>
-  I want to <L2 capability in business terms>
-  So that <business value or outcome>
+**Key rules:**
+- **Split composite scenarios.** One operation per Scenario. Never combine CRUD lifecycle
+  into one Scenario — each step gets its own Given/When/Then. See `references/anti-patterns.md`
+  for examples.
+- **Use Scenario Outline with Examples** for data-driven rules (rate limits, media types,
+  PII types, settings, filters). Size by distinct business outcome: <3 rows questions the
+  outline, >10 questions the split.
+- **Standardized verification steps.** Every state-changing Scenario must end with relevant
+  `And` steps: audit log entry, visible state, cascade effects, response metadata.
+  Use outcome-descriptive phrasing, not exact strings (unless the string IS the business rule).
+- **Cross-capability scenarios.** For every dependency edge in the capability map, produce
+  at least one `@cross-capability` Scenario.
+- **One actor per Feature.** If a second "As a" persona appears, split the Feature.
 
-  Background:
-    Given the system is in a valid initial state
-    And standard test data is loaded
-
-  @capability @level2 @<l2-tag> @happy-path
-  Scenario: <L2 Capability Name> — happy path
-    Given <preconditions from capability>
-    When <triggering event>
-    Then <expected outcome>
-    And <additional verification>
-
-  @capability @level2 @<l2-tag> @exception
-  Scenario: <L2 Capability Name> — error case
-    Given <error-triggering preconditions>
-    When <invalid or failing action>
-    Then <error is handled>
-    And <system state is consistent>
-```
-
-#### Scenario types to generate
-
-Generate **at least** a happy-path scenario for every L2. Add additional scenarios when the
-capability description or dependencies suggest meaningful alternatives:
-
-1. **Happy Path** — Standard successful execution of the capability.
-2. **Alternative Flow** — A valid but different path (e.g., "customer updates profile via web
-   portal" vs. "via mobile app").
-3. **Exception / Error** — Error conditions, validation failures, and how the system handles them.
-4. **Boundary / Edge** — Minimum, maximum, or threshold values (optional, for high-risk capabilities).
-5. **Cross-Capability** — Scenarios that exercise dependencies between capabilities, if the
-   capability map documents cross-capability relationships.
-6. **Security** — Authentication, authorization, PII handling, and access control constraints.
-7. **Concurrency** — Race conditions, simultaneous writes, and rate-limit behavior under load.
-8. **Regression** — If the capability map carries bug findings (Stage 0), each meaningful bug
-   becomes a named scenario that pins the bug's business outcome as a requirement — stated
-   as what the business observes, never as the broken implementation ("writes to wrong
-   table" becomes "enrolling from the member profile changes nothing else about the member").
-   Tag `@regression`. The point: yesterday's defects are tomorrow's acceptance criteria.
-
-#### Split composite scenarios
-
-**Never** combine multiple operations or business rules into a single Scenario. A composite
-scenario that walks through an entire CRUD lifecycle (create → read → update → delete in one
-Scenario) must be split into four independent Scenarios, each with its own Given/When/Then.
-Composite scenarios obscure which operation failed when a test breaks, making failure isolation
-and debugging difficult.
-
-**Anti-pattern:**
-```gherkin
-Scenario: Customer lifecycle management
-  Given a new customer is created
-  And the customer's details are updated
-  And the customer is archived
-  Then all changes are reflected correctly   # which step failed?
-```
-
-**Correct:**
-```gherkin
-Scenario: Customer record creation
-  Given no customer with that identifier exists
-  When a new customer is registered
-  Then the customer record should exist
-  And an audit log entry should be created
-  And the response metadata should include a creation timestamp
-
-Scenario: Customer record update
-  Given an existing customer record
-  When the customer's details are updated
-  Then the record should reflect the new values
-  And the previous values should be preserved in the change history
-```
-
-#### Scenario Outline with Examples tables
-
-Use `Scenario Outline` with `Examples:` tables whenever the same business rule applies across
-multiple distinct data values. This is especially applicable for:
-- **Rate limits** — requests-per-window thresholds
-- **Media types** — accepted/rejected content types
-- **PII types** — personal data classification handling
-- **Setting keys** — configuration option validation
-- **Filter values** — query filter acceptance behavior
-
-Each row in the `Examples:` table is an independent test run. Keep columns descriptive with
-business-meaningful names.
-
-**Size by outcome, not by count.** One row per distinct business outcome (one per status
-value, one per threshold side, one per accepted/rejected input). There is no numeric target:
-fewer than 3 rows usually means the rule is not really data-driven — question the outline;
-more than ~10 rows usually means several rules are masquerading as one — question the split.
-Never pad rows to hit a number; padded rows are noise that slows every CI run.
-
-**Example — rate limits:**
-```gherkin
-@capability @level2 @api-rate-limiting @boundary
-Scenario Outline: API request rate limit enforcement
-  Given the rate limit window is "<window>"
-  And "<request-count>" requests have already been made
-  When the client sends one more request
-  Then the response should be "<status>"
-  And the response metadata should include a "Retry-After" header of "<retry-after>" seconds
-
-  Examples:
-    | window  | request-count | status      | retry-after |
-    | 1 minute | 49           | 200 OK      | 0           |
-    | 1 minute | 50           | 200 OK      | 0           |
-    | 1 minute | 51           | 429 Too Many| 60          |
-    | 1 minute | 100          | 429 Too Many| 60          |
-```
-
-#### Standardized verification steps
-
-Every scenario that exercises a state change or side effect should end with consistent `And`
-verification steps. Apply the subset relevant to the capability. Prefer **outcome-descriptive**
-phrasing — assert the observable business outcome, not literal strings:
-
-| Verification type   | Outcome-descriptive pattern (preferred)                       | When to use                         |
-|---------------------|---------------------------------------------------------------|-------------------------------------|
-| Audit log entry     | `And an audit log entry should be recorded for the <event>`   | Any write or state-changing action  |
-| Visible state       | `And the <thing> should appear in the <view/list/feed>`       | User-facing capabilities            |
-| Cascade effects     | `And the downstream "<related-record>" should reflect the change` | When a change propagates to related entities |
-| Response metadata   | `And the response metadata should include "<header>"`         | Any API-facing action               |
-
-**Exact strings only when the string IS the business rule.** An audit code like
-`AUTHZ_REJECTED` may be pinned exactly if auditing denials under that code is itself a
-requirement; otherwise exact codes, UI copy, and button labels must NOT appear — they
-couple the spec to a vocabulary (or a marketing rename) that does not exist yet. Asserting
-"the UI should show 'Booked!'" breaks the day copywriting changes; asserting "the booking
-appears with its reference" does not.
-
-Use these as trailing `And` steps after the primary `Then` outcome. Do not omit them from
-write operations — they are mandatory for any Scenario that mutates state.
-
-**Example with all four verification types:**
-```gherkin
-@capability @level2 @order-fulfillment @happy-path
-Scenario: Order shipment dispatch
-  Given an order with status "ready_to_ship"
-  When the fulfillment team marks it as shipped
-  Then the order status should be "shipped"
-  And an audit log entry should be recorded for the shipment
-  And the shipment appears in the customer's order feed
-  And the downstream invoice should be marked as finalized
-  And the response metadata should include a "X-Shipped-At" timestamp
-```
-
-#### Cross-capability scenarios
-
-If the dependency map shows cross-capability relationships, generate scenarios that exercise
-those dependencies. These scenarios should live in the most relevant Feature and reference the
-dependent capability in their `Given` preconditions.
-
-**Rule:** For every dependency edge in the capability map's dependency section, produce at
-least one `@cross-capability` Scenario. If 10 cross-capability relationships exist, 10
-cross-capability Scenarios must exist — not 2.
+See `references/scenario-generation.md` for templates, examples, and verification step patterns.
+See `references/anti-patterns.md` for the full list of 14 anti-patterns to avoid.
 
 ### Stage 4: Step Definition Mapping
 
@@ -393,144 +256,31 @@ Findings are fixed in place; the validation report records both passes' results.
 
 ## Gherkin Conventions
 
-Follow these conventions for all generated Gherkin:
-
-- **Feature titles** — Use the L1 capability name (or sub-capability name after an
-  actor-seam split, Stage 2). Keep it concise.
-- **Feature descriptions** — Start with the capability description from the input. If
-  business value is available, include it as a "So that" line.
-- **One actor per Feature** — If a second "As a" persona appears, split the Feature
-  (Stage 2 rule).
-- **`Rule:` grouping** — Use `Rule:` blocks (Gherkin 6) to group related scenarios
-  inside a Feature (e.g. one Rule per business regulation). Sub-features that end up
-  with many scenarios are a signal the split should have gone further.
-- **Language** — Write in **business terms**, not implementation terms. Avoid framework,
-  database, or class names in scenario steps.
-- **One rule per scenario** — Each scenario should test one business rule or outcome.
-- **Split composite scenarios** — A scenario that performs multiple operations (e.g. a full
-  CRUD lifecycle in one Scenario) must be split into one Scenario per operation. Each split
-  scenario has its own Given/When/Then and ends with standardized verification steps. This
-  gives better failure isolation and faster root-cause identification.
-- **Scenario names** — Descriptive but concise. Include the flow type ("happy path,"
-  "error case") as a suffix.
-- **Background** — Use for shared preconditions across ALL scenarios in a Feature. Do not
-  put feature-specific setup here.
-- **Data tables** — Use for complex multi-field inputs. Keep columns ordered logically
-  (e.g., field name, type, valid value, invalid value).
-- **Scenario Outline with Examples** — Use `Scenario Outline:` + `Examples:` when the same
-  scenario applies across multiple discrete data values. Size by outcome: one row per distinct
-  business outcome; <3 rows questions the outline, >10 questions the split (see Stage 3).
-- **Standardized verification steps** — Every Scenario that mutates state must end with
-  relevant `And` verification steps drawn from the outcome-descriptive set:
-  - `And an audit log entry should be recorded for the <event>`
-  - `And the <thing> should appear in the <view/list/feed>`
-  - `And the downstream "<related-record>" should reflect the change`
-  - `And the response metadata should include "<header>"`
-  Exact strings are reserved for cases where the string itself is the business rule.
-- **Tags** — Every scenario carries `@capability`, `@level2`, a per-L2 descriptor tag, and a
-  semantic flow-type tag from this set: `@happy-path`, `@alternative`, `@exception`,
-  `@boundary`, `@cross-capability`, `@security`, `@concurrency`, `@regression`. These enable
-  targeted CI execution (e.g. `cucumber --tags @security`).
+- **Feature titles** — Use the L1 capability name. Keep concise.
+- **Feature descriptions** — Include capability description and "So that" business value.
+- **One actor per Feature** — Split along actor seams if multiple personas appear.
+- **`Rule:` grouping** — Use `Rule:` blocks (Gherkin 6) to group related scenarios.
+- **Language** — Business terms only. No framework, database, or class names.
+- **One rule per scenario** — Split composite scenarios into one per operation.
+- **Background** — Shared preconditions only. No feature-specific setup.
+- **Data tables** — For complex multi-field inputs. Ordered logically.
+- **Tags** — Every scenario carries `@capability`, `@level2`, per-L2 tag, and a semantic
+  tag: `@happy-path`, `@alternative`, `@exception`, `@boundary`, `@cross-capability`,
+  `@security`, `@concurrency`, `@regression`.
 
 ---
 
 ## Anti-Patterns
 
-### 1. Technical language in scenarios
+See `references/anti-patterns.md` for the full list with symptoms and fixes. The most critical:
 
-**Symptom:** Steps reference database tables, class names, HTTP codes, or framework methods.
-**Fix:** Rewrite in business terms. "Then the customer is saved to the database" becomes
-"Then the customer should be able to log in."
-
-### 2. Implementation details as scenarios
-
-**Symptom:** Scenarios describe *how* the system works (API calls, UI clicks, SQL queries)
-rather than *what* the system should do.
-**Fix:** Focus on business outcomes. The system's internal mechanism should not appear in
-the Feature.
-
-### 3. Missing actor or business value
-
-**Symptom:** A Feature has no "As a / I want / So that" narrative.
-**Fix:** Every Feature must state who benefits, what they need, and why. If actors or value
-are missing from the input, infer them from the capability description or flag for review.
-
-### 4. One giant scenario per capability
-
-**Symptom:** A single scenario tries to test the entire happy path AND all error cases.
-**Fix:** Split into granular scenarios. One business rule → one scenario. A CRUD lifecycle
-spawns four scenarios (create, read, update, delete), each with its own Given/When/Then and
-standardized verification steps.
-
-### 5. Composite scenario testing multiple operations
-
-**Symptom:** A Scenario performs create → read → update → delete in one flow.
-**Fix:** Split into one Scenario per operation. Each split scenario must have independent
-preconditions and a clear single outcome. This gives better failure isolation in CI: when
-the update step fails, only the update Scenario fails — not the entire lifecycle.
-
-### 6. Missing standardized verification steps
-
-**Symptom:** A write Scenario ends after the primary `Then` outcome with no audit, UI,
-cascade, or metadata checks.
-**Fix:** Every state-changing Scenario must end with relevant `And` verification steps from
-this set: audit log entry, UI state confirmation, cascade effects, response metadata.
-
-### 7. Insufficient data-driven coverage
-
-**Symptom:** Only one scenario exists for a capability that varies by input (rate limits,
-media types, PII types).
-**Fix:** Use `Scenario Outline` with `Examples:` tables. Each distinct business outcome is a
-separate row; size by outcome, not by count (Stage 3).
-
-### 8. Under-tagged scenarios
-
-**Symptom:** Scenarios carry only `@capability @level2` with no semantic flow-type tag.
-**Fix:** Every Scenario must carry one of: `@happy-path`, `@alternative`, `@exception`,
-`@boundary`, `@cross-capability`, `@security`, `@concurrency`. Tags enable CI to run
-targeted subsets (e.g. `cucumber --tags @security` for pen-test runs).
-
-### 9. Missing cross-capability scenarios
-
-**Symptom:** The dependency map shows 10 cross-capability relationships but only 2 are
-tested.
-**Fix:** For each dependency edge in the capability map, generate at least one
-`@cross-capability` Scenario. These live in the most relevant Feature and reference the
-dependent capability in their `Given` preconditions.
-
-### 10. No OpenSpec linkage (when OpenSpec is in use)
-
-**Symptom:** Gherkin files are generated but not linked to OpenSpec proposals.
-**Fix:** Always create or update an OpenSpec change when the project uses OpenSpec. This
-maintains the traceability chain from business capability → Gherkin spec → implementation.
-
-### 11. Multi-persona Feature
-
-**Symptom:** A Feature needs two "As a" lines (e.g. one for prospects, one for enrolled
-members) — usually after mechanically mapping one L1 to one Feature.
-**Fix:** Split along actor seams into sub-features with lineage back to the L1 (Stage 2).
-A Feature is one actor pursuing one value.
-
-### 12. OR-shaped outcome
-
-**Symptom:** A `Then` step offers alternatives — "the enrollment is rejected or waitlisted",
-"succeeds or returns an error".
-**Fix:** Pin the policy. An OR cannot be asserted; decide (or surface to the owner) which
-branch the business requires, and write that.
-
-### 13. Exact-string coupling to an unborn vocabulary
-
-**Symptom:** Steps assert audit codes, error codes, or UI labels that no product decision
-has defined yet — one rename breaks dozens of scenarios.
-**Fix:** Use outcome-descriptive steps (Stage 3). Reserve exact strings for when the string
-itself is the business rule.
-
-### 14. Skipping validation
-
-**Symptom:** The generated specs are delivered on the strength of a self-graded checklist,
-unparsed and unreviewed.
-**Fix:** Run Stage 6: machine-parse every file, then adversarially re-read for contradictory
-windows, invented attributes, vague assertions, and persona leakage.
+1. **Technical language** — Steps reference DB tables, class names, HTTP codes
+2. **Composite scenarios** — Multiple operations in one Scenario (CRUD lifecycle)
+3. **Missing verification steps** — Write scenarios without audit/state cascade/metadata checks
+4. **Under-tagged scenarios** — Missing semantic flow-type tags
+5. **Multi-persona Feature** — Two "As a" lines instead of splitting along actor seams
+6. **OR-shaped outcomes** — "rejected or waitlisted" — pin the policy instead
+7. **Skipping validation** — Delivering unparsed, unreviewed specs
 
 ---
 
@@ -652,26 +402,4 @@ The two skills share a `dependencies` relationship in metadata. When both are in
 agent analyzing legacy code can run the full pipeline: extract capabilities, then generate
 executable specifications from the resulting domain model.
 
----
 
-## Cross-Tool Compatibility
-
-This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any
-compatible tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`,
-`.opencode/skills/`, `.cursor/skills/`, `.github/skills/`, `.kiro/skills/`, `.gemini/skills/`,
-`.kilocode/skills/`). The `SKILL.md` above is the single source of truth; it is installed
-unmodified into each tool.
-
-To expose this skill to a target project, run the repo's `install-skill.sh` (it symlinks this
-folder into the chosen tool's path):
-
-```bash
-bash install-skill.sh --tool claude,codex,cursor --target /path/to/project
-bash install-skill.sh --tool claude --target /path/to/project --id capability-to-gherkin
-bash install-skill.sh --list-tools
-```
-
-For tools that do not read `SKILL.md` natively (they only consume a project memory file such
-as `AGENTS.md` / `CLAUDE.md` / `.windsurfrules`), point them at `references/condensed.md` —
-a flattened copy of the pipeline, mapping rules, and checklist above. Full install details
-and the progressive-disclosure model are in this folder's `README.md`.

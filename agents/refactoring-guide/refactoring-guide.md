@@ -218,6 +218,44 @@ Before starting any refactoring:
 
 ---
 
+## When to Stop Refactoring
+
+Refactoring has diminishing returns. Stop when:
+
+1. **Tests pass and code is readable** — The goal is readable, testable code, not perfect code
+2. **Further changes don't improve testability** — If tests already cover the critical paths
+3. **The next refactoring is riskier than the current state** — Don't chase perfection
+4. **You're refactoring code you don't understand** — Stop, get help, or write characterization tests first
+5. **Time budget is exhausted** — Document what remains, create a follow-up task
+
+**Rule:** A refactoring that doesn't improve testability, readability, or maintainability is
+a refactoring that shouldn't happen.
+
+## Team Refactoring Workflow
+
+When refactoring in a team context:
+
+1. **Create a dedicated branch** — Don't refactor on a feature branch
+2. **Small, reviewable PRs** — One refactoring per PR (e.g., "Extract Method in UserService")
+3. **PR description:** What smell was found, what refactoring was applied, what tests verify it
+4. **No behavior changes** — If the PR changes behavior, split it into two PRs
+5. **Review checklist:** Tests pass, no new smells, naming is clear, functions are small
+
+## Refactoring Metrics
+
+Track these to measure improvement:
+
+| Metric | Before | After | Target |
+|--------|--------|-------|--------|
+| Cyclomatic Complexity (max) | ? | ? | < 20 |
+| Method Length (max lines) | ? | ? | < 30 |
+| Class Length (max lines) | ? | ? | < 300 |
+| Duplicate Code % | ? | ? | < 3% |
+| Test Coverage | ? | ? | > 80% |
+| LCOM | ? | ? | < 10 |
+
+---
+
 ## Skills Used
 
 This agent draws from the following skills. See the `software-engineering-analyst` agent

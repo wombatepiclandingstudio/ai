@@ -18,18 +18,19 @@ Personal repository for all things AI — agents and reusable skills.
 
 Skills follow the open [Agent Skills](https://github.com/agentskills/agentskills) standard:
 each skill is a folder containing a `SKILL.md` (YAML frontmatter + Markdown instructions),
-optionally with `references/`, `evals/`, and `scripts/`.
+optionally with `references/`, `evals/`, and `scripts/`. Installation instructions live in
+each skill's `README.md`, not in the `SKILL.md` (which stays focused on instructions).
 
 | Skill | Purpose |
 |-------|---------|
-| `skills/legacy-capability-extractor` | Extract a traceable business capability map from legacy codebases |
-| `skills/capability-to-gherkin` | Convert business capability maps into executable Gherkin specifications for BDD, with OpenSpec integration |
-| `skills/backoffice-design` | Design and review enterprise backoffice / operator-console UIs (capability pages, list/detail workflows, and tech-agnostic UI/UX design patterns) |
-| `skills/refactoring-catalog` | Apply Martin Fowler's refactoring catalog — code smells, behavior-preserving transformations, and the full catalog of named techniques |
-| `skills/clean-code-review` | Review and enforce Robert C. Martin's Clean Code principles — naming, functions, SOLID, TDD, and the boy scout rule |
-| `skills/legacy-code-workshop` | Apply Michael Feathers' techniques for working with legacy code — characterization tests, dependency breaking, sprout/wrap methods, and the Mikado method |
-| `skills/pragmatic-development` | Apply Hunt & Thomas' Pragmatic Programmer principles — DRY, orthogonality, tracer bullets, breaking coupling, and the pragmatic starter kit |
-| `skills/software-metrics-quality` | Apply CK metrics, cyclomatic complexity, Halstead measures, maintainability index, Fagan inspection, ISO 9126/25010 quality model, and common pitfalls |
+| `skills/legacy-capability-extractor` | Extract a traceable business capability map from legacy codebases via a 7-phase multi-signal pipeline |
+| `skills/capability-to-gherkin` | Convert business capability maps into executable Gherkin BDD specifications with triage and validation |
+| `skills/backoffice-design` | Design enterprise backoffice UIs: capability pages, list/detail workflows, stepper/wizard, bulk ops, real-time status, and UI/UX design patterns |
+| `skills/refactoring-catalog` | Apply Martin Fowler's refactoring catalog with automated smell detection and full catalog of named techniques |
+| `skills/clean-code-review` | Enforce Clean Code principles: naming, functions, SOLID, TDD, immutability, test coverage strategy |
+| `skills/legacy-code-workshop` | Apply Michael Feathers' legacy code techniques: characterization tests, dependency breaking with decision tree, sprout/wrap methods, Mikado |
+| `skills/pragmatic-development` | Apply Pragmatic Programmer principles: DRY with detection guide, orthogonality, tracer bullets, coupling breaking with decision criteria |
+| `skills/software-metrics-quality` | CK metrics, cyclomatic complexity, Halstead, maintainability index, Fagan inspection, ISO 25010 with CI integration guidance |
 
 ### Install a skill into a project
 
@@ -91,11 +92,11 @@ Agent definitions live in `agents/` and follow the [Claude Code subagent format]
 
 | Agent | Purpose |
 |-------|---------|
-| `agents/software-engineering-analyst` | **Primary** — Unified analyst that orchestrates all quality skills as an integrated system (metrics → diagnosis → testability → refactoring → process → quality model) |
-| `agents/bookworm` | Hyper-skeptical reviewer that distrusts both others' claims and its own memory; verifies language/framework-specific facts against live sources (web, Context7 MCP, sigmap) before asserting them |
-| `agents/code-quality-reviewer` | Comprehensive code quality reviewer combining Fowler, Uncle Bob, Feathers, and Pragmatic Programmer principles — structured reviews with actionable recommendations |
-| `agents/refactoring-guide` | Guides refactoring using Fowler's catalog and Feathers' legacy code techniques — step-by-step with specific refactoring patterns and the Mikado method |
-| `agents/metrics-analyst` | Quantitative software quality analyst using CK metrics, cyclomatic complexity, Halstead measures, maintainability index, Fagan inspection, and ISO 9126/25010 |
+| `agents/software-engineering-analyst` | **Primary orchestrator** — Unified analyst that integrates all quality skills with conflict resolution when skills disagree (metrics vs smells, safety vs speed, quality vs timeline) |
+| `agents/bookworm` | Hyper-skeptical verifier that distrusts its own memory; verifies facts against live sources (Context7, web, sigmap) with confidence levels and fallback behavior when sources are unavailable |
+| `agents/code-quality-reviewer` | Comprehensive reviewer combining Fowler, Uncle Bob, Feathers, and Pragmatic principles with prioritization framework and auto-fix categorization |
+| `agents/refactoring-guide` | Step-by-step refactoring guide with stopping criteria, team workflow (branching, PRs, reviews), and refactoring metrics tracking |
+| `agents/metrics-analyst` | Quantitative analyst with language-specific metric guidance, CI quality gate configuration, and ISO 25010 assessment |
 
 ### Install an agent into a project
 

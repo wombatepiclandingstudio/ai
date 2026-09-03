@@ -151,6 +151,45 @@ Check for common anti-patterns:
 
 ---
 
+## Language-Specific Considerations
+
+Metrics apply differently across languages:
+
+| Language | CK Metrics | CC | Notes |
+|----------|-----------|-----|-------|
+| **Java/C#** | Full CK suite | Standard | All metrics directly applicable |
+| **Python** | Adapted (no interfaces) | Standard | LCOM less meaningful; use CC + MI |
+| **TypeScript** | Adapted (structural typing) | Standard | Interface segregation via types |
+| **Go** | No inheritance → DIT=0, NOC=0 | Standard | Focus on CBO, CC, MI |
+| **Rust** | No inheritance → DIT=0 | Standard | Traits ≈ interfaces; ownership affects CBO |
+| **JavaScript** | Prototype-based DIT | Standard | Use CC + MI; CBO via imports |
+| **Functional (Haskell/Elixir)** | Minimal OO metrics | Standard | Focus on CC, function length, MI |
+
+**Key insight:** OO metrics (DIT, NOC, LCOM) are less meaningful in functional languages.
+Focus on complexity (CC), size (LOC), and maintainability (MI) for all languages.
+
+## CI Integration — Quality Gates
+
+Enforce metrics in CI/CD to prevent regression:
+
+| Gate | Threshold | Action on Fail |
+|------|-----------|----------------|
+| **Max CC** | ≤ 20 per function | Block merge; requires refactor |
+| **Max Method Length** | ≤ 30 lines | Warn; block if > 50 |
+| **Max Class Length** | ≤ 300 lines | Warn; block if > 500 |
+| **Duplicate Code** | < 3% | Block merge |
+| **Min MI** | ≥ 40 | Warn; block if < 20 |
+| **Min Test Coverage** | ≥ 80% new code | Block merge |
+
+**Tools for CI integration:**
+- SonarQube quality gates (most comprehensive)
+- `radon` (Python) + `coverage` in CI
+- ESLint rules for complexity (`complexity`, `max-depth`, `max-lines-per-function`)
+- `tslint`/`eslint` for TypeScript complexity rules
+- `gocyclo` for Go cyclomatic complexity
+
+---
+
 ## Output Format
 
 For each analysis, provide:

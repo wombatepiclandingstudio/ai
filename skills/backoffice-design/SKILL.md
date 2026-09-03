@@ -128,6 +128,51 @@ Forbidden frontend-only duplication includes:
 
 The frontend may hide / disable actions for UX, but backend denial remains authoritative.
 
+## Operational UX patterns
+
+### Stepper / Wizard workflows
+
+For multi-step processes (onboarding, approval chains, data entry):
+
+- Show a visible progress indicator (step numbers or labels);
+- allow navigation to completed steps (but not forward past the current step);
+- persist form state across steps (no data loss on back navigation);
+- validate per step, not only at the end;
+- show a summary before final submission;
+- support save-and-resume for long processes.
+
+### Bulk operations
+
+For actions on multiple records (approve, reject, export, delete):
+
+- provide select-all / deselect-all checkboxes;
+- show a floating action bar or contextual toolbar when items are selected;
+- display a count of selected items;
+- require confirmation for destructive bulk actions (delete, archive);
+- report success/failure counts after bulk execution;
+- support cancellation of in-progress bulk operations.
+
+### Real-time status updates
+
+For workflows with asynchronous backend processing (extraction, validation, export):
+
+- use Server-Sent Events (SSE) or WebSocket for live status;
+- show per-item status badges (pending, processing, complete, failed);
+- display elapsed time or estimated completion when available;
+- provide a manual refresh fallback for environments where real-time is unavailable;
+- handle reconnection gracefully (show "reconnecting…" instead of breaking);
+- never poll more frequently than every 5 seconds.
+
+### Keyboard shortcuts for power users
+
+For high-volume operator workflows:
+
+- provide discoverable keyboard shortcuts (show a `?` help overlay);
+- support common patterns: `Ctrl+Enter` (submit), `Esc` (cancel/close), `Tab` (next field);
+- avoid overriding browser defaults (`Ctrl+S`, `Ctrl+F`);
+- provide visual feedback when a shortcut is triggered;
+- make shortcuts configurable when feasible.
+
 ## Cross-cutting UI/UX design patterns
 
 Beyond structure, apply the following design-pattern disciplines. They are priority-ordered;
@@ -246,22 +291,4 @@ Gate may WARN when:
 - configuration UI is UI-local only and persistence is explicitly out of scope;
 - performance budgets are exceeded but a mitigation plan and measurement are attached.
 
-## Cross-Tool Compatibility
 
-This skill follows the open **Agent Skills** standard — a `SKILL.md` folder that any compatible
-tool discovers at a well-known path (e.g. `.claude/skills/`, `.codex/skills/`, `.opencode/skills/`,
-`.cursor/skills/`, `.github/skills/`, `.kiro/skills/`, `.gemini/skills/`, `.kilocode/skills/`). The
-`SKILL.md` above is the single source of truth; it is installed unmodified into each tool.
-
-To expose this skill to a target project, run the repo's `install.sh` (it symlinks this folder
-into the chosen tool's path):
-
-```bash
-bash install.sh --tool claude,codex,cursor,kilocode,opencode --target /path/to/project
-bash install.sh --list-tools          # show all supported tools and their paths
-```
-
-For tools that do not read `SKILL.md` natively (they only consume a project memory file such as
-`AGENTS.md` / `CLAUDE.md` / `.windsurfrules`), point them at `references/condensed.md` — a flattened
-copy of the structure above. Full install details and the progressive-disclosure model are in this
-folder's `README.md`.
