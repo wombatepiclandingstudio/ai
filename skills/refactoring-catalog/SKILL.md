@@ -1,18 +1,18 @@
 ---
 name: refactoring-catalog
 description: >
-  Apply Martin Fowler's refactoring catalog to restructure existing code without changing
-  external behavior. Use when the user asks to refactor, clean up, improve design, reduce
-  technical debt, or restructure code; when code smells are identified; before adding features
-  to messy code; or when applying the boy scout rule. Covers the full catalog: Composing
-  Methods, Moving Features Between Objects, Organizing Data, Simplifying Conditional
-  Expressions, Simplifying Method Calls, and Dealing with Generalization.
+  Refactor code safely using Martin Fowler's proven catalog of behavior-preserving
+  transformations. Paste code with code smells (long methods, large classes, duplication,
+  feature envy, switch statements) — get specific refactoring recommendations with
+  before/after examples, the exact catalog technique to apply, and test verification
+  steps. Includes automated smell detection guidance and the full Composing Methods,
+  Moving Features, Organizing Data, Simplifying Conditionals, and Generalization catalog.
 version: "1.0"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [refactoring, code-smells, clean-code, design, fowler, technical-debt, boy-scout]
+  tags: [refactoring, code-smells, clean-code, design, fowler, technical-debt, before-after, behavior-preserving]
 ---
 
 # Refactoring Catalog Skill
@@ -292,18 +292,21 @@ A refactoring using this skill should produce:
 
 ---
 
-## Related Skills
+## Test Cases
 
-These skills work together with refactoring. Use the `software-engineering-analyst` agent
-to orchestrate them as an integrated system.
+### Test Case 1: Long method refactoring
+**Input:** A 60-line method that handles customer validation, database persistence, email notification, and audit logging.
+**Expected output:** Recommendation to Apply Extract Method, breaking the method into 4 focused methods (validateCustomer, saveToDatabase, sendNotification, logAuditEvent), with before/after code examples.
+**Assertion:** Output identifies the smell (Long Method), recommends Extract Method, and provides before/after code with test verification steps.
 
-| Skill | Connection |
-|-------|------------|
-| `clean-code-review` | Clean Code defines the goal state after refactoring — naming, functions, SOLID |
-| `legacy-code-workshop` | Legacy Code techniques enable refactoring by breaking dependencies and adding tests |
-| `pragmatic-development` | Pragmatic principles (DRY, orthogonality) are both causes and solutions for code smells |
-| `software-metrics-quality` | Metrics tell you WHERE to refactor (high CC → Extract Method, high LCOM → Extract Class) |
+### Test Case 2: Feature envy detection
+**Input:** A class `OrderFormatter` that repeatedly calls `order.getCustomer().getName()`, `order.getCustomer().getAddress()`, `order.getCustomer().getPaymentMethod()`.
+**Expected output:** Recommendation to Apply Move Method — move the formatting logic to the Customer class or extract a CustomerFormatter.
+**Assertion:** Output identifies Feature Envy smell and recommends Move Method or Extract Class.
 
-**Orchestrated by:** `software-engineering-analyst` agent
+### Test Case 3: Switch statement refactoring
+**Input:** A 15-case switch statement that calculates shipping cost based on order type (standard, express, international, wholesale, etc.).
+**Expected output:** Recommendation to Apply Replace Conditional with Polymorphism, with a strategy pattern or subclass approach, and before/after code.
+**Assertion:** Output identifies Switch Statements smell and recommends polymorphism. Before/after code preserves behavior.
 
 

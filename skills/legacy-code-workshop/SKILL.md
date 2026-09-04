@@ -1,17 +1,18 @@
 ---
 name: legacy-code-workshop
 description: >
-  Apply Michael Feathers' techniques for working effectively with legacy code: characterization
-  tests, dependency breaking (extract interface, parameterize constructor, factory injection,
-  sprout method, wrap method), the Mikado method, and understanding dependencies before changing.
-  Use when the user needs to change code without tests, add features to untested code, break
-  dependencies for testability, or systematically approach large-scale refactoring of legacy systems.
+  Safely modify legacy code that has no tests. Apply Michael Feathers' techniques:
+  write characterization tests to document existing behavior, break dependencies for
+  testability (extract interface, factory injection, sprout/wrap methods), and use
+  the Mikado method for large-scale refactoring. Includes a dependency-breaking decision
+  tree and sprout class technique. Paste untested code and get a step-by-step plan to
+  change it safely.
 version: "1.0"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [legacy-code, testing, dependency-breaking, mikado, feathers, characterization-tests, sprout, wrap]
+  tags: [legacy-code, testing, dependency-breaking, mikado, characterization-tests, untested-code, sprout, wrap]
 ---
 
 # Legacy Code Workshop Skill
@@ -311,10 +312,25 @@ A legacy code session should produce:
 
 ---
 
-## Related Skills
+## Test Cases
 
-These skills work together with legacy code techniques. Use the `software-engineering-analyst` agent
-to orchestrate them as an integrated system.
+### Test Case 1: Characterization test generation
+**Input:** A function `processOrder(order)` that calculates total, applies discount, updates inventory, and charges payment — with no existing tests.
+**Expected output:** At least 3 characterization tests: (1) test that a standard order produces the expected total, (2) test that a discounted order applies the discount correctly, (3) test that inventory is decremented. Each test captures existing behavior, not desired behavior.
+**Assertion:** Tests are characterization tests (document what the code DOES, not what it SHOULD do). Each test has a clear expected value based on running the code.
+
+### Test Case 2: Dependency-breaking decision tree
+**Input:** A class `ReportGenerator` that directly instantiates `DatabaseConnection` in its constructor and calls `connection.query()` — and you can change the constructor.
+**Expected output:** Recommendation to Apply Parameterize Constructor (decision tree path: "Can you change the constructor? YES → Parameterize Constructor"). Include before/after code.
+**Assertion:** Output follows the decision tree. Recommends the simplest technique that works (Parameterize Constructor, not Adapter or Facade).
+
+### Test Case 3: Mikado method planning
+**Input:** A goal: "Extract UserService from a 500-line GodClass that depends on DatabaseConnection, EmailService, CacheManager, and AuditLogger."
+**Expected output:** A Mikado graph showing: Extract UserService → needs DatabaseConnection extraction → needs connection pool refactoring → needs tests for connection pool. Each node is a dependency that must be resolved first.
+**Assertion:** Graph shows at least 3 levels of dependencies. No step is attempted without resolving its prerequisites.
+---
+
+## Companion Skills
 
 | Skill | Connection |
 |-------|------------|
@@ -322,7 +338,5 @@ to orchestrate them as an integrated system.
 | `clean-code-review` | Clean Code principles define the goal state after fixing legacy code |
 | `pragmatic-development` | Pragmatic practices (TDD, version control, testing) prevent code from becoming legacy |
 | `software-metrics-quality` | Metrics quantify legacy code risk and track improvement after changes |
-
-**Orchestrated by:** `software-engineering-analyst` agent
 
 

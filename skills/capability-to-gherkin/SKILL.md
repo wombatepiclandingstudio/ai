@@ -1,19 +1,19 @@
 ---
 name: capability-to-gherkin
 description: >
-  Converts a business capability map (L1 capabilities and L2 sub-capabilities with
-  descriptions, actors, and value statements) into executable Gherkin Features and
-  Scenarios for behavior-driven development (BDD). Bridges enterprise architecture
-  artifacts and automated test specifications. Use when you have a capability map
-  (from legacy-capability-extractor or similar output) and need BDD specs; when the
-  user asks to convert capabilities to Gherkin, Cucumber, or BDD tests; or when
-  integrating capability analysis with an OpenSpec specification-driven workflow.
+  Convert a business capability map into executable Gherkin BDD specifications.
+  Paste a capability map (JSON, Markdown, or YAML) describing your business
+  capabilities, actors, and value statements — get runnable .feature files with
+  scenarios, data tables, verification steps, and cross-capability coverage.
+  Includes triage of non-feature items (invariants, NFRs, deferred), regression
+  scenarios from bug findings, and machine validation. Works with Cucumber,
+  SpecFlow, and Behat.
 version: "1.2"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [bdd, gherkin, testing, specification, capabilities, openspec, scenario-outline, data-tables, cross-capability, triage, regression]
+  tags: [bdd, gherkin, testing, specification, capabilities, feature-files, cucumber, specflow, behat, scenario-outline, regression]
 ---
 
 # Business Capability to Gherkin Converter
@@ -25,10 +25,10 @@ Transforms a structured business capability map into **executable Gherkin specif
   regression scenarios from bug findings, and machine validation of the
   generated Gherkin.
 
-This skill is designed to consume the output of the [legacy-capability-extractor](https://github.com/agentskills/agentskills)
-skill — a two-level capability map with L1 capabilities, L2 sub-capabilities, descriptions,
-actors, and business value statements — and render it as Gherkin `.feature` files that
-Cucumber, SpecFlow, Behat, and other BDD runners can execute.
+This skill is designed to consume a structured business capability map — a two-level
+hierarchy with L1 capabilities, L2 sub-capabilities, descriptions, actors, and business
+value statements — and render it as Gherkin `.feature` files that Cucumber, SpecFlow,
+Behat, and other BDD runners can execute.
 
 ## Use when
 
@@ -386,20 +386,46 @@ A conversion using this skill should produce:
 
 ---
 
-## Relationship to legacy-capability-extractor
+## Test Cases
 
-This skill is designed as a **companion** to legacy-capability-extractor:
-
+### Test Case 1: Basic capability map conversion
+**Input:** A capability map with 2 L1 capabilities and 3 L2 sub-capabilities:
+```json
+{
+  "capabilities": [
+    {
+      "name": "Customer Management",
+      "description": "Manages customer lifecycle",
+      "actors": ["Customer Service Rep"],
+      "value": "Enable personalized service",
+      "subcapabilities": [
+        {"name": "Customer Registration", "description": "Register new customers"},
+        {"name": "Profile Updates", "description": "Update customer information"}
+      ]
+    },
+    {
+      "name": "Order Processing",
+      "description": "Handle order lifecycle",
+      "actors": ["Fulfillment Team"],
+      "value": "Ensure timely delivery",
+      "subcapabilities": [
+        {"name": "Order Creation", "description": "Create new orders"}
+      ]
+    }
+  ]
+}
 ```
-legacy-capability-extractor (A1–A7 pipeline) → a6-domain-model.md
-                                                             ↓
-                                          capability-to-gherkin (this skill)
-                                                             ↓
-                                          *.feature files (executable BDD specs)
-```
+**Expected output:** At least 2 `.feature` files with valid Gherkin syntax, each Feature containing "As a / I want / So that" narrative, at least one Scenario per L2, `@capability` and `@level2` tags, and `Given/When/Then` steps in business language.
+**Assertion:** Every L2 has at least one Scenario. No technical jargon (database names, class names) in steps.
 
-The two skills share a `dependencies` relationship in metadata. When both are installed, an
-agent analyzing legacy code can run the full pipeline: extract capabilities, then generate
-executable specifications from the resulting domain model.
+### Test Case 2: Triage of non-feature capabilities
+**Input:** A capability map including an invariant ("stats read transactions, not plan templates") and a deferred item ("Gamification — deferred to Phase 3").
+**Expected output:** A disposition table showing `invariant` and `deferred(reason)` dispositions. No Scenario generated for the deferred item. The invariant is documented as acceptance criteria in the owning Feature.
+**Assertion:** 100% of L2 items have a disposition. No false test obligations for deferred items.
+
+### Test Case 3: Cross-capability scenarios
+**Input:** A capability map with a dependency: "Order Processing depends on Customer Management."
+**Expected output:** At least one `@cross-capability` Scenario that exercises the dependency, with the dependent capability referenced in `Given` preconditions.
+**Assertion:** Every dependency edge in the map has a corresponding `@cross-capability` Scenario.
 
 

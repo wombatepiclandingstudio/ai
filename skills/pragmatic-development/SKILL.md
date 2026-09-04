@@ -1,17 +1,18 @@
 ---
 name: pragmatic-development
 description: >
-  Apply Andrew Hunt and David Thomas' Pragmatic Programmer principles: DRY, orthogonality,
-  tracer bullets, breaking coupling, good-enough software, the debugging mindset, and the
-  pragmatic starter kit (version control, testing, documentation). Use when establishing
-  development practices, planning architecture, approaching new projects, breaking tight
-  coupling, or applying pragmatic philosophy to software development decisions.
+  Review and improve software development practices using proven pragmatic engineering
+  principles. Covers DRY violation detection, orthogonality analysis, tracer bullet
+  architecture, coupling-breaking techniques with decision criteria, the debugging
+  mindset, and the pragmatic starter kit (version control, testing, documentation).
+  Use when starting a new project, breaking tight coupling, establishing team
+  development standards, or applying pragmatic philosophy to architecture decisions.
 version: "1.0"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [pragmatic, dry, orthogonality, tracer-bullets, coupling, debugging, starter-kit, architecture]
+  tags: [pragmatic, dry, orthogonality, tracer-bullets, coupling, architecture, team-standards, debugging]
 ---
 
 # Pragmatic Development Skill
@@ -342,10 +343,25 @@ A pragmatic development session should produce:
 
 ---
 
-## Related Skills
+## Test Cases
 
-These skills work together with pragmatic development. Use the `software-engineering-analyst` agent
-to orchestrate them as an integrated system.
+### Test Case 1: DRY violation detection
+**Input:** Code with three functions that each contain the same 10-line email validation regex and formatting logic.
+**Expected output:** Identification of algorithm duplication (DRY violation), recommendation to extract into a shared `validateAndFormatEmail()` utility, with before/after code.
+**Assertion:** Output identifies the specific duplication (3 copies of the same logic). Recommends extraction into a single function.
+
+### Test Case 2: Coupling analysis
+**Input:** A `ReportService` class that imports and directly uses 8 other classes (Database, Cache, EmailService, PdfGenerator, ExcelExporter, ChartLibrary, Logger, ConfigManager).
+**Expected output:** Identification of high coupling (CBO = 8), analysis of which dependencies are essential vs. accidental, and recommendations to reduce coupling using interfaces, dependency injection, or event-driven patterns.
+**Assertion:** Output identifies the coupling issue. Provides at least 2 specific decoupling recommendations with rationale.
+
+### Test Case 3: Tracer bullet recommendation
+**Input:** A request to build a new feature: "Add a reporting dashboard that pulls data from 3 APIs, processes it, and displays charts."
+**Expected output:** Recommendation to build a tracer bullet first — a thin end-to-end slice that connects to one API, fetches raw data, and displays it in a simple table — before building the full dashboard.
+**Assertion:** Output recommends tracer bullet approach. The proposed slice touches all layers (data → processing → display) but implements minimal functionality.
+---
+
+## Companion Skills
 
 | Skill | Connection |
 |-------|------------|
@@ -353,7 +369,5 @@ to orchestrate them as an integrated system.
 | `clean-code-review` | Clean Code and Pragmatic Programmer share principles (DRY, boy scout rule, SRP) |
 | `legacy-code-workshop` | Pragmatic practices (TDD, testing, version control) prevent code from becoming legacy |
 | `software-metrics-quality` | Metrics quantify DRY violations, coupling, and the effectiveness of pragmatic practices |
-
-**Orchestrated by:** `software-engineering-analyst` agent
 
 

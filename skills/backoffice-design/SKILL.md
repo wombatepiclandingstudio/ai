@@ -1,21 +1,19 @@
 ---
 name: backoffice-design
 description: >
-  Design and review enterprise backoffice / operator-console UIs: capability-page architecture,
-  list/detail and task workflows, server-side filtering/pagination, role-aware navigation,
-  loading/empty/error/permission states, configuration UX, and AI-assistant surfaces — augmented
-  with cross-cutting UI/UX design patterns (accessibility, touch, layout, typography, color,
-  animation, forms, navigation, charts) plus web-quality discipline: WCAG 2.2 accessibility,
-  Core Web Vitals performance (LCP/INP/CLS), and a security/robustness baseline. Use when building
-  or reviewing admin consoles, operator dashboards, task inboxes, validation / approval / archive /
-  export workflows, settings or configuration pages, or any internal tool with an operator workflow.
-  Tech-agnostic: the skill applies design patterns and structural rules, not a specific framework.
+  Design and review enterprise backoffice and operator-console UIs. Covers
+  capability-page architecture, list/detail workflows, task inboxes, server-side
+  filtering, role-aware navigation, loading/empty/error states, configuration UX,
+  and AI-assistant surfaces. Includes UI/UX fundamentals (forms, typography, color,
+  accessibility, touch targets, responsive design), WCAG 2.2 AA compliance,
+  Core Web Vitals performance (LCP/INP/CLS), and security baselines. Tech-agnostic:
+  applies design patterns, not framework code.
 version: "1.1"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [ui, ux, backoffice, design-system, accessibility, performance, security, operator-console]
+  tags: [ui, ux, backoffice, admin-panel, operator-console, accessibility, wcag-22, performance, task-workflow, design-system]
 ---
 
 # Backoffice Design Skill
@@ -447,4 +445,22 @@ Gate may WARN when:
 - configuration UI is UI-local only and persistence is explicitly out of scope;
 - performance budgets are exceeded but a mitigation plan and measurement are attached.
 
+---
+
+## Test Cases
+
+### Test Case 1: Capability page design
+**Input:** "Design an operator console for document ingestion with ingest, validate, archive, export, QA, and settings pages."
+**Expected output:** A design with one route per capability, shared navigation, list/detail patterns for validation and archive, server-side filtering, loading/empty/error states for each page, and role-aware action visibility.
+**Assertion:** Output includes at least 5 distinct capability pages. Each page specifies loading, empty, and error states. No single-page dashboard.
+
+### Test Case 2: Form UX review
+**Input:** A settings page form with 15 fields, no labels (placeholder-only), errors displayed at the top of the page, and a submit button that stays enabled during submission.
+**Expected output:** A review identifying: placeholder-only labels (violation), error placement (violation), missing submit disable (violation), and specific fixes for each.
+**Assertion:** Review identifies at least 3 violations from the UI/UX 101 section. Each violation includes a specific fix.
+
+### Test Case 3: Accessibility audit
+**Input:** A backoffice page with color-only status indicators (red = error, green = success), no alt text on icons, and keyboard-trapped modal.
+**Expected output:** A review identifying: color-only meaning (WCAG 1.4.1 violation), missing alt text (WCAG 1.1.1 violation), keyboard trap (WCAG 2.1.2 violation), with severity ratings and fixes.
+**Assertion:** All three violations are identified with WCAG success criteria references.
 

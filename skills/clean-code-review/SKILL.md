@@ -1,17 +1,17 @@
 ---
 name: clean-code-review
 description: >
-  Review and enforce Robert C. Martin's (Uncle Bob) Clean Code principles: meaningful names,
-  small single-purpose functions, one level of abstraction, proper error handling, SOLID
-  principles, TDD, and the boy scout rule. Use when reviewing code for quality, mentoring
-  developers on clean practices, enforcing naming conventions, checking function size,
-  validating SOLID compliance, or establishing team coding standards.
+  Review code for Clean Code compliance: meaningful naming, small single-purpose
+  functions, proper abstraction levels, SOLID principles, TDD patterns, and error
+  handling. Paste code and get a structured review with specific violations identified,
+  severity ratings, and before/after refactoring examples. Includes immutability
+  principles, test coverage strategy, and the boy scout rule.
 version: "1.0"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [clean-code, solid, tdd, naming, code-review, quality, uncle-bob, boy-scout]
+  tags: [clean-code, solid, tdd, naming, code-review, readability, maintainability, quality]
 ---
 
 # Clean Code Review Skill
@@ -370,10 +370,25 @@ A review using this skill should produce:
 
 ---
 
-## Related Skills
+## Test Cases
 
-These skills work together with clean code review. Use the `software-engineering-analyst` agent
-to orchestrate them as an integrated system.
+### Test Case 1: Naming violations
+**Input:** A function `calc()` with variables `d`, `tmp`, `res`, and a class `Proc` with method `doStuff()`.
+**Expected output:** A review identifying: single-letter variables (violation), abbreviations (violation), unclear class name (violation), unclear method name (violation). Recommendations: rename to `calculateElapsedDays()`, `temporaryResult`, `response`, `Processor`, `processOrder()`.
+**Assertion:** At least 4 naming violations identified. Each includes a specific rename recommendation.
+
+### Test Case 2: Function size violation
+**Input:** A 45-line function that parses CSV, validates rows, transforms data, writes to database, sends email, and logs results.
+**Expected output:** A review identifying: function does multiple things (SRP violation), exceeds 20-line guideline, mixed abstraction levels. Recommendations to extract into parseCsv(), validateRows(), transformData(), persistToDatabase(), sendNotification(), logResults().
+**Assertion:** Output identifies the function as violating SRP and the 20-line guideline. Recommends at least 4 extract-method operations.
+
+### Test Case 3: SOLID violation
+**Input:** A `UserService` class with methods: createUser(), deleteUser(), sendWelcomeEmail(), generateReport(), exportToCSV(), calculateMetrics().
+**Expected output:** A review identifying: SRP violation (UserService handles CRUD, email, reporting, metrics), recommending extraction into UserService, EmailService, ReportService, MetricsService.
+**Assertion:** Output identifies SRP violation and recommends splitting into at least 3 focused classes.
+---
+
+## Companion Skills
 
 | Skill | Connection |
 |-------|------------|
@@ -381,7 +396,5 @@ to orchestrate them as an integrated system.
 | `legacy-code-workshop` | Legacy Code techniques enable fixing violations by breaking dependencies |
 | `pragmatic-development` | DRY and orthogonality are both Clean Code and Pragmatic principles |
 | `software-metrics-quality` | Metrics quantify Clean Code violations (SOLID → CBO/LCOM, naming → MI) |
-
-**Orchestrated by:** `software-engineering-analyst` agent
 
 

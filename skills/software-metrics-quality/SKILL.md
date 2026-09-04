@@ -1,17 +1,18 @@
 ---
 name: software-metrics-quality
 description: >
-  Apply software engineering metrics and quality processes: CK object-oriented metrics (WMC,
-  DIT, NOC, CBO, RFC, LCOM), cyclomatic complexity, Halstead complexity measures, maintainability
-  index, Fagan code inspection process, ISO 9126/25010 quality model, and common pitfalls to
-  avoid. Use when measuring code complexity, evaluating maintainability, planning code inspections,
-  establishing quality standards, or assessing software quality against industry benchmarks.
+  Measure and improve software quality using industry-standard metrics. Analyze code
+  complexity (cyclomatic complexity, CK metrics), maintainability (Halstead, MI),
+  and structural quality (ISO 25010). Get a prioritized report with risk hotspots,
+  quality gates, CI integration guidance, and language-specific considerations.
+  Includes Fagan code inspection process and common pitfalls across refactoring,
+  testing, design, code review, estimation, and architecture.
 version: "1.0"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [metrics, quality, ck-metrics, cyclomatic-complexity, halstead, maintainability, fagan, iso-9126, iso-25010, inspection, pitfalls]
+  tags: [metrics, quality, code-quality, complexity-analysis, maintainability, fagan, iso-25010, cyclomatic-complexity]
 ---
 
 # Software Metrics & Quality Skill
@@ -180,6 +181,24 @@ A metrics analysis should produce:
 - Pitfalls analysis with recommendations
 - Prioritized action plan
 
+---
+
+## Test Cases
+
+### Test Case 1: Cyclomatic complexity analysis
+**Input:** A function with 3 nested if-statements, 2 while loops, and 1 switch with 4 cases.
+**Expected output:** Cyclomatic complexity calculation: D = 3 (ifs) + 2 (whiles) + 4 (switch cases) = 9 decision points, M = 9 + 1 = 10. Risk classification: Low (1-10). Recommendation: acceptable complexity, but monitor if it grows.
+**Assertion:** CC calculation is correct (M = 10). Risk level matches the threshold table (Low).
+
+### Test Case 2: Maintainability Index calculation
+**Input:** A file with 500 LOC, cyclomatic complexity of 25, and Halstead volume of 2000.
+**Expected output:** MI calculation: MI = max(0, (171 - 5.2×ln(2000) - 0.23×25 - 16.2×ln(500)) × 100 / 171). Risk: Low MI (needs refactoring). Action: prioritize for refactoring.
+**Assertion:** MI formula is applied correctly. Action matches the MI threshold table.
+
+### Test Case 3: Pitfall detection
+**Input:** A team that refactors code while simultaneously adding new features, tests only happy paths, and has no regression strategy.
+**Expected output:** Identification of 3 pitfalls: (1) Refactoring + features simultaneously, (2) Testing only happy paths, (3) No regression strategy. Each with prevention recommendation.
+**Assertion:** All 3 pitfalls are identified from the pitfalls reference. Each includes a specific prevention strategy.
 ---
 
 ## Tools

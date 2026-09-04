@@ -1,21 +1,19 @@
 ---
 name: web-architecture-guardrails
 description: >
-  Enforces web architecture integrity when adding or modifying pages, components, and routes.
-  Prevents structural fragmentation — duplicated shells, broken routing, drifted navigation,
-  inconsistent styles, and scattered meta — by requiring a shared-layout-first approach and
-  a mandatory pre/post change audit. Use this skill whenever the user asks to add a new page,
-  route, section, or view to an existing web project; restructure layouts or navigation;
-  refactor shared components; or review a project for architectural consistency. Also triggers
-  on requests like "add a page," "create a new route," "update the navbar," "this page looks
-  different from the rest," "the footer is missing," "links are broken," or "make it consistent."
-  Framework-agnostic: the skill defines patterns and a verification workflow, not framework code.
+  Prevent web project fragmentation when adding pages, routes, or components.
+  Enforces shared-layout-first architecture, consistent navigation, proper meta tags,
+  and link integrity through a mandatory audit-implement-verify workflow. Catches
+  duplicated shells, broken routing, style drift, and inconsistent SEO before they ship.
+  Includes framework-specific patterns for Astro, Next.js, Vue/Nuxt, SvelteKit, Angular,
+  React SPA, and server-rendered apps. Covers micro-frontend, monorepo, i18n, and
+  performance architecture.
 version: "1.0"
 license: MIT
 metadata:
   author: personal
   type: workflow
-  tags: [architecture, frontend, layout, routing, templating, navigation, consistency, web]
+  tags: [architecture, frontend, shared-layout, routing, navigation, consistency, page-drift, meta-tags]
 ---
 
 # Web Architecture Guardrails
@@ -460,6 +458,24 @@ A request using this skill should provide:
 - A visual or structural comparison with at least one existing page (show consistency)
 - Build/type/lint checks passing when available
 
+---
+
+## Test Cases
+
+### Test Case 1: Shell duplication detection
+**Input:** A new page `/about` that includes its own `<html>`, `<head>`, `<body>`, `<nav>`, and `<footer>` instead of importing the shared layout.
+**Expected output:** Audit identifying: shell duplication (violation), route registered outside layout hierarchy (violation), navigation not updated (violation). Corrected page that imports the shared layout and contains only page content.
+**Assertion:** Audit identifies all 3 violations. Corrected page has no `<html>`, `<head>`, `<body>`, `<nav>`, or `<footer>` tags.
+
+### Test Case 2: Navigation consistency check
+**Input:** A project where the nav has 5 items on the home page but 4 items on the about page (missing "About" link).
+**Expected output:** Identification of navigation inconsistency: the about page's nav is missing the "About" link. Recommendation to use the shared nav component and update the single nav source.
+**Assertion:** Output identifies the specific missing link. Recommends using the shared navigation component.
+
+### Test Case 3: Meta tag audit
+**Input:** A page with no `<title>`, no `<meta name="description">`, and no Open Graph tags.
+**Expected output:** Identification of missing meta tags: title (required), description (required), OG tags (recommended). Recommended values based on page content.
+**Assertion:** Output identifies all missing meta tags. Provides recommended title and description values.
 ---
 
 ## Regression Test Reconciliation
