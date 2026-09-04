@@ -41,69 +41,6 @@ Given a request to build or review an internal / operator-facing UI, the skill i
   security/robustness baseline (CSP, Trusted Types, SRI, semantic HTML, error handling), detailed in
   `references/web-quality.md`.
 
-## Repository Layout
-
-This repo is organized as:
-
-```
-.
-├── agents/            # Agent definitions (custom agent prompts/configs)
-├── skills/            # Reusable skills (open Agent Skills standard)
-│   ├── legacy-capability-extractor/
-│   └── backoffice-design/
-│       ├── SKILL.md               # Canonical skill definition (source of truth)
-│       ├── README.md              # This file
-│       ├── evals/
-│       │   └── evals.json         # Eval scenarios (build + review)
-│       └── references/
-│           ├── design-patterns.md # Structural UI/UX pattern rules + pre-delivery checklist
-│           ├── web-quality.md      # WCAG 2.2, Core Web Vitals, security best-practices
-│           └── condensed.md       # Fallback for tools that don't read SKILL.md
-├── install.sh         # Cross-platform installer (symlinks skills into target projects)
-└── README.md
-```
-
-## Install to a Target Project
-
-Skills are discovered by tools at well-known paths. `install.sh` symlinks this skill folder
-into a target project under the path each tool expects:
-
-```bash
-# Install for one tool
-bash install.sh --tool claude --target /path/to/project
-
-# Install for several tools at once
-bash install.sh --tool claude,codex,cursor --target /path/to/project
-
-# List supported tools and their install paths
-bash install.sh --list-tools
-
-# Uninstall
-bash install.sh --tool claude --target /path/to/project --remove
-```
-
-### Supported tools
-
-| Tool | Installs into |
-|------|---------------|
-| Claude Code | `.claude/skills/` |
-| OpenAI Codex | `.codex/skills/` |
-| OpenCode | `.opencode/skills/` |
-| Kilo Code | `.kilocode/skills/` |
-| Cursor | `.cursor/skills/` |
-| GitHub Copilot / VS Code | `.github/skills/` |
-| Kiro (AWS) | `.kiro/skills/` |
-| Gemini CLI | `.gemini/skills/` |
-| Roo Code / Cline | `.roo/skills/` |
-| Goose | `.goose/skills/` |
-
-### Tools without native SKILL.md support
-
-For agents that only read a project memory file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
-`.windsurfrules`, etc.), point them at `references/condensed.md` or paste its content into the
-tool's rules file. The condensed version carries the trigger phrases, the structural rules, and the
-design-pattern priority table without the verbose rationale.
-
 ## Use It
 
 Open any supported AI coding tool in a project where the skill is installed and ask:

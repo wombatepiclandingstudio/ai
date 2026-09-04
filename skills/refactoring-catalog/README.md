@@ -14,46 +14,6 @@ Given code that needs restructuring, the skill guides the agent through:
 - **Safe Refactoring Process** — Tests-first, small incremental steps, behavior preservation
 - **When to Refactor** — Rule of Three, before/after features, during bug fixes, code review
 
-## Install to a Target Project
-
-```bash
-# Install for one tool
-bash install-skill.sh --tool claude --target /path/to/project
-
-# Install for several tools at once
-bash install-skill.sh --tool claude,codex,cursor --target /path/to/project
-
-# Install only this skill
-bash install-skill.sh --tool claude --target /path/to/project --id refactoring-catalog
-
-# List supported tools and their install paths
-bash install-skill.sh --list-tools
-
-# Uninstall
-bash install-skill.sh --tool claude --target /path/to/project --remove
-```
-
-### Supported tools
-
-| Tool | Installs into |
-|------|---------------|
-| Claude Code | `.claude/skills/` |
-| OpenAI Codex | `.codex/skills/` |
-| OpenCode | `.opencode/skills/` |
-| Kilo Code | `.kilocode/skills/` |
-| Cursor | `.cursor/skills/` |
-| GitHub Copilot / VS Code | `.github/skills/` |
-| Kiro (AWS) | `.kiro/skills/` |
-| Gemini CLI | `.gemini/skills/` |
-| Roo Code / Cline | `.roo/skills/` |
-| Goose | `.goose/skills/` |
-
-### Tools without native SKILL.md support
-
-For agents that only read a project memory file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
-`.windsurfrules`, etc.), point them at `references/condensed.md` or paste its content into the
-tool's rules file.
-
 ## Use It
 
 Open any supported AI coding tool in a project where the skill is installed and ask:
