@@ -44,6 +44,162 @@ Use this skill when a request touches:
 Do not use this skill for landing pages, pure marketing pages, simple static forms, or
 backend-only modules with no operator/user workflow.
 
+## UI/UX 101 — The basics
+
+Before applying any advanced pattern, internalize these fundamentals. Every rule below is
+non-negotiable for operator-facing software.
+
+### Visibility of system status
+
+The user must always know what is happening. Never leave the user wondering "did that work?"
+
+- Show loading indicators for any async operation > 200ms.
+- Show success/error messages after every mutation (create, update, delete).
+- Show progress for multi-step operations (upload percentage, batch processing count).
+- Disable submit buttons while a request is in flight to prevent double-submission.
+
+**Loading variants — use the right one:**
+| Pattern | When to use | Anti-pattern |
+|---------|-------------|--------------|
+| **Skeleton screen** | Page or section loading with known structure (list, card grid, form) | Spinner on an entire page that could show layout immediately |
+| **Spinner** | Inline action, button click, short operation (< 3s) | Spinner for page-level loads — user can't see what's coming |
+| **Progress bar** | Determinate duration (upload, batch, export) | Indeterminate bar for unknown duration — user doesn't know if it's stuck |
+| **Inline text** | Tiny operations (auto-save, status flip) | Toast for every micro-action — noise |
+| **Disabled + spinner** | Submitting a form | Nothing — user clicks again and again |
+
+**Empty states are not blank screens.** Every list, table, and search result needs an empty
+state that tells the user:
+1. **What happened** — "No results found" or "No records yet"
+2. **Why** — "No records match your filters" or "You haven't created any orders"
+3. **What to do** — "Try adjusting your search" or "Create your first order"
+Never show a blank area where content should be — it looks broken.
+
+### When to disable, hide, or enable inputs
+
+| Situation | Action | Why |
+|-----------|--------|-----|
+| Field depends on another field's value (e.g., "State" depends on "Country") | **Disable** until parent is selected | Prevents invalid combinations |
+| Action requires permission the user lacks | **Hide** the control entirely | Don't show what they can't do |
+| Action requires permission the user lacks but should know exists | **Disable** with tooltip explaining why | Awareness without confusion |
+| Form is incomplete (required fields empty) | **Disable** submit button | Prevents partial submissions |
+| Operation is in progress | **Disable** the triggering button | Prevents duplicate requests |
+| Data is read-only by design (audit logs, finalized records) | **Disable** all edit controls | Clear signal: "this can't be changed" |
+| Network is offline or API is unreachable | **Disable** all mutation controls | Prevent guaranteed failures |
+
+**Never** disable a field without telling the user WHY. A greyed-out input with no
+explanation is a mystery, not a feature.
+
+### Color and contrast
+
+- **Text contrast:** 4.5:1 minimum for body text, 3:1 for large text (≥18pt or ≥14pt bold).
+- **UI component contrast:** 3:1 for borders, icons, and focus indicators against their background.
+- **Never use color alone** to convey meaning. A red field must also have an icon, text, or
+  border change. Colorblind users (~8% of males) won't see it otherwise.
+- **Semantic color tokens** (not raw hex). `--color-error`, `--color-success`, `--color-warning`
+  instead of `#ff0000`. This enforces consistency and makes theming possible.
+- **Gray-on-gray is a readability killer.** If you squint to read it, it fails. Test with a
+  contrast checker tool.
+- **Dark mode is not just inverting colors.** It needs separate token definitions, reduced
+  saturation for backgrounds, and adjusted shadow/elevation strategy.
+
+### Typography fundamentals
+
+- **Base size: 16px.** Body text smaller than 14px is hard to read for anyone over 40.
+- **Line height: 1.5× for body text.** Tighter (1.3×) is acceptable in dense data tables
+  but test readability.
+- **Line length: 50–75 characters per line.** Longer lines fatigue the eye. Use `max-width`
+  on text containers (~65ch).
+- **One typeface family** for the entire UI. Use weight (400, 500, 600, 700) and size for
+  hierarchy, not different fonts.
+- **Monospace for code, IDs, and technical values.** Never use monospace for body text.
+- **Don't use bold for everything.** Bold is a highlight, not a paragraph style.
+
+### Touch vs. mouse interactions
+
+- **Minimum touch target: 44×44px** (WCAG 2.2). Aim for 48×48px. Below 24×24px is
+  inaccessible regardless of input method.
+- **8px minimum spacing** between adjacent touch targets to prevent mis-taps.
+- **No hover-only affordances.** If a tooltip or dropdown only appears on hover, touch
+  users can never see it. Provide an alternative (tap, long-press, or always-visible).
+- **Press states matter.** A button needs `:active` feedback (scale, darken, or shift)
+  within 50ms. Delayed feedback feels unresponsive.
+
+### Responsive design basics
+
+- **Mobile-first:** Start with the smallest screen, add complexity as space grows.
+- **Breakpoints by content, not device:** When the layout breaks or text wraps badly,
+  that's a breakpoint — not "because iPad."
+- **No horizontal scroll.** Ever. Content reflows. Tables become cards on small screens.
+- **320px minimum.** The UI must work at 320px viewport width without zooming.
+- **Allow zoom.** Never set `user-scalable=no` or `maximum-scale=1`. Users with low
+  vision need to zoom.
+- **Stack over sprawl.** On narrow screens, side-by-side elements stack vertically.
+  Two-column forms become one-column. Sidebar moves above content.
+
+### Modals and dialogs
+
+Use modals sparingly — they interrupt the user's workflow.
+
+- **Confirmation only.** Use modals for destructive actions that need explicit confirmation.
+  Not for informational messages (use inline text or toast).
+- **Escape always works.** `Esc` closes the modal. Clicking the backdrop closes it.
+  A visible close button is mandatory.
+- **Focus trap.** When a modal opens, focus moves into it. Tab cycles within the modal.
+  When it closes, focus returns to the trigger element.
+- **No modal-on-modal.** Never stack modals. If a modal needs a confirmation, replace the
+  first modal's content instead.
+- **Short content.** If the modal body needs scrolling, it's too long. Use a full page instead.
+
+### Toast and notification patterns
+
+- **Toast = brief, non-blocking, auto-dismiss.** Use for success confirmations, minor errors,
+  or status updates. 3–5 seconds display time.
+- **Stack from top-right or bottom-right.** Never obscure critical UI elements (navigation,
+  form fields, primary action buttons).
+- **Max 3 visible toasts.** Older toasts dismiss when new ones arrive. Don't flood the screen.
+- **Actionable toasts** when possible: "Record saved. Undo?" is better than just "Saved."
+- **Error toasts should persist** until dismissed. Don't auto-dismiss error messages — the
+  user needs time to read and act on them.
+- **Never use toasts for complex information.** If it needs a title, body, and action button,
+  use a banner or inline notification instead.
+
+### Data tables basics
+
+Tables are the backbone of operator UIs. Get them right:
+
+- **Sticky header.** When scrolling long tables, the header must stay visible.
+- **Sticky first column** (optional but valuable). When horizontal scroll is needed, keep
+  the identifier column visible.
+- **Row height: 48–56px** for touch, 40px for mouse-only. Don't cram rows — readability
+  trumps density.
+- **Right-align numbers.** Decimal points should line up. Left-align text.
+- **Sortable column headers.** Show the current sort direction with an arrow icon.
+- **Row hover state.** Subtle background change on hover to help the eye track across rows.
+- **Selection indicator.** When rows are selectable, show a checkbox or highlight on the
+  entire row, not just a tiny checkbox.
+- **Empty table state.** Never show an empty table with just headers. Show "No records found"
+  with an explanation and action.
+
+### Search and filtering
+
+- **Search input visible by default.** Don't hide it behind an icon or toggle. Operators
+  search constantly.
+- **Search scope is clear.** "Search orders" or "Search by customer name" — not just a
+  magnifying glass icon.
+- **Debounce search input** (300ms). Don't fire a request on every keystroke.
+- **Clear button.** An × inside the search input to clear the query in one click.
+- **Filter chips/tags.** Show active filters as removable chips below the search bar.
+  "Status: Active × Country: US ×" — the user sees what's applied.
+- **Filter reset.** A single "Clear all filters" button when multiple filters are active.
+- **Results count.** Always show "Showing 1–25 of 342 orders" so the user knows the scope.
+
+### The "grandma test"
+
+If someone unfamiliar with the system can complete the core task without instructions, the
+UI is clear enough. If they need a manual, the design failed. This doesn't mean the UI is
+"simple" — it means it's intuitive. Complexity in the domain is fine; complexity in the
+interface is not.
+
 ## Required UX shape
 
 When this skill is selected, generated frontend should prefer:
