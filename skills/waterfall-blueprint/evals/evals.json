@@ -1,0 +1,60 @@
+{
+  "skill_name": "waterfall-blueprint",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to build a customer support ticketing system. Customers submit tickets, agents respond and resolve them. Help me create a complete specification.",
+      "expected_output": "The agent should begin Phase 0 (Intake & Scoping) by asking follow-up questions about business context, scope, stakeholders, and constraints. Then proceed to Phase 1 (Requirements Elicitation) with systematic drill-down through all 8 requirement categories. Should produce an SRS with at least 20 functional requirements, each with unique IDs (FR-NNN), priorities, and acceptance criteria. Should include a Requirements Traceability Matrix.",
+      "files": [],
+      "expectations": [
+        "Agent asks at least 8 follow-up questions before generating any documents",
+        "Agent produces a Project Context Document (PCD) and presents it for confirmation",
+        "Agent works through all 8 requirement categories (functional, interfaces, performance, database, security, safety, quality, constraints)",
+        "Every functional requirement has a unique ID (FR-NNN format)",
+        "Every requirement has a priority (Must/Should/Could/Won't)",
+        "Every requirement has acceptance criteria",
+        "Performance requirements are quantified (response time, throughput, concurrency)",
+        "Agent produces an SRS following IEEE 830 structure",
+        "Agent produces a Requirements Traceability Matrix (RTM)",
+        "Agent produces at least one Gate Review Report",
+        "No vague requirements without quantification",
+        "No implementation details in requirements (technology choices deferred)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Here's my partial requirements doc: The system shall encrypt all data at rest. The system shall support full-text search across all data without requiring decryption. The system shall be fast. The system shall be user-friendly.",
+      "expected_output": "The agent should review the requirements and identify: (1) contradiction between encryption-at-rest and searchable-without-decryption, (2) vague requirement 'fast' without quantification, (3) vague requirement 'user-friendly' without criteria, (4) missing requirement IDs, (5) missing error conditions, (6) missing acceptance criteria. Should flag the contradiction and ask the user to resolve before proceeding. Should rewrite vague requirements with quantified criteria.",
+      "files": [],
+      "expectations": [
+        "Agent identifies the contradiction between encryption-at-rest and full-text-search-without-decryption",
+        "Agent asks the user to resolve the contradiction before proceeding",
+        "Agent identifies 'fast' as a vague requirement and asks for quantification",
+        "Agent identifies 'user-friendly' as a vague requirement and asks for criteria",
+        "Agent notes missing requirement IDs and provides FR-NNN format",
+        "Agent adds error conditions to requirements that lack them",
+        "Agent adds acceptance criteria to requirements that lack them",
+        "Agent does NOT produce a design document until the contradiction is resolved",
+        "Agent rewrites vague requirements with specific, testable criteria"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have a requirements doc for a document management system. Can you review it against IEEE 830 and fill in the gaps? The system should manage documents, support version control, and allow searching.",
+      "expected_output": "The agent should review the partial requirements against IEEE 830 structure and identify gaps: missing Introduction section, missing Overall Description, missing external interface requirements, missing performance requirements, missing security requirements, missing quality attributes, missing RTM. Should produce a complete SRS with all IEEE 830 sections populated, filling gaps through interactive follow-up questions.",
+      "files": [],
+      "expectations": [
+        "Agent identifies which IEEE 830 sections are missing or incomplete",
+        "Agent asks follow-up questions to fill each gap",
+        "Agent produces an SRS with all IEEE 830 sections populated",
+        "Agent adds external interface requirements (UI, API, software)",
+        "Agent adds performance requirements (quantified)",
+        "Agent adds security requirements (authentication, authorization, encryption)",
+        "Agent adds quality attributes (availability, reliability, maintainability)",
+        "Agent produces a Requirements Traceability Matrix",
+        "Agent runs quality criteria check (necessary, unambiguous, complete, consistent, verifiable, traceable, modifiable, ranked)",
+        "Agent identifies and resolves any contradictions in the original requirements"
+      ]
+    }
+  ]
+}
