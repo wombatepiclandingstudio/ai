@@ -1,0 +1,59 @@
+{
+  "skill_name": "test-case-validation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have 200 test cases for a web application regression suite traced to 50 requirements. Some requirements have 8-10 test cases each. I suspect there's redundancy. Can you review my test cases for overlap and identify what to remove?",
+      "expected_output": "The agent should begin Stage 0 (Intake & Inventory) by asking about the test case format and structure. Then proceed to Stage 2 (Overlap Detection) using traceability matrix analysis and functional overlap detection. Should identify exact duplicates, functional duplicates, and partial overlaps. Should produce an Overlap Report with classifications and recommendations for every overlap pair. Should calculate overlap rate and provide a summary.",
+      "files": [],
+      "expectations": [
+        "Agent asks about test case format before proceeding",
+        "Agent builds a traceability matrix (requirements → test cases)",
+        "Agent identifies at least 3 overlap classifications (exact duplicate, functional duplicate, partial overlap)",
+        "Agent provides specific recommendations (remove, consolidate, keep) for every overlap found",
+        "Agent calculates overlap rate percentage",
+        "Agent identifies coverage gaps (requirements with 0 test cases)",
+        "Agent identifies unjustified tests (test cases with no requirement traceability)",
+        "Agent produces an Overlap Report with summary statistics",
+        "Agent flags requirements with 5+ test cases as potential redundancy",
+        "Agent distinguishes between valid multi-test requirements (different scenarios) and redundant ones"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have 5 test cases for a login form: (1) valid username + valid password = success, (2) valid username + valid password = success, (3) valid username + valid password = success, (4) invalid username = error, (5) valid username + valid password = success. Can you validate these and fill in the gaps?",
+      "expected_output": "The agent should identify: (1) TC-001, TC-002, TC-003, TC-005 are exact duplicates (same happy path), (2) Missing error cases (invalid password, empty fields, locked account, max length, special characters), (3) Missing boundary cases (min/max length username/password), (4) Missing edge cases (SQL injection, XSS, null values). Should recommend consolidating duplicates to 1 happy-path test and generating at least 10 new test cases using ECP + BVA + error guessing.",
+      "files": [],
+      "expectations": [
+        "Agent identifies TC-001, TC-002, TC-003, TC-005 as exact duplicates",
+        "Agent recommends consolidating to 1 happy-path test case",
+        "Agent identifies missing error cases (invalid password, empty fields, locked account)",
+        "Agent identifies missing boundary cases (min/max length)",
+        "Agent identifies missing edge cases (special characters, injection)",
+        "Agent recommends generating new test cases using ECP",
+        "Agent recommends generating new test cases using BVA",
+        "Agent recommends generating new test cases using error guessing",
+        "New test cases have complete steps and expected results",
+        "New test cases are categorized with correct level (unit/system) and type (functional/security)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My team has test cases where some unit tests actually test the full system through the UI, some integration tests only test a single function, and some system tests are labeled as unit tests. We also need to decide what to automate. Can you categorize everything correctly and recommend an automation strategy?",
+      "expected_output": "The agent should: (1) Correct categorization based on what is tested (not who tests it) — UI tests are system-level, single-function tests are unit-level regardless of labels, (2) Reclassify every mislabeled test with rationale, (3) Produce an Automation Recommendation separating tests into automate/keep-manual/review-after-first-pass based on frequency, stability, determinism, and ROI criteria.",
+      "files": [],
+      "expectations": [
+        "Agent corrects categorization based on what is tested, not who tests it",
+        "Agent reclassifies UI tests as system-level regardless of original label",
+        "Agent reclassifies single-function tests as unit-level regardless of original label",
+        "Agent provides rationale for every reclassification",
+        "Agent produces an Automation Recommendation with clear categories",
+        "Agent applies the frequency criterion (automate if run ≥3 times)",
+        "Agent applies the stability criterion (automate stable features)",
+        "Agent applies the determinism criterion (automate clear pass/fail)",
+        "Agent separates regression tests as highest automation priority",
+        "Agent identifies usability/exploratory tests as keep-manual"
+      ]
+    }
+  ]
+}
