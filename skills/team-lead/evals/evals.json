@@ -1,0 +1,54 @@
+{
+  "skill_name": "team-lead",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to review the entire src/ directory. I want metrics analysis, code quality review, and refactoring recommendations. Do it all in parallel with the available agents.",
+      "expected_output": "The agent should decompose into 3 parallel tasks (T-001: metrics, T-002: quality review, T-003: refactoring), each assigned to the right specialist (metrics-analyst, code-quality-reviewer, refactoring-guide) using Caveman Handoff format. Should produce task decomposition with done conditions, token budgets, and dependency mapping. After all tasks complete, should integrate findings into a unified report.",
+      "files": [],
+      "expectations": [
+        "Agent decomposes into exactly 3 tasks (metrics, quality, refactoring)",
+        "Each task assigned to the correct specialist agent",
+        "Every assignment uses Caveman Handoff format (ASSIGN, TO, TASK, CONTEXT, OUTPUT, DONE, CONSTRAINTS)",
+        "Each task has a specific, testable done condition",
+        "Token budgets estimated per task",
+        "Tasks identified as parallel (no dependencies between them)",
+        "Integration step produces unified findings (not siloed fragments)",
+        "No preamble or verbose language in any message",
+        "Status tracking format used for progress monitoring"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The waterfall-blueprint agent produced an SRS at docs/srs.md. Now I need test cases generated from it and validated. Coordinate the handoff efficiently.",
+      "expected_output": "The agent should produce a HANDOFF message from waterfall-blueprint output to test-case-validation input, using the explicit HANDOFF protocol. The message should reference the SRS file path (not dump its contents), specify what the test-case-validation agent should do, and identify any gaps.",
+      "files": [],
+      "expectations": [
+        "HANDOFF message produced with all 4 sections (ARTIFACTS, SUMMARY, NEXT, GAPS)",
+        "SRS referenced by file path (docs/srs.md), not contents included",
+        "SUMMARY is one line describing what was produced",
+        "NEXT specifies exactly what the test-case-validation agent should do",
+        "GAPS section explicitly states if anything is missing",
+        "Handoff message is ≤120 tokens",
+        "No preamble, no restating, no pleasantries",
+        "Clear task assignment for the test-case-validation agent"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The code-quality-reviewer says to extract 5 classes from UserService. The metrics-analyst says metrics are moderate and extraction isn't warranted. Resolve this conflict.",
+      "expected_output": "The agent should identify the conflict type (approach conflict), check facts (are the smells real despite moderate metrics?), apply the priority hierarchy, document the decision with one-line rationale, and notify affected agents in Caveman format.",
+      "files": [],
+      "expectations": [
+        "Conflict identified as approach conflict between two agents",
+        "Facts checked before resolution (are smells real vs. metrics moderate?)",
+        "Priority hierarchy applied (which principle drives the decision)",
+        "Decision documented with one-line rationale",
+        "Affected agents notified in Caveman format (CONFLICT message)",
+        "Resolution message ≤60 tokens",
+        "Decision is actionable (not wishy-washy)",
+        "Rationale references the priority that drove the decision"
+      ]
+    }
+  ]
+}
