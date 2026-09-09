@@ -373,69 +373,66 @@ Before components, establish tokens:
 }
 ```
 
-**For wp-admin environments**, use the WordPress admin token system instead:
+**For wp-admin environments (WordPress 7.1+)**, use the new Design System Theming
+layer. Tokens follow the [W3C DTCG specification](https://www.designtokens.org/)
+ and are exposed as CSS custom properties:
 
 ```css
-/* wp-admin tokens (Track B) */
+/* WordPress 7.1 Design System tokens (DTCG-spec) */
 :root {
-  /* WordPress admin theme color — the only dynamic token */
+  /* Accent — generated from seed colors via ThemeProvider */
   --wp-admin-theme-color: #3858e9;
   --wp-admin-theme-color--rgb: 56, 88, 233;
   --wp-admin-theme-color-darker-10: #2145e6;
   --wp-admin-theme-color-darker-20: #183ad6;
   --wp-admin-border-width-focus: 1.5px;
+
+  /* Semantic color tokens */
+  --wp-color-success: #4ab866;
+  --wp-color-warning: #f0b849;
+  --wp-color-error: #cc1818;
+  --wp-color-info: #3858e9;
+
+  /* Elevation tokens */
+  --wp-elevation-xs: 0 4px 4px rgba(0,0,0,0.01), 0 3px 3px rgba(0,0,0,0.02);
+  --wp-elevation-s: 0 8px 8px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.05);
+  --wp-elevation-m: 0 16px 16px rgba(0,0,0,0.02), 0 4px 5px rgba(0,0,0,0.03);
+  --wp-elevation-l: 0 50px 43px rgba(0,0,0,0.02), 0 30px 36px rgba(0,0,0,0.04);
+
+  /* Roundness tokens */
+  --wp-radius-xs: 1px;
+  --wp-radius-s: 2px;
+  --wp-radius-m: 4px;
+  --wp-radius-l: 8px;
+  --wp-radius-full: 9999px;
 }
 ```
 
-WordPress admin tokens are SCSS variables compiled to static CSS — do NOT expose
-them as CSS custom properties. The only dynamic token is `--wp-admin-theme-color`.
-Use the wp-admin SCSS variables for all other values:
+Use the `ThemeProvider` React component to customize admin UI areas:
 
-```scss
-// WordPress admin spacing (4px grid)
-$grid-unit-05: 4px;
-$grid-unit-10: 8px;
-$grid-unit-15: 12px;
-$grid-unit-20: 16px;
-$grid-unit-30: 24px;
-$grid-unit-40: 32px;
-$grid-unit-50: 40px;
-$grid-unit-60: 48px;
+```jsx
+import { ThemeProvider } from '@wordpress/components';
 
-// WordPress admin border radius
-$radius-xs: 1px;
-$radius-s: 2px;    // Buttons, inputs
-$radius-m: 4px;    // Focus rings
-$radius-l: 8px;    // Cards, panels
-$radius-full: 9999px;
-
-// WordPress admin gray scale
-$gray-100: #f0f0f0;  // Page background
-$gray-200: #e0e0e0;
-$gray-300: #ddd;
-$gray-400: #ccc;     // Disabled borders
-$gray-600: #949494;  // Input borders
-$gray-700: #757575;
-$gray-800: #2f2f2f;
-$gray-900: #1e1e1e;  // Primary text
-
-// WordPress admin typography
-$font-size-xs: 11px;
-$font-size-s: 12px;
-$font-size-m: 13px;  // Base body
-$font-size-l: 15px;
-$font-size-xl: 20px;
-
-// WordPress admin semantic colors
-$alert-yellow: #f0b849;   // Warning
-$alert-green: #4ab866;    // Success
-$alert-red: #cc1818;      // Error
-$alert-blue: #3858e9;     // Info
-
-// WordPress admin font stack
-$font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-  Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+// Override theme color for a specific admin section
+<ThemeProvider accent="#e91e63" background="#fafafa">
+  <MyAdminComponent />
+</ThemeProvider>
 ```
+
+The color ramp generator creates full color scales from seed accent/background colors:
+
+```jsx
+import { createTheme } from '@wordpress/theme';
+
+const theme = createTheme({
+  accent: '#3858e9',
+  background: '#f0f0f1',
+});
+// Generates a harmonious color scale with accessible contrast
+```
+
+**Pre-7.1 fallback** (for older WordPress installs), use the legacy wp-admin SCSS
+variables — see `references/library-catalog.md` for the complete legacy token set.
 
 #### 4.3 Component Architecture
 

@@ -8,10 +8,25 @@ The best code is the code that was not written.
 ### @wordpress/components
 - **What:** 90+ React components for WordPress admin interfaces
 - **Why:** Native wp-admin look and feel, consistent with WordPress core, accessible
-- **Components:** Button, TextControl, TextareaControl, SelectControl, CheckboxControl, RadioControl, ToggleControl, RangeControl, NumberControl, SearchControl, ComboboxControl, ColorPicker, ColorPalette, Modal, Notice, Card, CardBody, CardHeader, Panel, PanelBody, PanelRow, TabPanel, Tabs, Tooltip, Spinner, ProgressBar, Dropdown, DropdownMenu, Popover, ConfirmDialog, Snackbar, Flex, HStack, VStack, Divider, Scrollable, Badge, Icon, Heading, Text, ExternalLink, Placeholder, Disabled, DatePicker, DateTimePicker, FormFileUpload, DropZone, ResizableBox, Guide, Navigator, ClipboardButton, Shortcut, NavigableContainer, ScrollLock, SlotFill, HigherOrder, StyleProvider, CustomSelectControl, FormToggle, FormTokenField, CircularOptionPicker, DuotonePicker, GradientPicker, PaletteEdit, AlignmentMatrixControl, AnglePickerControl, BoxControl, BorderBoxControl, BorderControl, Draggable, Autocomplete, Composite, KeyboardShortcuts, Sandbox, Surface, Elevation, TextHighlight, Tip, __experimentalInputControl
+- **Components:** Button, TextControl, TextareaControl, SelectControl, CheckboxControl, RadioControl, ToggleControl, RangeControl, NumberControl, SearchControl, ComboboxControl, ColorPicker, ColorPalette, Modal, Notice, Card, CardBody, CardHeader, Panel, PanelBody, PanelRow, TabPanel, Tabs, Tooltip, Spinner, ProgressBar, Dropdown, DropdownMenu, Popover, ConfirmDialog, Snackbar, Flex, HStack, VStack, Divider, Scrollable, Badge, Icon, Heading, Text, ExternalLink, Placeholder, Disabled, DatePicker, DateTimePicker, FormFileUpload, DropZone, ResizableBox, Guide, Navigator, ClipboardButton, Shortcut, NavigableContainer, ScrollLock, SlotFill, HigherOrder, StyleProvider, CustomSelectControl, FormToggle, FormTokenField, CircularOptionPicker, DuotonePicker, GradientPicker, PaletteEdit, AlignmentMatrixControl, AnglePickerControl, BoxControl, BorderBoxControl, BorderControl, Draggable, Autocomplete, Composite, KeyboardShortcuts, Sandbox, Surface, Elevation, TextHighlight, Tip, ThemeProvider, __experimentalInputControl
 - **Install:** `npm install @wordpress/components`
 - **Use for:** WordPress admin pages, plugin admin screens, Gutenberg extensions
 - **Note:** Within wp-admin, enqueue via `wp_enqueue_style('wp-components')`. Outside wp-admin, import `@wordpress/components/build-style/style.css`.
+- **WordPress 7.1:** Now includes `ThemeProvider` for customizing admin UI areas with the new DTCG-spec design tokens.
+
+### @wordpress/theme (NEW in 7.1)
+- **What:** Design system theming layer with DTCG-spec CSS custom properties
+- **Why:** Semantic design tokens for color, typography, border, elevation, roundness — following the W3C Design Tokens Community Group specification
+- **Features:**
+  - CSS custom properties for all admin styling
+  - `ThemeProvider` React component for customizing admin UI areas
+  - Color ramp generator from accent/background seed colors
+  - Tokens importable into Figma via DTCG spec
+  - Supports dark mode capability
+- **Install:** Ships with WordPress 7.1 core (`wp-theme` registered stylesheet)
+- **Use for:** All admin UI styling, user color scheme customization, plugin branding
+- **Token categories:** Color, roundness, cursor styles, elevation, typography, border
+- **Key tokens:** `--wp-admin-theme-color`, `--wp-elevation-*`, `--wp-radius-*`, `--wp-color-*`
 
 ### @wordpress/data
 - **What:** Redux-based state management for WordPress
@@ -39,7 +54,12 @@ The best code is the code that was not written.
 
 ### WordPress Admin CSS Patterns
 
-When building wp-admin-style interfaces, use these patterns:
+**WordPress 7.1+ (recommended):** Use the new Design System Theming tokens instead
+of hardcoded CSS values. The `wp-theme` package provides DTCG-spec CSS custom
+properties for color, typography, border, elevation, and roundness. Use
+`ThemeProvider` to customize admin UI areas.
+
+**Pre-7.1 fallback:** When targeting older WordPress installs, use these patterns:
 
 **Buttons:**
 ```css
