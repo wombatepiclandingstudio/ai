@@ -255,29 +255,125 @@ Based on UI map and analysis:
 | Navigation Sidebar | Good (semantic HTML) | Keep, add Radix Navigation | LOW |
 | Stats Cards | Good (presentational) | Keep, restyle with Tailwind | LOW |
 
-### Stage 3: Rewrite Decision
+### Stage 3: Rewrite Decision (STRICT ENFORCEMENT)
 
-Determine whether to rewrite or refactor.
+> "Plan to throw one away; you will, anyhow." — Fred Brooks, The Mythical Man-Month
 
-#### Rewrite When (≥60% of components need changes)
+**The default is REWRITE. Refactoring requires explicit justification for EVERY
+component being kept.** This is not a suggestion. This is the rule.
 
-- Custom implementations where libraries should exist (focus trap, ARIA, keyboard)
-- Accessibility violations in >30% of components
-- No design system (hardcoded colors, spacing, typography throughout)
-- Framework is end-of-life or fundamentally wrong for the use case
-- Component files are consistently >500 lines
-- The codebase is more library code than application code
+#### The Inversion of Proof
 
-#### Refactor When (<60% of components need changes)
+| Approach | Default | Justification Required |
+|----------|---------|----------------------|
+| **Rewrite** | YES — requires no justification | None |
+| **Refactor** | NO — requires justification for EVERY component | Must pass the "Justify Keeping" checklist for each component |
 
-- Architecture is sound but implementation is poor
-- Some components are good and should be preserved
-- Business logic is correct and must be preserved exactly
-- Team can do incremental improvement
+If you cannot justify keeping a component, you MUST rewrite it. "It works" is
+not justification. "It's mostly fine" is not justification. "I don't have time
+to rewrite" is not justification.
 
-**For this skill: we assume REWRITE.** The user asked for overhaul. If the analysis
-shows refactoring is better, tell the user — but proceed with rewrite unless advised
-otherwise.
+#### Mandatory Rewrite Triggers (ANY ONE = REWRITE)
+
+If ANY of these conditions are true, rewrite is MANDATORY. No exceptions.
+
+**Quantitative triggers:**
+- [ ] Any component > 500 lines
+- [ ] > 30% of components have accessibility violations
+- [ ] > 20% of components use inline styles or hardcoded colors
+- [ ] > 15% code duplication across components
+- [ ] Custom implementations exist where libraries should be used (3+ instances)
+- [ ] Average component size > 250 lines
+- [ ] No design system tokens in use (hardcoded values throughout)
+
+**Qualitative triggers:**
+- [ ] Architecture is fundamentally wrong (wrong abstraction, wrong technology)
+- [ ] Original design assumptions are no longer valid
+- [ ] The code has been patched so many times it's unrecognizable
+- [ ] Security/accessibility failures are systemic, not isolated
+- [ ] No single developer can explain the component architecture in < 5 minutes
+- [ ] The team that wrote the code no longer exists
+
+**The "Touch Count" trigger:**
+- If a "simple fix" requires touching > 5 files, the architecture is the problem.
+- If fixing one component requires changing 3+ other components, the coupling is structural.
+- If each small fix introduces new bugs, the codebase is in a decay spiral.
+
+#### The "Justify Keeping" Checklist (for Refactor decision ONLY)
+
+If you believe refactoring is appropriate (against the default of rewrite), you
+MUST answer YES to EVERY question for EVERY component you want to keep:
+
+- [ ] **Purpose**: Can I state what this component does in ONE sentence?
+- [ ] **Test coverage**: Does it have meaningful tests that verify BEHAVIOR (not just line coverage)?
+- [ ] **Production validation**: Has it been running in production without major bugs for > 6 months?
+- [ ] **Architectural fit**: Does it fit the TARGET architecture, or would it need significant rework?
+- [ ] **Rewrite cost**: Could I write it from scratch in < 2x the time it would take to refactor?
+- [ ] **Dependencies**: Are ALL its dependencies current and secure?
+- [ ] **Accessibility**: Does it meet WCAG 2.2 AA (0 violations)?
+- [ ] **Design system**: Does it use current design tokens and patterns?
+- [ ] **Size**: Is it < 200 lines?
+- [ ] **Props**: Does it have < 7 props?
+- [ ] **Composition**: Does it use children/slots, not config objects?
+
+**If ANY answer is "no" or "I don't know": the component MUST be rewritten.**
+
+#### The "Delete First" Workflow
+
+When rewrite is chosen (the default):
+
+1. **DELETE the old code first.** Not "mark for deletion." Actually delete it.
+2. **Write new code from scratch.** Do NOT copy-paste from old code. Do NOT
+   modify old code. Start with a blank file and write new code that satisfies
+   the requirements.
+3. **Verify deletion.** Run tests/imports to confirm nothing depends on deleted code.
+4. **Verify new code.** Run tests/imports to confirm new code works.
+5. **Compare metrics.** Old vs new on every dimension. If any metric got worse,
+   the rewrite failed.
+
+**The "Burn the Boats" rule:**
+- No fallback to old code
+- No hybrid old/new running simultaneously (except during Strangler Fig migration)
+- No cherry-picking from old code into new code
+- Fresh mental model: understand requirements independently, not as "changes to old code"
+- Complete replacement: old code is deleted, not deprecated
+
+#### Rewrite vs Refactor: Decision Tree
+
+```
+START: Default = REWRITE
+  │
+  ├─ ANY mandatory trigger true? → REWRITE (no further analysis needed)
+  │
+  ├─ ALL mandatory triggers false?
+  │   │
+  │   ├─ Run "Justify Keeping" checklist for each component
+  │   │   │
+  │   │   ├─ ALL components pass ALL checklist items? → REFACTOR (with justification)
+  │   │   │
+  │   │   └─ ANY component fails ANY checklist item? → REWRITE
+  │   │
+  │   └─ Document which components passed/failed and why
+  │
+  └─ User explicitly requests refactor despite triggers? → WARN, then proceed with refactor
+     (document the risk acceptance)
+```
+
+#### Anti-Patterns (Leniency Traps)
+
+| Anti-Pattern | Why It Fails | Enforcement |
+|-------------|-------------|-------------|
+| "I'll just fix this one thing" | The "one thing" connects to 10 other things | If fix touches > 3 files, justify architecture |
+| "The existing code is mostly fine" | Agent hasn't looked deeply enough | Must list 5 specific problems before deciding "fine" |
+| "I'll refactor incrementally" | Creates half-old, half-new system worse than either | If > 50 small changes across > 10 files, rewrite |
+| "Let me preserve the architecture" | Architecture IS the problem | Ask: "Would I design this way from scratch?" If no, rewrite |
+| "It's too complex to rewrite" | Complexity is the REASON to rewrite | If no one can explain it in < 5 min, it's too complex to keep |
+| "We don't have time" | Maintenance cost exceeds rewrite cost within 12-18 months | Calculate ongoing maintenance cost vs one-time rewrite |
+| "The tests pass" | Green CI masks logically hollow tests | Mutation testing, not just line coverage |
+| "It's been working for years" | Survivorship bias — it works until it doesn't | "Working" ≠ maintainable, secure, or accessible |
+
+**For this skill: the user asked for OVERHAUL. "Overhaul" means rewrite.
+If you find yourself doing a minor refactor, STOP. You are doing it wrong.**
 
 ### Stage 4: Architecture Design
 
@@ -729,48 +825,118 @@ Bundle size: [before] → [after] ([reduction]%)
 
 ---
 
-## Pre-Delivery Checklist
+## Pre-Delivery Checklist (MANDATORY — ALL items must pass)
 
-Before declaring the overhaul complete:
+Before declaring the overhaul complete, EVERY item must be verified. No exceptions.
+No "mostly done." No "close enough." ALL must pass.
+
+### Rewrite Verification (non-negotiable)
 
 - [ ] Code analysis complete (framework, components, architecture, a11y, tokens)
-- [ ] UI map produced (reconstructed from code)
-- [ ] Rewrite decision made (rewrite vs refactor)
-- [ ] Architecture designed (stack, tokens, component tree)
-- [ ] Every custom implementation checked against library catalog
-- [ ] Every component rewritten using libraries + Tailwind + tokens
-- [ ] Zero accessibility violations
-- [ ] All interactive elements keyboard accessible with visible focus
-- [ ] All components < 200 lines
-- [ ] All components < 7 props
-- [ ] No inline styles, no hardcoded colors, no `!important`
-- [ ] Design tokens used consistently
+- [ ] Mandatory rewrite triggers evaluated — any ONE = rewrite
+- [ ] If refactor was chosen: "Justify Keeping" checklist completed for EVERY retained component
+- [ ] Every old component was DELETED (not deprecated, not commented out — deleted)
+- [ ] New code written from scratch (not modified from old code)
+- [ ] No cherry-picking from old code into new code
+- [ ] Before/after metrics show improvement on ALL dimensions
+
+### Component Quality (non-negotiable)
+
+- [ ] Every custom implementation replaced with library (Radix, React Aria, shadcn/ui, @wordpress/components)
+- [ ] Every component < 200 lines (NO exceptions without explicit justification)
+- [ ] Every component < 7 props (NO exceptions)
+- [ ] Every component uses composition (children/slots), not config objects
+- [ ] Zero inline styles in entire codebase
+- [ ] Zero hardcoded colors — all from design tokens
+- [ ] Zero `!important` usage
+- [ ] Design tokens established and used consistently
+
+### Accessibility (non-negotiable)
+
+- [ ] Zero axe-core violations
+- [ ] Every interactive element keyboard accessible
+- [ ] Every interactive element has visible focus indicator
+- [ ] Every form input has associated label
+- [ ] Every image has alt text
+- [ ] Every dynamic region has aria-live
+- [ ] Heading hierarchy is correct (no skips)
+- [ ] Landmark roles present (main, nav, header, footer)
+
+### States (non-negotiable)
+
+- [ ] Every async operation has loading state (skeleton or spinner)
+- [ ] Every async operation has error state (meaningful message, not blank)
+- [ ] Every list/table has empty state (designed, not blank)
+- [ ] Every destructive action has confirmation
+
+### Design System (non-negotiable)
+
 - [ ] Dark mode supported via CSS custom properties
-- [ ] Loading, error, empty states present
-- [ ] Before/after metrics produced
-- [ ] All old custom implementations deleted
+- [ ] Responsive: works at 320px+, no fixed pixel widths
+- [ ] Typography from token scale (not arbitrary font sizes)
+- [ ] Spacing from 4px grid (not arbitrary pixel values)
+- [ ] Colors from token palette (not arbitrary hex/rgb values)
+
+### TypeScript (non-negotiable)
+
+- [ ] Strict mode enabled
+- [ ] Zero `any` types
+- [ ] All props typed with interfaces
+- [ ] No type assertions (`as`) unless absolutely necessary
 
 ---
 
-## Gate Implications
+## Gate Implications (STRICT)
 
-The gate must **BLOCK** when:
+The gate must **BLOCK** when ANY of these are true:
 
-- A custom implementation exists where a library should be used
-- Accessibility violations remain unfixed
-- Inline styles or hardcoded colors persist
-- Components exceed 300 lines without justification
-- No design tokens are established
-- Dark mode is not supported
-- Loading/error/empty states are missing
-- The "before" code was not deleted (dual maintenance)
+### Rewrite Integrity Blocks
+
+- A mandatory rewrite trigger was true but refactor was chosen without documented risk acceptance
+- "Justify Keeping" checklist was not completed for retained components
+- Old code was not deleted (dual maintenance — old + new coexisting)
+- New code was modified from old code (not written from scratch)
+- Before/after metrics show NO improvement or regression on any dimension
+
+### Component Quality Blocks
+
+- ANY component > 200 lines
+- ANY component has > 7 props
+- ANY inline styles exist
+- ANY hardcoded colors exist
+- ANY `!important` usage exists
+- ANY custom implementation exists where a library should be used
+- Design tokens not established or not used consistently
+
+### Accessibility Blocks
+
+- ANY axe-core violation
+- ANY interactive element not keyboard accessible
+- ANY interactive element without visible focus
+- ANY form input without associated label
+- ANY image without alt text
+
+### State Blocks
+
+- ANY async operation without loading state
+- ANY async operation without error state
+- ANY list/table without empty state
+
+### Design System Blocks
+
+- Dark mode not supported
+- Responsive design not working at 320px
+- Typography not from token scale
+- Spacing not from 4px grid
 
 The gate must **WARN** when:
 
-- Some components are 200-300 lines (acceptable but review)
+- Components are 150-200 lines (at the limit)
 - Animation could be simpler (CSS instead of framer-motion)
 - Some tokens are approximate (not final design values)
 - Bundle size increased slightly (library added, but behavior gained)
+
+**The gate does NOT warn about "close enough." It blocks.**
 
 ---
 
