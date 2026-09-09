@@ -59,3 +59,4 @@ The agent recognizes the intent from the skill's `description` and follows the s
 - Tailwind CSS — Utility-first CSS
 - Refactoring UI (Adam Wathan & Steve Schoger) — Design principles
 - OpenDesign philosophy — Open code, composition, accessibility
+- [aj-geddes/useful-ai-prompts](https://github.com/aj-geddes/useful-ai-prompts) — Wireframe prototyping skill (fidelity levels, prototyping tools, wireframe examples, prototype testing, component template)

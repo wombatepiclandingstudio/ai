@@ -79,8 +79,11 @@ Three principles govern every rewrite:
 
 ```
 Code Analysis → UI/UX Understanding → Rewrite Decision → Architecture Design
-  → Component Rewrite → Verification & Polish
+  → Wireframe & Prototype → Component Rewrite → Verification & Polish
 ```
+
+**Every stage is mandatory.** You cannot skip wireframing to "save time." The wireframe
+is the specification for the rewrite — without it, you are guessing, not designing.
 
 ### Stage 1: Code Analysis
 
@@ -584,7 +587,161 @@ src/
 └── plugins/             # WordPress plugin entry points
 ```
 
-### Stage 5: Component Rewrite
+### Stage 5: Wireframe & Prototype (MANDATORY — DO NOT SKIP)
+
+> "A wireframe is a conversation with the future. Without it, you are monologuing
+> at the code." — This skill
+
+Before writing ANY code, create wireframes and prototypes that validate the new
+design. This is not optional. This is not "nice to have." This is the specification
+that the rewrite follows. Without it, you are guessing, not designing.
+
+#### Why Wireframing Is Mandatory
+
+1. **It catches design errors before code.** A wireframe takes 30 minutes. A code
+   rewrite of a bad design takes days.
+2. **It validates the UI map.** The UI map from Stage 2 is abstract. Wireframes
+   make it concrete. Does the layout actually work? Do the interactions flow?
+3. **It forces you to think about states.** Empty states, error states, loading states,
+   success states — wireframes force you to design ALL of them, not just the happy path.
+4. **It prevents "code-first design."** When you write code first, you design what's
+   easy to code, not what's good for users. Wireframes invert this.
+
+#### Fidelity Levels
+
+Choose the right fidelity for the situation:
+
+| Fidelity | Time | Detail | When to Use |
+|----------|------|--------|-------------|
+| **Low** (sketches) | 30 min – 2 hrs | Basic layout, no colors/fonts, boxes and lines | Early concept validation, brainstorming |
+| **Medium** (wireframes) | 2 – 8 hrs | Layout, content, basic interaction, placeholder content | Team alignment, feedback gathering |
+| **High** (prototypes) | 8+ hrs | Visual design, interactions, animations, real content | Developer handoff, user testing |
+
+**For this skill: Medium fidelity is the default.** High fidelity only when the
+user explicitly requests it or when the design is complex enough to need interaction
+validation.
+
+#### Wireframe Process
+
+1. **List all screens** from the UI map (Stage 2).
+2. **For each screen, create a wireframe** with:
+   - Layout structure (header, sidebar, content, footer)
+   - Navigation elements
+   - Content areas (what data is displayed, where)
+   - Interactive elements (buttons, forms, toggles, dropdowns)
+   - States: empty, loading, error, success, partial data
+3. **Define interaction flows** between screens:
+   - User trigger → Screen transition → Result
+   - Form submission → Validation → Success/Error
+   - Navigation → Page load → Data display
+4. **Validate against the library catalog:**
+   - Does each interactive element have a library component?
+   - Are the wireframe patterns compatible with Radix/shadcn/wp-components?
+5. **Get feedback (if team exists)** before proceeding to code.
+
+#### Wireframe Template
+
+For each screen, produce:
+
+```
+SCREEN: [Screen Name]
+Route: [URL path]
+Purpose: [One sentence — what does this screen do?]
+
+LAYOUT:
+┌─────────────────────────────────────────┐
+│ [Header: Logo, Search, User Menu]       │
+├──────┬──────────────────────────────────┤
+│      │                                  │
+│ [Nav]│  [Main Content Area]             │
+│      │                                  │
+│      │  ┌────────────────────────────┐  │
+│      │  │ [Content Block 1]          │  │
+│      │  └────────────────────────────┘  │
+│      │  ┌────────────────────────────┐  │
+│      │  │ [Content Block 2]          │  │
+│      │  └────────────────────────────┘  │
+│      │                                  │
+├──────┴──────────────────────────────────┤
+│ [Footer]                                │
+└─────────────────────────────────────────┘
+
+COMPONENTS:
+- [Component Name] → [Library: Radix/shadcn/wp-components]
+- [Component Name] → [Library: ...]
+
+STATES:
+- Empty: [What shows when no data?]
+- Loading: [Skeleton/spinner?]
+- Error: [Error message? What action?]
+- Success: [Confirmation? Toast?]
+
+INTERACTIONS:
+- [Element] → [Trigger] → [Action]
+- [Form] → [Submit] → [Validate → Success: redirect | Error: inline error]
+```
+
+#### Prototype Component Template
+
+When wireframing interactive elements, use this template structure:
+
+```tsx
+// Component: [Name]
+// Wireframe: [Screen Name] — [Section]
+// Library: [Radix/shadcn/wp-components — which component]
+
+import React from 'react';
+
+interface Props {
+  // TODO: Define props based on wireframe
+}
+
+export function ComponentName({ }: Props) {
+  // TODO: Add state and effects based on wireframe interactions
+
+  return (
+    <div>
+      {/* TODO: Add component markup based on wireframe */}
+    </div>
+  );
+}
+```
+
+#### Interaction Flow Definition
+
+For every user flow, define:
+
+```
+FLOW: [Flow Name]
+Trigger: [What starts this flow?]
+Steps:
+  1. [User action] → [System response]
+  2. [User action] → [System response]
+  3. [User action] → [System response]
+Edge cases:
+  - [What if step 2 fails?]
+  - [What if user cancels at step 3?]
+  - [What if network is unavailable?]
+```
+
+#### Wireframe Validation Checklist
+
+Before proceeding to code, verify:
+
+- [ ] Every screen from the UI map has a wireframe
+- [ ] Every interactive element is mapped to a library component
+- [ ] Every screen has empty, loading, error, and success states designed
+- [ ] Every user flow has edge cases documented
+- [ ] Every form has validation rules defined
+- [ ] Navigation between all screens is defined
+- [ ] Responsive behavior is considered (mobile/tablet/desktop)
+- [ ] Accessibility is considered (keyboard flow, screen reader labels)
+- [ ] The wireframe uses the correct design tokens (from Stage 4)
+- [ ] The wireframe is consistent with the chosen styling track (Tailwind or wp-admin)
+
+**If ANY screen is missing a wireframe, DO NOT proceed to code.**
+
+### Stage 6: Component Rewrite
 
 For each component, follow the rewrite protocol.
 
@@ -643,7 +800,7 @@ For every component rewritten:
 - [ ] Empty state: designed, not blank
 - [ ] TypeScript: strict types, no `any`
 
-### Stage 6: Verification & Polish
+### Stage 7: Verification & Polish
 
 After all components are rewritten, verify the whole.
 
@@ -947,6 +1104,9 @@ A ui-ux-overhaul session should produce:
 - Code analysis report (framework, components, a11y, tokens, performance)
 - UI map reconstructed from code
 - Architecture decision document (stack choices with rationale)
+- **Wireframes for every screen** (layout, components, states, interactions)
+- **Interaction flow definitions** (user triggers → system responses → edge cases)
+- **Wireframe validation checklist** (all screens covered, all states designed)
 - Design token file (CSS custom properties)
 - Rewritten components (all using libraries + Tailwind)
 - Accessibility verification (axe-core results, keyboard test)
