@@ -1,0 +1,57 @@
+{
+  "skill_name": "ui-ux-overhaul",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Rewrite the frontend in src/components/. It has custom modals, custom selects, inline styles everywhere, hardcoded colors, and no accessibility. Use Radix UI and Tailwind CSS.",
+      "expected_output": "The agent should begin with Code Analysis (Stage 1), detecting the framework, inventorying components, auditing accessibility, and identifying custom implementations. Should produce a UI Map (Stage 2). Should proceed to Architecture Design (Stage 4) with design tokens and stack choices. Should rewrite every custom Modal with Radix Dialog (via shadcn/ui), every custom Select with Radix Select, replace all inline styles with Tailwind classes, replace all hardcoded colors with design tokens. Should produce before/after metrics.",
+      "files": [],
+      "expectations": [
+        "Code analysis report produced (framework, components, a11y, tokens)",
+        "Custom Modal replaced with Radix Dialog (shadcn/ui)",
+        "Custom Select replaced with Radix Select (shadcn/ui)",
+        "All inline styles replaced with Tailwind classes",
+        "All hardcoded colors replaced with design tokens",
+        "Design token file created (CSS custom properties)",
+        "Loading/error/empty states added where missing",
+        "Dark mode support added via CSS custom properties",
+        "Before/after metrics produced (component count, size, a11y violations, LOC)",
+        "Old custom implementations deleted"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Analyze the React app in src/ and tell me: (1) what's wrong with the UI/UX code, (2) what custom implementations should be replaced with libraries, (3) what the accessibility score would be, and (4) whether to rewrite or refactor.",
+      "expected_output": "The agent should produce a comprehensive Code Analysis report covering: framework detection, component inventory (with sizes), architecture patterns, accessibility audit (with violation counts), design system detection (token usage), performance indicators, and a list of custom implementations that should use libraries. Should include a rewrite/refactor recommendation with rationale.",
+      "files": [],
+      "expectations": [
+        "Framework and stack correctly detected",
+        "Component inventory with size classification",
+        "Architecture patterns identified (good and bad)",
+        "Accessibility violations counted and categorized (critical/major/moderate)",
+        "Design system usage evaluated (tokens, colors, spacing consistency)",
+        "Custom implementations listed with library replacements",
+        "Performance indicators identified",
+        "Rewrite vs refactor recommendation with threshold-based rationale",
+        "Specific file:line references for all findings"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have a Next.js app with 30 components. 12 of them are over 300 lines. There's no design system, no loading states, no error states, and the modals are custom-built without focus traps. Give me the overhaul plan.",
+      "expected_output": "The agent should produce a complete overhaul plan: analysis (12 components > 300 lines = rewrite candidates, no design system = foundational work needed, custom modals without focus traps = accessibility critical), architecture (Next.js + Tailwind + Radix UI + shadcn/ui), design tokens, component tree, rewrite strategy (full replacement recommended given ≥60% need changes), execution order, and validation criteria.",
+      "files": [],
+      "expectations": [
+        "Analysis identifies 12 components > 300 lines as rewrite candidates",
+        "No design system flagged as foundational issue",
+        "Custom modals without focus traps flagged as critical accessibility issue",
+        "Architecture recommends Next.js + Tailwind + Radix UI + shadcn/ui",
+        "Design token file template provided",
+        "Component tree designed (ui/, layout/, features/)",
+        "Rewrite strategy is full replacement (≥60% threshold met)",
+        "Execution order specified (tokens → library → features → pages)",
+        "Validation criteria defined (a11y, performance, code quality)"
+      ]
+    }
+  ]
+}
