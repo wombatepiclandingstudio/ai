@@ -287,6 +287,8 @@ Missing loading states:  [N] async operations without loading UI
 Missing error states:    [N] async operations without error UI
 Missing empty states:    [N] lists/tables without empty state
 Missing dark mode:       [N] components without dark mode support
+Tests for custom comps:  [N] test files that test custom (soon-to-be-deleted) components
+Test coverage on custom: [%] of custom components with tests
 ```
 
 #### Step 2: Declare Extermination Targets
@@ -298,17 +300,32 @@ KILL LIST
 
 DELETE AND REPLACE:
 - [Component A] → Replace with [library component]
+  └─ Tests: DELETE [Component A].test.tsx, REWRITE as [NewComponent].test.tsx
 - [Component B] → Replace with [library component]
+  └─ Tests: DELETE [Component B].test.tsx, REWRITE as [NewComponent].test.tsx
 - [CSS File X] → Delete entirely, rewrite with Tailwind
 - [Inline styles in File Y] → Delete all, rewrite with Tailwind
 
 DELETE ENTIRELY:
 - [Unused component Z] → No replacement needed
+  └─ Tests: DELETE [Component Z].test.tsx (if exists)
 - [Dead CSS rules] → Delete
 
 REWRITE FROM SCRATCH:
 - [Component C] → Too complex to fix, rewrite with library + tokens
+  └─ Tests: DELETE old tests, REWRITE testing new behavior
 - [Component D] → Accessibility disaster, rewrite from scratch
+  └─ Tests: DELETE old tests, REWRITE testing new a11y behavior
+
+TEST HANDLING RULES:
+- Old test file for deleted component → DELETE (not adapt, not modify — delete)
+- New test file → WRITE from scratch testing BEHAVIOR, not implementation
+- Test what the user sees/does: "click submit → form validates → error shows"
+- Do NOT test: internal state, DOM structure, component internals
+- Do NOT test: the library component itself (that's the library's job)
+- DO test: your wrapper passes props correctly
+- DO test: integration with your layout/data/state
+- DO test: error handling, loading states, edge cases
 ```
 
 #### Step 3: Verify Kill List Completeness
@@ -932,12 +949,37 @@ These are not suggestions. These are MANDATORY. Violation = the rewrite failed.
 15. **No TypeScript strict → ENABLE IT.** Strict mode, no `any`, full type
     inference. Every prop must be typed.
 
+16. **Custom component has tests → REWRITE THE TESTS.** When a custom component
+    is deleted and replaced with a library component, the old tests die with it.
+    You MUST:
+    - **DELETE** the old test file entirely (it tests the custom implementation,
+      which no longer exists)
+    - **REWRITE** tests from scratch that test the NEW behavior (library component
+      + your wrapper/integration)
+    - **DO NOT** try to "adapt" old tests to the new component. The old tests
+      test implementation details (internal state, DOM structure, event handlers)
+      that are completely different in the library version.
+    - **DO** write tests that verify BEHAVIOR: "when user clicks X, Y happens"
+      — not "component has internal state Z"
+    - **DO** test the integration: does your wrapper pass props correctly? Does
+      the library component render in your layout? Does the form submit work?
+    - **DO NOT** test the library component itself — that's the library's job.
+    - **Test file naming:** If the old file was `CustomModal.test.tsx`, the new
+      file should be `Modal.test.tsx` (testing the replacement, not the ghost).
+
+    **Why this matters:** Old tests against deleted code are FALSE CONFIDENCE.
+    They test something that doesn't exist anymore. A passing test against a
+    deleted component means NOTHING. Delete them. Rewrite them. Verify the
+    new code works.
+
 #### Component Rewrite Checklist
 
 For every component rewritten — ALL items must pass, no exceptions:
 
 - [ ] **Library check:** Confirmed no library exists (or chose shadcn/ui copy)
 - [ ] **Old component DELETED:** Not deprecated, not commented out — DELETED
+- [ ] **Old tests DELETED:** Test file for deleted component is GONE (not adapted, not modified — deleted)
+- [ ] **New tests WRITTEN:** New test file testing NEW behavior (library integration, not implementation details)
 - [ ] **New component from scratch:** Written new, not modified from old
 - [ ] **Accessibility:** Keyboard accessible, focus visible, ARIA attributes, labels
 - [ ] **Styling:** Tailwind CSS only (Track A) or wp-admin CSS (Track B)
