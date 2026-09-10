@@ -61,17 +61,65 @@ Tailwind CSS. Custom code exists only where no library can do the job.
 > "The best code is no code at all. Every line of code you write is a line that
 > has to be maintained." — Jeff Atwood
 
-Three principles govern every rewrite:
+### The Vibe-Code Assumption
 
-1. **Library-first.** Before writing any component, check: does Radix UI, React Aria,
-   shadcn/ui, or Headless UI already do this? If yes, use it. The best code is the
-   code that was not written.
-2. **Headless by default.** Use unstyled primitives (Radix, React Aria, Ark UI) for
-   behavior. Apply styles with Tailwind CSS or your design tokens. Separate behavior
-   from presentation.
-3. **Open code, not dependencies.** Prefer shadcn/ui's model: copy components into
-   your codebase, own them, modify them freely. No npm dependency for something you
-   can own.
+**This skill is designed for vibe-coded repositories.** Vibe-coded repos are
+guaranteed to have:
+- Custom CSS everywhere (inline styles, style attributes, CSS files with !important)
+- Custom modals, selects, tooltips, dropdowns that should use libraries
+- No design system (hardcoded colors, spacing, typography)
+- No accessibility (no ARIA, no labels, no focus management, no keyboard nav)
+- No loading/error/empty states
+- Components that are 500+ lines doing everything
+- `div` elements used as buttons
+- `onClick` handlers on non-interactive elements
+
+**The default response to vibe-coded UI is EXTERMINATION, not renovation.**
+
+You do not "fix" a vibe-coded modal. You DELETE it and replace it with Radix Dialog.
+You do not "improve" a custom select. You DELETE it and replace it with Radix Select.
+You do not "clean up" inline styles. You DELETE them and write Tailwind classes.
+You do not "add" accessibility. You REWRITE the component with accessibility built in.
+
+### The Three Principles (Ruthlessly Enforced)
+
+1. **Library-first. No exceptions.** Before writing ANY component, check the catalog.
+   If a library exists, USE IT. Writing a custom implementation when a library exists
+   is a CRIME against maintainability. The best code is the code that was not written.
+
+2. **Headless by default.** Radix UI for behavior. Tailwind CSS for styling. Design
+   tokens for colors/spacing/typography. No CSS-in-JS. No inline styles. No custom CSS
+   files with hardcoded values.
+
+3. **Delete, don't modify.** When a library component replaces a custom component,
+   DELETE the custom component entirely. Do not keep it "for reference." Do not
+   comment it out. Do not move it to a legacy folder. DELETE IT.
+
+### What "Exterminate" Means
+
+| Vibe-Code Pattern | Response |
+|-------------------|----------|
+| Custom `<Modal>` component | DELETE it. Replace with `npx shadcn@latest add dialog` |
+| Custom `<Select>` / `<Dropdown>` | DELETE it. Replace with `npx shadcn@latest add select` |
+| Custom `<Tooltip>` | DELETE it. Replace with `npx shadcn@latest add tooltip` |
+| Custom `<Tabs>` | DELETE it. Replace with `npx shadcn@latest add tabs` |
+| Custom `<Accordion>` | DELETE it. Replace with `npx shadcn@latest add accordion` |
+| Custom form validation | DELETE it. Replace with react-hook-form + zod |
+| Custom drag-and-drop | DELETE it. Replace with @dnd-kit/core |
+| Custom toast/notification | DELETE it. Replace with sonner |
+| Custom command palette | DELETE it. Replace with cmdk |
+| Inline `style={{...}}` | DELETE every occurrence. Rewrite with Tailwind classes |
+| `!important` in CSS | DELETE every occurrence. Fix specificity at source |
+| Hardcoded `#hex` colors | DELETE. Replace with design token references |
+| Hardcoded `px` spacing | DELETE. Replace with 4px grid token references |
+| `<div onClick>` without role | DELETE. Replace with `<button>` or add role+keyboard |
+| `<input>` without label | DELETE the input. Rewrite with associated label |
+| `outline: none` | DELETE. Replace with focus-visible ring using tokens |
+| Component > 500 lines | DELETE. Split into 2-4 focused components |
+| CSS file with > 100 lines of custom styles | DELETE. Replace with Tailwind utility classes |
+| Multiple CSS files for one component | DELETE all. Consolidate into Tailwind |
+
+**If you find yourself "improving" instead of "replacing," you are doing it wrong.**
 
 ---
 
@@ -205,6 +253,71 @@ Detect hand-rolled implementations where libraries exist:
 **Rule:** If a custom implementation exists where a library should be used,
 flag it as a rewrite candidate. The library version will be more accessible,
 more maintainable, and fewer lines of code.
+
+### Stage 1.5: Pre-Rewrite Extermination (VIBE-CODE ASSAULT)
+
+Before proceeding to understanding or design, run the **Vibe-Code Assault** — a
+systematic destruction of everything that's wrong. This is not analysis. This is
+demolition preparation.
+
+#### Step 1: Count the Damage
+
+Run these searches and record the COUNT of each violation:
+
+```
+VIBE-CODE DAMAGE REPORT
+
+Inline styles:           [N] occurrences of style={{
+!important:              [N] occurrences in CSS
+Hardcoded colors:        [N] occurrences of #hex, rgb(), rgba(), hsl()
+Hardcoded spacing:       [N] occurrences of [0-9]+px in styles
+Custom modals:           [N] custom modal/dialog components
+Custom selects:          [N] custom select/dropdown components
+Custom tooltips:         [N] custom tooltip components
+Custom tabs:             [N] custom tab components
+Custom accordions:       [N] custom accordion components
+Custom form validation:  [N] custom validation implementations
+div-as-button:           [N] div onClick without role
+Inputs without labels:   [N] inputs without associated label
+outline: none:           [N] occurrences
+CSS files with custom:   [N] files with > 50 lines of custom CSS
+Components > 500 lines:  [N] files
+Components > 200 lines:  [N] files
+Missing loading states:  [N] async operations without loading UI
+Missing error states:    [N] async operations without error UI
+Missing empty states:    [N] lists/tables without empty state
+Missing dark mode:       [N] components without dark mode support
+```
+
+#### Step 2: Declare Extermination Targets
+
+Based on the damage report, generate the **Kill List**:
+
+```
+KILL LIST
+
+DELETE AND REPLACE:
+- [Component A] → Replace with [library component]
+- [Component B] → Replace with [library component]
+- [CSS File X] → Delete entirely, rewrite with Tailwind
+- [Inline styles in File Y] → Delete all, rewrite with Tailwind
+
+DELETE ENTIRELY:
+- [Unused component Z] → No replacement needed
+- [Dead CSS rules] → Delete
+
+REWRITE FROM SCRATCH:
+- [Component C] → Too complex to fix, rewrite with library + tokens
+- [Component D] → Accessibility disaster, rewrite from scratch
+```
+
+#### Step 3: Verify Kill List Completeness
+
+The Kill List must account for 100% of violations found in Step 1. If any
+violation is not in the Kill List, it was MISSED. Find it and add it.
+
+**The Kill List is the contract.** Every item on it will be executed. No item
+will be "deferred" or "addressed later." If it's on the list, it dies.
 
 ### Stage 2: UI/UX Understanding
 
@@ -769,36 +882,78 @@ For each component, follow the rewrite protocol.
    no missing memoization where needed.
 7. **Delete the old component.** The best code is the code that was not written.
 
-#### Rewrite Rules
+#### Rewrite Rules (ZERO TOLERANCE)
 
-- **Never create a custom implementation if a library does it.** Check the catalog.
-- **Never use inline styles.** Always Tailwind classes (Track A) or wp-admin CSS classes (Track B).
-- **Never use `!important`.** Fix the specificity at the source.
-- **Never hardcode colors.** Always use design tokens (HSL for Track A, wp-admin variables for Track B).
-- **Never skip ARIA.** Every interactive element must be accessible.
-- **Never use `div` for interactive elements.** Use `<button>`, `<a>`, `<input>`,
-  or add `role` + `tabIndex` + keyboard handler.
-- **Never exceed 200 lines per component.** If it's longer, split it.
-- **Never use boolean prop explosions.** Use composition or variant patterns.
-- **Never duplicate styling.** Extract to a shared utility or token.
+These are not suggestions. These are MANDATORY. Violation = the rewrite failed.
+
+1. **Custom component exists where library exists → DELETE IT.** No exceptions.
+   Check the catalog. If Radix, React Aria, shadcn/ui, or @wordpress/components
+   has it, the custom version is GONE.
+
+2. **Inline styles → DELETE EVERY ONE.** Search for `style={{`. Every occurrence
+   is replaced with Tailwind classes. No "I'll fix this one later." Fix ALL of them.
+
+3. **`!important` → DELETE EVERY ONE.** Search the CSS. Every `!important` is
+   removed and the specificity is fixed at the source.
+
+4. **Hardcoded colors → DELETE EVERY ONE.** Search for `#[0-9a-fA-F]`, `rgb(`,
+   `rgba(`, `hsl(`. Every hardcoded color is replaced with a design token reference.
+
+5. **Hardcoded spacing → DELETE EVERY ONE.** Search for `[0-9]+px` in styles.
+   Every hardcoded pixel value is replaced with a 4px grid token.
+
+6. **Missing ARIA → REWRITE THE COMPONENT.** Not "add ARIA to the existing code."
+   Rewrite from scratch with accessibility built into the structure.
+
+7. **`div` as button → DELETE AND REPLACE.** `<div onClick>` is not a button.
+   Replace with `<button>` or a proper interactive element with role+keyboard.
+
+8. **Missing label on input → DELETE AND REWRITE.** Every `<input>` must have
+   an associated `<label>` or `aria-label`. Rewrite the form component.
+
+9. **`outline: none` → DELETE.** Replace with a focus-visible ring using design
+   tokens. The focus indicator is mandatory.
+
+10. **Component > 200 lines → SPLIT.** No component should be longer than 200
+    lines. If it is, it's doing too much. Split it into focused components.
+
+11. **CSS file with custom styles → DELETE FILE.** Replace with Tailwind utility
+    classes. The only CSS file that should exist is the design token file.
+
+12. **No loading/error/empty states → ADD THEM.** Every async operation needs
+    a loading state, an error state, and the component needs an empty state.
+
+13. **No dark mode → ADD IT.** Use CSS custom properties. Support
+    `prefers-color-scheme`. No component should be light-only.
+
+14. **No responsive design → ADD IT.** Every component must work at 320px+.
+    No fixed pixel widths. Use Tailwind responsive prefixes.
+
+15. **No TypeScript strict → ENABLE IT.** Strict mode, no `any`, full type
+    inference. Every prop must be typed.
 
 #### Component Rewrite Checklist
 
-For every component rewritten:
+For every component rewritten — ALL items must pass, no exceptions:
 
-- [ ] Library check: confirmed no library exists (or chose shadcn/ui copy)
-- [ ] Accessibility: keyboard accessible, focus visible, ARIA attributes
-- [ ] Styling: Tailwind CSS (Track A) or wp-admin CSS (Track B), design tokens for colors/spacing/typography
-- [ ] Composition: children/slots pattern, no config objects
-- [ ] Size: < 200 lines
-- [ ] Props: < 7, no boolean explosions
-- [ ] Semantic HTML: correct elements (`button`, `nav`, `main`, etc.)
-- [ ] Responsive: works at 320px+, no fixed pixel widths
-- [ ] Dark mode: uses CSS custom properties, supports `prefers-color-scheme`
-- [ ] Loading state: skeleton or spinner for async operations
-- [ ] Error state: meaningful error message, not blank
-- [ ] Empty state: designed, not blank
-- [ ] TypeScript: strict types, no `any`
+- [ ] **Library check:** Confirmed no library exists (or chose shadcn/ui copy)
+- [ ] **Old component DELETED:** Not deprecated, not commented out — DELETED
+- [ ] **New component from scratch:** Written new, not modified from old
+- [ ] **Accessibility:** Keyboard accessible, focus visible, ARIA attributes, labels
+- [ ] **Styling:** Tailwind CSS only (Track A) or wp-admin CSS (Track B)
+- [ ] **Design tokens:** All colors/spacing/typography from tokens
+- [ ] **No inline styles:** Zero `style={{` in the entire component
+- [ ] **No hardcoded values:** Zero `#hex`, `rgb()`, `[0-9]+px` in the component
+- [ ] **Composition:** children/slots pattern, no config objects
+- [ ] **Size:** < 200 lines (HARD LIMIT)
+- [ ] **Props:** < 7, no boolean explosions
+- [ ] **Semantic HTML:** `<button>`, `<nav>`, `<main>`, `<header>`, etc.
+- [ ] **Responsive:** Works at 320px+, no fixed pixel widths
+- [ ] **Dark mode:** Uses CSS custom properties, supports `prefers-color-scheme`
+- [ ] **Loading state:** Skeleton or spinner for async operations
+- [ ] **Error state:** Meaningful error message, not blank
+- [ ] **Empty state:** Designed, not blank
+- [ ] **TypeScript:** Strict mode, no `any`, all props typed
 
 ### Stage 7: Verification & Polish
 
