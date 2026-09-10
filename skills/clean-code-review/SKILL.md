@@ -6,21 +6,41 @@ description: >
   handling. Paste code and get a structured review with specific violations identified,
   severity ratings, and before/after refactoring examples. Includes immutability
   principles, test coverage strategy, and the boy scout rule.
-version: "1.0"
-license: MIT
-metadata:
-  author: personal
-  type: workflow
-  tags: [clean-code, solid, tdd, naming, code-review, readability, maintainability, quality]
 ---
 
-# Clean Code Review Skill
+**Scope:** Enforces Robert C. Martin's Clean Code principles — code that is easy to understand, maintain, and modify. Clean code reads like well-written prose, tells a story, and expresses intent clearly without requiring comments.
 
-Enforces Robert C. Martin's Clean Code principles — code that is easy to understand,
-maintain, and modify. Clean code reads like well-written prose, tells a story, and
-expresses intent clearly without requiring comments.
+---
 
-## Use when
+## Zero — Core Concepts
+
+> "The ratio of time spent reading vs. writing is well over 10 to 1. We are constantly reading old code as part of the effort to write new code. Making it easy to read makes it easier to write." — Robert C. Martin
+
+**Pillars of Clean Code:**
+
+| Pillar | Description |
+|--------|-------------|
+| **Meaningful Names** | Names reveal intent; avoid abbreviations, encoding, mental mapping |
+| **Small Functions** | Rarely exceed 20 lines, do one thing, one level of abstraction |
+| **Self-Documenting Code** | Code reads like prose; comments explain WHY, not WHAT |
+| **SOLID Principles** | Five principles ensuring maintainable, flexible design |
+| **TDD** | RED → GREEN → REFACTOR cycle; tests are mandatory |
+| **Immutability** | Prefer `const`/`final`/`readonly`; pure functions by default |
+| **Boy Scout Rule** | Leave the code cleaner than you found it |
+
+**SOLID Summary:**
+
+| Principle | Rule |
+|-----------|------|
+| **S — Single Responsibility** | One class = one reason to change |
+| **O — Open/Closed** | Open for extension, closed for modification |
+| **L — Liskov Substitution** | Subtypes substitutable without altering correctness |
+| **I — Interface Segregation** | Clients depend only on interfaces they use |
+| **D — Dependency Inversion** | Depend on abstractions, not concretions |
+
+---
+
+## One — When to Use
 
 - Reviewing code for quality and maintainability
 - Mentoring developers on clean coding practices
@@ -30,7 +50,7 @@ expresses intent clearly without requiring comments.
 - The user mentions "clean code," "code quality," "SOLID," "naming," or "code review"
 - Preparing code for production or code review
 
-## Do not use when
+**Do NOT use when:**
 
 - Writing code from scratch with no existing code to review
 - The user wants performance optimization only (clean code is about readability, not speed)
@@ -39,49 +59,107 @@ expresses intent clearly without requiring comments.
 
 ---
 
-## Core Philosophy
+## Two — Hard Prohibitions
 
-> "The ratio of time spent reading vs. writing is well over 10 to 1. We are constantly
-> reading old code as part of the effort to write new code. Making it easy to read makes
-> it easier to write." — Robert C. Martin
+> **HR-1.** Do NOT return `null` — return empty collections, arrays, or special values instead.
+
+> **HR-2.** Do NOT pass `null` as an argument — avoid passing null wherever possible.
+
+> **HR-3.** Do NOT use flag parameters — don't use boolean flags to control behavior.
+
+> **HR-4.** Do NOT write comments that explain bad code — rewrite the code instead.
+
+> **HR-5.** Do NOT allow functions to exceed 20 lines without justification.
+
+> **HR-6.** Do NOT use single-letter variables except loop counters.
+
+> **HR-7.** Do NOT use Hungarian notation (`strName`, `iCount`) or abbreviations (`mgr`, `cstm`).
+
+> **HR-8.** Do NOT mix abstraction levels within a function — higher-level calls lower-level.
+
+> **HR-9.** Do NOT have side effects AND return values from the same function — choose one.
+
+> **HR-10.** Do NOT use exceptions for normal flow control — exceptions are for exceptional cases.
+
+> **HR-11.** Do NOT allow duplicate code — extract and DRY it.
+
+> **HR-12.** Do NOT refactor without a test suite in place.
 
 ---
 
-## 1. Meaningful Names
+## Three — Decision Tree: What to Review
 
-Names should reveal intent. A name should tell you why it exists, what it does, and how
-it's used.
+```
+Reviewing code quality?
+├── Is this new code from scratch?
+│   └── YES → Cannot review; suggest clean-code principles for writing
+├── Does it have names to review?
+│   ├── Single letters, abbreviations, misleading names?
+│   │   └── FIX → Meaningful Names section (Section One rules)
+│   └── Names look good → Continue
+├── Are functions small and focused?
+│   ├── Exceeds 20 lines or does multiple things?
+│   │   └── FIX → Extract Method; apply SRP
+│   └── Functions are clean → Continue
+├── Is there duplication?
+│   ├── Same logic in 2+ places?
+│   │   └── FIX → Extract into shared function; DRY
+│   └── No duplication → Continue
+├── Is error handling correct?
+│   ├── Returns null, swallows exceptions, uses return codes?
+│   │   └── FIX → Use exceptions, no null returns, propagate properly
+│   └── Error handling is clean → Continue
+├── Are SOLID principles followed?
+│   ├── Class has multiple responsibilities?
+│   │   └── FIX → Extract Class; split by responsibility
+│   ├── Clients depend on interfaces they don't use?
+│   │   └── FIX → Interface Segregation
+│   └── All SOLID principles OK → Continue
+├── Are tests present and FIRST-compliant?
+│   ├── No tests or tests violate FIRST?
+│   │   └── FIX → Write tests; follow TDD cycle
+│   └── Tests are good → Continue
+└── Is immutability applied?
+    ├── Mutable state without justification?
+    │   └── FIX → Use const/final/readonly; pure functions
+    └── All clear → Code is clean
+```
 
-### Rules
+---
+
+## Four — Review Process
+
+### Step 1: Scan for Code Smells
+
+Run automated detection first, then manual review.
+
+| Smell | Detection | Primary Fix |
+|-------|-----------|-------------|
+| **Long Method** | Functions > 20 lines | Extract Method |
+| **Large Class** | Classes > 300 lines | Extract Class (SRP) |
+| **Duplicate Code** | Same block in 2+ places | Extract Method / Pull Up |
+| **Long Parameter List** | Methods > 3 parameters | Introduce Parameter Object |
+| **Feature Envy** | Method uses another class's data more | Move Method |
+| **Data Clumps** | Fields always appear together | Extract Class |
+| **Switch Statements** | Long chains of switch/if-else | Replace Conditional with Polymorphism |
+| **Dead Code** | Unreachable or unused code | Remove |
+
+### Step 2: Check Naming
 
 | Rule | Bad | Good |
 |------|-----|------|
 | Reveal intent | `d` | `elapsedTimeInDays` |
 | Avoid disinformation | `hp`, `aix` for accounts | `accountPayable` |
-| Make meaningful distinctions | `a1`, `a2`, `a3` | `source`, `destination`, `purpose` |
-| Use pronounceable names | `hmwk` | `homework` |
-| Use searchable names | `86400000` | `MILLISECONDS_PER_DAY` |
+| Meaningful distinctions | `a1`, `a2`, `a3` | `source`, `destination`, `purpose` |
+| Pronounceable names | `hmwk` | `homework` |
+| Searchable names | `86400000` | `MILLISECONDS_PER_DAY` |
 | No mental mapping | `l => ...` | `location => ...` |
 | Avoid encoding | `strName`, `iCount` | `name`, `count` |
 | Classes are nouns | — | `Customer`, `Invoice` |
 | Methods are verbs | — | `postPayment`, `calculateInvoice` |
-| Booleans read as questions | — | `isValid`, `hasPermission` |
+| Booleans as questions | — | `isValid`, `hasPermission` |
 
-### Anti-Patterns
-
-- Single letter variables: `a`, `b`, `i` (except loop counters)
-- Abbreviations: `mgr`, `cstm`, `req`
-- Misleading names: `list`, `temp`, `data`
-- Hungarian notation: `strName`, `iCount`
-- Gratuitous context: `car.carMake` → `car.make`
-
----
-
-## 2. Functions
-
-Functions should be small, do one thing, and operate at a single level of abstraction.
-
-### Rules
+### Step 3: Check Function Rules
 
 | Rule | Description |
 |------|-------------|
@@ -94,27 +172,19 @@ Functions should be small, do one thing, and operate at a single level of abstra
 | **No side effects** | Either return something OR have side effects, not both |
 | **DRY** | No duplicate code |
 
-### Command Query Separation
-
-Functions should either do something or answer something, not both.
-
+**Command Query Separation:** Functions should either do something or answer something, not both.
 - Bad: `public void setSanitized(String sanitized)` — sets AND returns boolean
 - Good: `public void sanitize(String value)` / `public boolean isSanitized()`
 
----
+### Step 4: Check Comments
 
-## 3. Comments
+**When NOT to Comment:**
+- Redundant comments — `// increment counter` before `counter++`
+- Misleading comments — comments that contradict code
+- Mandatory comments — added just to follow a policy
+- API docs on internal code — good naming is better
 
-> "Don't comment bad code — rewrite it." — Brian W. Kernighan
-
-### When NOT to Comment
-
-- **Redundant comments** — `// increment counter` before `counter++`
-- **Misleading comments** — comments that contradict code
-- **Mandatory comments** — comments added just to follow a policy
-- **API docs on internal code** — good naming is better
-
-### When to Comment
+**When to Comment:**
 
 | Type | Example |
 |------|---------|
@@ -124,28 +194,9 @@ Functions should either do something or answer something, not both.
 | **TODO** | Things that need to be done (review periodically) |
 | **Amplification** | `// Must be called before calcTax()` |
 
----
-
-## 4. Error Handling
-
-### Rules
-
-| Rule | Description |
-|------|-------------|
-| **Use exceptions** | Not return codes |
-| **Write try-catch-finally first** | Define what happens before how it fails |
-| **Don't return null** | Return empty collections, arrays, or special values |
-| **Don't pass null** | Avoid passing null as an argument |
-| **Propagate properly** | Catch at the right level; don't swallow silently |
-| **Exceptions are for exceptional cases** | Not for normal flow control |
-
----
-
-## 5. Formatting
+### Step 5: Check Formatting
 
 > "The purpose of formatting is to reveal the logical structure of the code."
-
-### Rules
 
 | Rule | Target |
 |------|--------|
@@ -156,17 +207,11 @@ Functions should either do something or answer something, not both.
 | **Whitespace** | Around operators and keywords |
 | **Conformity** | Team follows consistent style guide |
 
----
+### Step 6: Check Objects and Data Structures
 
-## 6. Objects and Data Structures
+> "Objects hide their data behind abstractions and expose functions. Data structures expose their data and have no significant functions."
 
-> "Objects hide their data behind abstractions and expose functions. Data structures
-> expose their data and have no significant functions."
-
-### Law of Demeter
-
-Objects should only talk to their immediate friends. Methods should only call methods on:
-
+**Law of Demeter:** Methods should only call methods on:
 1. Itself
 2. Objects passed as parameters
 3. Objects created within the method
@@ -174,24 +219,16 @@ Objects should only talk to their immediate friends. Methods should only call me
 
 Bad: `ctxt.getScratchDir().absolutePath()`
 
----
+### Step 7: Check TDD Compliance
 
-## 7. Unit Tests (TDD)
-
-### The Three Laws of TDD
-
+**The Three Laws of TDD:**
 1. You may not write production code until you have written a failing unit test
 2. You may not write more of a unit test than is sufficient to fail
 3. You may not write more production code than is sufficient to pass the currently failing test
 
-### The TDD Cycle
+**The TDD Cycle:** `RED → GREEN → REFACTOR`
 
-```
-RED → GREEN → REFACTOR
-Write Failing Test → Make Test Pass → Refactor
-```
-
-### FIRST Principles
+**FIRST Principles:**
 
 | Principle | Description |
 |-----------|-------------|
@@ -201,76 +238,11 @@ Write Failing Test → Make Test Pass → Refactor
 | **Self-Validating** | Boolean result: pass or fail |
 | **Timely** | Written at the right time (before production code) |
 
-### Test Pattern: Arrange → Act → Assert
+**Test Pattern:** Arrange → Act → Assert
 
-```java
-// Arrange: Set up the test
-// Act: Execute the behavior
-// Assert: Verify the outcome
-```
-
----
-
-## 8. SOLID Principles
-
-### S — Single Responsibility Principle
-
-"A class should have only one reason to change."
-
-- One class = one responsibility
-- Easier to test, understand, and modify
-
-### O — Open/Closed Principle
-
-"Software entities should be open for extension, but closed for modification."
-
-- Add functionality without changing existing code
-- Use interfaces and abstractions
-
-### L — Liskov Substitution Principle
-
-"Subtypes must be substitutable for their base types without altering correctness."
-
-- Subclasses must honor the "is-a" relationship
-- Must not break the program when substituted
-
-### I — Interface Segregation Principle
-
-"Clients should not be forced to depend on interfaces they do not use."
-
-- Keep interfaces small and focused
-- Create role interfaces, not fat interfaces
-
-### D — Dependency Inversion Principle
-
-"High-level modules should not depend on low-level modules. Both should depend on abstractions."
-
-- Depend on abstractions, not concretions
-- Makes code flexible and testable
-
----
-
-## 9. The Boy Scout Rule
-
-> "Leave the code cleaner than you found it."
-
-### Practice
-
-- When you touch code, make it better
-- Small, incremental improvements compound over time
-- Rename confusing variables
-- Extract confusing sections into well-named functions
-- Remove dead code
-- Add missing tests
-- Simplify complex conditions
-
----
-
-## 10. Immutability
+### Step 8: Check Immutability
 
 > "If you don't need to change it, make it immutable."
-
-### Rules
 
 - Use `const` / `final` / `readonly` by default; only use mutable when mutation is the point
 - Prefer pure functions (no side effects, same input → same output)
@@ -278,47 +250,54 @@ Write Failing Test → Make Test Pass → Refactor
 - Avoid reassigning parameters; use local variables instead
 - When mutation is necessary, make it explicit and contained in a single method
 
-### Benefits
-
-- Easier to reason about (no hidden state changes)
-- Thread-safe by default
-- Easier to test (no setup/teardown for shared state)
-- Prevents a class of bugs (accidental mutation, race conditions)
+**Benefits:** Easier to reason about, thread-safe by default, easier to test, prevents accidental mutation and race conditions.
 
 ---
 
-## Test Coverage Strategy
+## Five — Error Handling
 
-### What to test
-
-| Priority | What | Why |
-|----------|------|-----|
-| 1 | Business logic / domain rules | Highest value, most fragile |
-| 2 | Edge cases and error paths | Where bugs hide |
-| 3 | Integration points | Where systems break |
-| 4 | UI components (critical paths) | User-facing behavior |
-| 5 | Utility functions | Low risk, easy to test |
-
-### Coverage targets
-
-- **New code:** 80%+ coverage (measured by line/branch)
-- **Existing code:** Don't lower the bar; improve incrementally
-- **Critical paths:** 100% (payment, auth, data integrity)
-- **Legacy code:** Characterization tests first, then improve
-
-### FIRST principles reminder
-
-- **Fast** — Tests run in milliseconds
-- **Independent** — Tests don't depend on each other
-- **Repeatable** — Same result every time
-- **Self-Validating** — Boolean pass/fail
-- **Timely** — Written at the right time (before or alongside production code)
+| Violation | Fix |
+|-----------|-----|
+| Returns `null` | Return empty collections, arrays, or special values |
+| Passes `null` | Avoid passing null as an argument |
+| Uses return codes | Use exceptions instead |
+| Swallows exceptions | Catch at the right level; don't swallow silently |
+| Exception in normal flow | Exceptions are for exceptional cases only |
+| No try-catch-finally | Write try-catch-finally first — define what happens before how it fails |
 
 ---
 
-## Pre-Delivery Checklist
+## Six — Key Rules
 
-Before declaring code clean:
+| ID | Rule |
+|----|------|
+| **HR-1** | Never return null; return empty collections or special values |
+| **HR-2** | Never pass null as an argument |
+| **HR-3** | Never use flag parameters |
+| **HR-4** | Never comment bad code — rewrite it |
+| **HR-5** | Functions rarely exceed 20 lines |
+| **HR-6** | No single-letter variables except loop counters |
+| **HR-7** | No Hungarian notation or abbreviations |
+| **HR-8** | One level of abstraction per function |
+| **HR-9** | No side effects AND return values from same function |
+| **HR-10** | Exceptions for exceptional cases only |
+| **HR-11** | No duplicate code |
+| **HR-12** | Never refactor without a test suite |
+| **SRP** | One class = one reason to change |
+| **OCP** | Open for extension, closed for modification |
+| **LSP** | Subtypes substitutable for base types |
+| **ISP** | Clients depend only on interfaces they use |
+| **DIP** | Depend on abstractions, not concretions |
+| **TDD** | RED → GREEN → REFACTOR; tests mandatory |
+| **FIRST** | Fast, Independent, Repeatable, Self-Validating, Timely |
+| **Immutable** | Use const/final/readonly by default |
+| **Boy Scout** | Leave code cleaner than you found it |
+
+---
+
+## Seven — Evidence & Checklist
+
+**Pre-Delivery Checklist:**
 
 - [ ] Names reveal intent and are searchable
 - [ ] Functions are small (< 20 lines), do one thing, have few arguments
@@ -334,33 +313,24 @@ Before declaring code clean:
 - [ ] TDD cycle was followed (RED → GREEN → REFACTOR)
 - [ ] Code is cleaner than when you found it (boy scout rule)
 
----
+**Gate Implications:**
 
-## Gate Implications
+| Gate | Condition |
+|------|-----------|
+| **BLOCK** | Functions exceed 20 lines without justification |
+| **BLOCK** | Names don't reveal intent (single letters, abbreviations, misleading) |
+| **BLOCK** | Duplicate code exists without abstraction |
+| **BLOCK** | Classes have multiple responsibilities |
+| **BLOCK** | SOLID principles are violated |
+| **BLOCK** | Tests don't follow FIRST principles |
+| **BLOCK** | Null is returned or passed where avoidable |
+| **BLOCK** | Comments explain bad code instead of fixing it |
+| **WARN** | Some functions are slightly long but well-named and focused |
+| **WARN** | Comments are redundant but not harmful |
+| **WARN** | Formatting is slightly inconsistent but functionally correct |
+| **WARN** | Test coverage could be higher but core paths are covered |
 
-Gate must **BLOCK** when:
-
-- Functions exceed 20 lines without justification
-- Names don't reveal intent (single letters, abbreviations, misleading)
-- Duplicate code exists without abstraction
-- Classes have multiple responsibilities
-- SOLID principles are violated
-- Tests don't follow FIRST principles
-- Null is returned or passed where avoidable
-- Comments explain bad code instead of fixing it
-
-Gate may **WARN** when:
-
-- Some functions are slightly long but well-named and focused
-- Comments are redundant but not harmful
-- Formatting is slightly inconsistent but functionally correct
-- Test coverage could be higher but core paths are covered
-
----
-
-## Evidence Required
-
-A review using this skill should produce:
+**Evidence Required:**
 
 - Code smell identification (naming, function size, duplication, etc.)
 - SOLID principle compliance check
@@ -370,31 +340,12 @@ A review using this skill should produce:
 
 ---
 
-## Test Cases
+## Reference Guides
 
-### Test Case 1: Naming violations
-**Input:** A function `calc()` with variables `d`, `tmp`, `res`, and a class `Proc` with method `doStuff()`.
-**Expected output:** A review identifying: single-letter variables (violation), abbreviations (violation), unclear class name (violation), unclear method name (violation). Recommendations: rename to `calculateElapsedDays()`, `temporaryResult`, `response`, `Processor`, `processOrder()`.
-**Assertion:** At least 4 naming violations identified. Each includes a specific rename recommendation.
-
-### Test Case 2: Function size violation
-**Input:** A 45-line function that parses CSV, validates rows, transforms data, writes to database, sends email, and logs results.
-**Expected output:** A review identifying: function does multiple things (SRP violation), exceeds 20-line guideline, mixed abstraction levels. Recommendations to extract into parseCsv(), validateRows(), transformData(), persistToDatabase(), sendNotification(), logResults().
-**Assertion:** Output identifies the function as violating SRP and the 20-line guideline. Recommends at least 4 extract-method operations.
-
-### Test Case 3: SOLID violation
-**Input:** A `UserService` class with methods: createUser(), deleteUser(), sendWelcomeEmail(), generateReport(), exportToCSV(), calculateMetrics().
-**Expected output:** A review identifying: SRP violation (UserService handles CRUD, email, reporting, metrics), recommending extraction into UserService, EmailService, ReportService, MetricsService.
-**Assertion:** Output identifies SRP violation and recommends splitting into at least 3 focused classes.
----
-
-## Companion Skills
-
-| Skill | Connection |
-|-------|------------|
-| `refactoring-catalog` | Fowler's catalog provides the techniques to fix Clean Code violations |
-| `legacy-code-workshop` | Legacy Code techniques enable fixing violations by breaking dependencies |
-| `pragmatic-development` | DRY and orthogonality are both Clean Code and Pragmatic principles |
-| `software-metrics-quality` | Metrics quantify Clean Code violations (SOLID → CBO/LCOM, naming → MI) |
-
-
+| Topic | See |
+|-------|-----|
+| Fowler's refactoring techniques | `refactoring-catalog` skill |
+| Breaking dependencies for testability | `legacy-code-workshop` skill |
+| DRY and orthogonality principles | `pragmatic-development` skill |
+| Metrics to quantify violations | `software-metrics-quality` skill |
+| Detailed test cases and examples | `references/condensed.md` |

@@ -47,7 +47,7 @@ actors, value statements, and cross-capability dependencies.
 
 ### Stage 2 — Feature Mapping
 | Capability Element | Gherkin Element |
-|-------------------|-----------------|
+|---|---|
 | L1 Capability | Feature (or feature set if multi-seam) |
 | L2 Capability | Scenario |
 | Description | Feature description |

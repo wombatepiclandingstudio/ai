@@ -8,15 +8,16 @@ description: >
   Includes framework-specific patterns for Astro, Next.js, Vue/Nuxt, SvelteKit, Angular,
   React SPA, and server-rendered apps. Covers micro-frontend, monorepo, i18n, and
   performance architecture.
-version: "1.0"
-license: MIT
-metadata:
-  author: personal
-  type: workflow
-  tags: [architecture, frontend, shared-layout, routing, navigation, consistency, page-drift, meta-tags]
 ---
 
+**Scope:** This skill enforces architectural consistency in multi-page web projects. It applies
+when adding pages, routes, or structural components. It does not apply to single-page apps with
+no routing, standalone micro-frontends with intentional shell ownership, backend-only code,
+CLI tools, or libraries.
+
 # Web Architecture Guardrails
+
+## Zero — Core Concepts
 
 When an LLM adds a page or makes structural changes to a web project, it often copies the
 shell (header, footer, sidebar, meta tags) into the new file instead of inheriting it from a
@@ -25,7 +26,64 @@ break or point to stale URLs, styles drift, and meta/SEO tags become inconsisten
 enforces a shared-layout-first architecture and a mandatory verification workflow that catches
 these regressions before they ship.
 
-## Use when
+### Six Architectural Principles
+
+**1. Single Source of Truth for the Shell.** Every multi-page web project must have exactly one
+master layout that wraps all page content. The shell owns: `<!doctype html>`, `<html>`, `<head>`,
+`<body>` tags, charset/viewport/generator meta, favicon and canonical/OG/Twitter meta structure,
+global stylesheets and CSS custom properties, shared navigation, shared footer, any persistent UI
+(toasters, modals, cookie banners), and the content insertion point (`<slot>`, `<Outlet>`,
+`{children}`, `{% block %}`). Pages own only: page-specific title and description (passed as
+props/metadata), page-specific content for the layout's content slot, page-specific meta overrides,
+and page-specific scoped styles.
+
+**2. Hierarchical Routing.** Routes must be registered as children of the layout route, not as
+standalone entries. When the router renders a page, the layout wraps it automatically.
+
+Correct:
+```
+/ (layout)           → renders shell + <Outlet>
+  /                  → renders Home content
+  /about             → renders About content
+  /blog              → renders Blog content
+    /[slug]          → renders BlogPost content
+```
+
+Incorrect:
+```
+/                    → Home page (includes its own <html>, <head>, <body>, navbar, footer)
+/about               → About page (includes its own <html>, <head>, <body>, navbar, footer)
+```
+
+**3. Navigation as a Derived Artifact.** Navigation should be driven by a single route/data
+structure. Preferred patterns: (1) nav items derived from route config, (2) single data file
+(`nav-items.ts` / `navigation.json` / `routes.yaml`), (3) single navigation component.
+Forbidden: navigation links hardcoded in individual page files or duplicated across layout variants.
+
+**4. Style Architecture: Global → Scoped.**
+
+| Level | What | Where | Example |
+|-------|------|-------|---------|
+| **Design tokens** | Colors, spacing, typography, shadows | CSS custom properties or Tailwind config | `--color-primary: #6366f1` |
+| **Global styles** | Reset, base typography, body/html rules | Single global stylesheet imported by layout | `body { @apply bg-slate-950 text-slate-100 }` |
+| **Layout styles** | Shell structure (navbar height, footer, grid) | Layout component (scoped or module CSS) | Grid template, sticky positioning |
+| **Component styles** | Card, button, input, badge | Component files (scoped, CSS modules, utility classes) | `.card { border-radius: 0.75rem }` |
+| **Page styles** | Page-specific overrides (rare) | Page file, scoped | Unique hero gradient |
+
+No page should define styles for `body`, `html`, `<main>` container width, or any structural shell
+element. Those belong to the layout.
+
+**5. Meta and SEO Consistency.** The layout defines the meta tag structure. Pages provide values
+through props, frontmatter, or head-management API. Every page needs: `<title>` (page-specific),
+`<meta name="description">` (page-specific), `<link rel="canonical">` (derived from URL + site
+config), OG tags (title, description, type, url, image), Twitter card tags. Layout supplies
+sensible defaults if a page omits them. No page ships with missing or empty `<title>`.
+
+**6. URL and Link Integrity.** All internal links generated from consistent base URL configuration,
+not hardcoded absolute URLs. Use relative paths or framework link components. Maintain consistent
+trailing-slash convention (always or never — don't mix). Anchor links reference IDs that exist.
+
+## One — When to Use
 
 - Adding a new page, route, or view to an existing multi-page web project
 - Restructuring or refactoring layouts, navigation, or shared components
@@ -35,430 +93,260 @@ these regressions before they ship.
   or "something changed after I added a page"
 - Migrating from a flat page structure to a hierarchical layout system
 
-## Do not use when
+**Trigger phrases:** "add a page", "create a new route", "add a section", "update the navbar",
+"fix the navigation", "the footer is missing", "links are broken", "this page looks different",
+"make it consistent", "fix the layout", "restructure layouts", "review architecture"
 
-- Building a single-page app with no routing or shared shell
-- Creating a standalone micro-frontend that intentionally has its own shell
-- Working on backend-only code with no UI
-- Building a CLI, library, or non-web artifact
+**Do not use** when: building a single-page app with no routing or shared shell, creating a
+standalone micro-frontend with intentional shell ownership, working on backend-only code,
+building a CLI, library, or non-web artifact.
 
----
+## Two — Hard Rules
 
-## Core Architectural Principles
+> **HR-1.** Every page must render inside the shared layout. A page file must NOT contain
+> `<html>`, `<head>`, `<body>`, `<nav>`, or `<footer>` tags.
 
-### 1. Single Source of Truth for the Shell
+> **HR-2.** Routes must be registered as children of the layout route, not as standalone entries.
 
-Every multi-page web project must have exactly **one** master layout (or layout hierarchy) that
-wraps all page content. The shell — the HTML document skeleton, `<head>`, global meta tags,
-favicon, shared navigation, footer, and global styles — is defined **once** in this layout and
-inherited by every page.
+> **HR-3.** Navigation links come from ONE place: a shared component, data file, or route config.
+> Do NOT put navigation links inside page files.
 
-**The layout owns:**
-- `<!doctype html>`, `<html>`, `<head>`, `<body>` tags
-- Charset, viewport, and generator meta tags
-- Favicon and canonical/OG/Twitter meta tag structure
-- Global stylesheets and CSS custom properties / design tokens
-- Shared navigation component (navbar, sidebar, bottom nav)
-- Shared footer component
-- Any persistent UI (toasters, modals, cookie banners)
-- The `<slot>`, `<Outlet>`, `{children}`, `{% block %}`, or equivalent content insertion point
+> **HR-4.** No page should define styles for `body`, `html`, `<main>` container width, or any
+> structural shell element. Those belong to the layout.
 
-**Pages own only:**
-- Page-specific title and description (passed as props/metadata to the layout)
-- Page-specific content that goes into the layout's content slot
-- Page-specific meta overrides (if the layout supports them)
-- Page-specific styles that are scoped to that page only
+> **HR-5.** If a new page does not provide title/description, the layout must supply sensible
+> defaults. No page ships with missing or empty `<title>`.
 
-### 2. Hierarchical Routing
+> **HR-6.** All internal links must use relative paths or a base URL utility, not hardcoded
+> absolute URLs.
 
-Routes must be registered as children of the layout route, not as standalone entries. When the
-router renders a page, the layout wraps it automatically — the page never renders the shell
-itself.
+> **HR-7.** Maintain a consistent trailing-slash convention (always or never — don't mix).
 
-**Correct:** Route tree where pages are children of the layout:
+> **HR-8.** The layout's `<head>` must include favicon and a default OG image. Pages can override
+> the OG image but must not omit it.
+
+> **HR-9.** Apply the same CSS approach (Tailwind, CSS Modules, scoped styles, utility classes)
+> used by existing pages. Do not introduce a new styling method without justification.
+
+> **HR-10.** When a structural change adds/modifies a page, navigation item, or route, reconcile
+> existing regression tests. Do not leave older tests expecting the previous structure unchanged.
+
+## Three — Decision Trees
+
 ```
-/ (layout)           → renders shell + <Outlet>
-  /                  → renders Home content
-  /about             → renders About content
-  /blog              → renders Blog content
-    /[slug]          → renders BlogPost content
-```
-
-**Incorrect:** Flat routes where each page manages its own shell:
-```
-/                    → Home page (includes its own <html>, <head>, <body>, navbar, footer)
-/about               → About page (includes its own <html>, <head>, <body>, navbar, footer)
-/blog                → Blog page (includes its own <html>, <head>, <body>, navbar, footer)
+Is the request about adding/modifying a page, route, or structural component?
+├── Yes → Is it a multi-page web project with routing?
+│   ├── Yes → Apply this skill (Audit → Implement → Verify workflow)
+│   └── No → Is it a single-page app with no routing?
+│       └── Yes → Do NOT use this skill
+├── No → Is it about backend-only code?
+│   └── Yes → Do NOT use this skill
+└── No → Is it about a CLI, library, or non-web artifact?
+    └── Yes → Do NOT use this skill
 ```
 
-### 3. Navigation as a Derived Artifact
+```
+Framework detection:
+├── Astro → src/layouts/Base.astro; pages in src/pages/; import layout in each page
+├── Next.js (App Router) → app/layout.tsx root; pages as app/page.tsx children
+├── Next.js (Pages Router) → pages/_app.tsx wraps all; _document.tsx for <html> shell
+├── Vue / Nuxt → layouts/default.vue (Nuxt) or App.vue wrapper; pages in pages/
+├── SvelteKit → src/routes/+layout.svelte root; +page.svelte for content
+├── Angular → AppComponent with <router-outlet>; shared modules for nav/footer
+├── React SPA → <Layout> component with <Outlet>; nested route config
+└── Server-rendered (Rails/Django/Laravel) → master template with {% block %} / @yield / <%= yield %>
+```
 
-The navigation component should be driven by a **single route/data structure** — not by
-hardcoded HTML links scattered across files. When a new page is added, the navigation updates
-from that central structure. When the navigation structure is only in one place, it cannot
-drift.
+```
+Adding a new page — workflow decision:
+├── Phase 1: Audit (before changes)
+│   ├── 1. Find the layout root
+│   ├── 2. Find the route registry
+│   ├── 3. Find the navigation source
+│   ├── 4. Find the style architecture
+│   ├── 5. Find the meta pattern
+│   └── 6. Find the base URL pattern
+├── Phase 2: Implement (the change)
+│   ├── 7. Create ONLY page content (no shell)
+│   ├── 8. Register as child of layout route
+│   ├── 9. Update the shared navigation source
+│   ├── 10. Provide meta values using project pattern
+│   ├── 11. Use project's style conventions
+│   └── 12. Use project's link conventions
+└── Phase 3: Verify (after changes)
+    ├── 13. Shell inheritance: navbar, footer, global styles present
+    ├── 14. Navigation: new page in nav, existing links work
+    ├── 15. Style consistency: same fonts, colors, spacing
+    ├── 16. Meta: title, description, canonical, OG tags present
+    ├── 17. Link integrity: all internal links resolve correctly
+    └── 18. Responsive: reflows at mobile/tablet/desktop
+```
 
-**Preferred patterns (in order):**
-1. Navigation items derived from the route configuration itself (framework auto-generates nav)
-2. A single `nav-items.ts` / `navigation.json` / `routes.yaml` data file consumed by the nav component
-3. A single navigation component file where all links are defined (acceptable for small projects)
-
-**Forbidden:** Navigation links hardcoded in individual page files, or duplicated across
-multiple layout variants.
-
-### 4. Style Architecture: Global → Scoped
-
-Styles must follow a clear hierarchy that prevents drift:
-
-| Level | What | Where | Example |
-|-------|------|-------|---------|
-| **Design tokens** | Colors, spacing, typography, shadows | CSS custom properties or Tailwind config | `--color-primary: #6366f1` |
-| **Global styles** | Reset, base typography, body/html rules | Single global stylesheet imported by the layout | `body { @apply bg-slate-950 text-slate-100 }` |
-| **Layout styles** | Shell structure (navbar height, footer, grid) | Layout component (scoped or module CSS) | Grid template, sticky positioning |
-| **Component styles** | Card, button, input, badge | Component files (scoped, CSS modules, utility classes) | `.card { border-radius: 0.75rem }` |
-| **Page styles** | Page-specific overrides (rare) | Page file, scoped | Unique hero gradient |
-
-**Rule:** No page should define styles for `body`, `html`, `<main>` container width, or any
-structural shell element. Those belong to the layout.
-
-### 5. Meta and SEO Consistency
-
-The layout defines the meta tag **structure** (where tags appear, which ones exist). Pages
-provide **values** (title, description, OG data) through props, frontmatter, or a head-management
-API. The layout ensures every page has:
-
-- `<title>` (page-specific)
-- `<meta name="description">` (page-specific)
-- `<link rel="canonical">` (derived from current URL + site config)
-- `<meta property="og:title">`, `og:description`, `og:type`, `og:url` (page-specific or derived)
-- `<meta name="twitter:card">`, `twitter:title`, `twitter:description` (page-specific or derived)
-- `<meta property="og:image">` (global default, page can override)
-
-**Rule:** If a new page does not provide title/description, the layout must supply sensible
-defaults. No page should ship with missing or empty `<title>`.
-
-### 6. URL and Link Integrity
-
-All internal links must be generated from a consistent base URL configuration, not hardcoded
-as absolute URLs. This prevents links from breaking when the site's base path, domain, or
-trailing-slash convention changes.
-
-**Patterns:**
-- Use a `base` or `prefix` utility derived from site config for all internal hrefs
-- Use relative paths (`./about`) or framework-provided link components (`<Link>`, `<a>`)
-- Maintain consistent trailing-slash convention (always or never — don't mix)
-- Anchor links (`#section`) must reference IDs that actually exist on the target page
-
----
-
-## Framework-Specific Patterns
-
-The principles above are universal. This section maps them to common frameworks so the agent
-can apply them concretely. **Read only the section for the detected stack.**
-
-### Astro
-
-- **Layout:** `src/layouts/Base.astro` (or nested layouts). Pages import and wrap content in the layout.
-- **Routing:** File-based (`src/pages/`). Every `.astro` file in `pages/` is a route. Layouts are NOT in `pages/`.
-- **Navigation:** Single `Navbar.astro` component imported by the layout.
-- **Styles:** Global CSS imported once in the layout (`import '../styles/global.css'`). Page-scoped styles via `<style>` blocks.
-- **Meta:** Layout accepts `title` and `description` props. Pages pass them: `<Base title="About">`.
-- **Static paths:** `getStaticPaths()` for dynamic routes. Ensure the function is in the page file, not the layout.
-- **Common LLM error:** Creating a new `.astro` page that includes its own `<html>`, `<head>`, `<body>`, navbar, and footer instead of importing the layout.
-
-### Next.js (App Router)
-
-- **Layout:** `app/layout.tsx` (root layout) and optional segment layouts (`app/dashboard/layout.tsx`).
-- **Routing:** File-based. `app/page.tsx` = `/`, `app/about/page.tsx` = `/about`.
-- **Navigation:** Shared `<Nav>` component imported in root layout. Or derive from route config.
-- **Styles:** Global CSS in `app/globals.css`, imported in root layout. CSS Modules or Tailwind for components.
-- **Meta:** `export const metadata` or `generateMetadata()` in page/layout files. Root layout defines defaults.
-- **Common LLM error:** Adding `layout.tsx` to every route segment unnecessarily, or duplicating the shell in `page.tsx` files instead of relying on the parent layout.
-
-### Next.js (Pages Router)
-
-- **Layout:** `pages/_app.tsx` wraps all pages. `pages/_document.tsx` controls `<html>` shell.
-- **Navigation:** Shared component in `_app.tsx`.
-- **Styles:** Global CSS imported in `_app.tsx`.
-- **Meta:** Per-page via `<Head>` from `next/head`, or use `next-seo`.
-- **Common LLM error:** Adding `<html>`, `<head>`, `<body>` tags in individual pages (those belong in `_document.tsx`).
-
-### Vue / Nuxt
-
-- **Layout:** `layouts/default.vue` (Nuxt) or a root `App.vue` wrapper component.
-- **Routing:** File-based in Nuxt (`pages/`). Route config in Vue Router (`router/index.ts`).
-- **Navigation:** `<NuxtLayout>` + `<NuxtPage>` in `app.vue`. Nav component in layout.
-- **Styles:** Global CSS in `assets/` imported by layout or `nuxt.config`. Scoped `<style>` in components.
-- **Meta:** `useHead()` or `useSeoMeta()` composables. Define defaults in layout, override in pages.
-- **Common LLM error:** Adding `<NuxtLayout>` inside individual pages instead of once in `app.vue`, causing nested layouts to break.
-
-### SvelteKit
-
-- **Layout:** `src/routes/+layout.svelte` (root) and nested `+layout.svelte` files.
-- **Routing:** File-based (`src/routes/`). `+page.svelte` is the page content.
-- **Navigation:** Nav component in root `+layout.svelte`.
-- **Styles:** Global CSS in `+layout.svelte` `<style>` block or imported. `app.html` for `<html>` shell.
-- **Meta:** `<svelte:head>` in pages or layouts. Or `@sveltejs/head` for structured meta.
-- **Common LLM error:** Creating a `+page.svelte` that includes its own `<svelte:head>`, `<nav>`, and `<footer>` instead of relying on the layout.
-
-### Angular
-
-- **Layout:** Root `AppComponent` template with `<router-outlet>`. Shared modules for nav/footer.
-- **Routing:** `app-routing.module.ts` with child routes under the root component.
-- **Navigation:** `NavComponent` selector in `AppComponent` template.
-- **Styles:** Global `styles.css` in `angular.json`. Component-scoped styles via `styleUrls`.
-- **Meta:** `Meta` service from `@angular/platform-browser` or `Title` service.
-- **Common LLM error:** Including `<app-nav>` and `<app-footer>` in every component template instead of only in `AppComponent`.
-
-### React (SPA, no framework router)
-
-- **Layout:** A `<Layout>` component that renders `<Outlet>` from `react-router-dom` or similar.
-- **Routing:** Route config object with nested routes under the layout route.
-- **Navigation:** `<Nav>` component inside `<Layout>`.
-- **Styles:** Global CSS imported once in the entry point or layout. CSS Modules / Tailwind for components.
-- **Meta:** `react-helmet-async` or equivalent. Layout provides defaults, pages override.
-- **Common LLM error:** Wrapping every page component in its own `<Layout>` instead of using nested routes.
-
-### Traditional Server-Rendered (Rails, Django, Laravel, PHP)
-
-- **Layout:** A master template (`base.html`, `layout.blade.php`, `application.html.erb`) with `{% block content %}` / `@yield('content')` / `<%= yield %>`.
-- **Routing:** Route file (e.g., `routes.rb`, `urls.py`, `web.php`). Pages are controllers/views that extend the layout.
-- **Navigation:** Partial template (`_nav.html`, `navbar.blade.php`) included by the layout.
-- **Styles:** Global CSS linked in the layout template.
-- **Meta:** Template blocks for title/description, filled by each page view.
-- **Common LLM error:** Creating a new view file that duplicates the full HTML shell instead of extending the master template.
-
----
-
-## Mandatory Workflow: Adding or Modifying Pages
-
-When a request involves adding a new page, route, or view — or modifying the structure of an
-existing one — follow this workflow **in order**. Do not skip steps.
+## Four — Mandatory Workflow: Adding or Modifying Pages
 
 ### Phase 1: Audit (before making changes)
 
-1. **Identify the layout root.** Find the master layout file. If none exists, flag this as a
-   prerequisite — the project needs a layout before adding pages.
-
+1. **Identify the layout root.** Find the master layout file. If none exists, flag as prerequisite.
 2. **Identify the route registry.** Find where routes are defined (file-based routing directory,
-   route config file, or router setup). Understand how new routes get discovered.
-
-3. **Identify the navigation source.** Find where navigation links are defined. Is it a single
-   component? A data file? Hardcoded in the layout? Determine how a new page's link gets added.
-
-4. **Identify the style architecture.** Find the global stylesheet, design tokens, and the
-   pattern for page-scoped styles. Note any inconsistencies in existing pages.
-
-5. **Identify the meta pattern.** Find how pages provide title/description to the layout. Note
-   the convention (props, frontmatter, head manager, template blocks).
-
-6. **Identify the base URL pattern.** Find how internal links are constructed. Note the
-   trailing-slash convention and any base path configuration.
+   route config file, or router setup).
+3. **Identify the navigation source.** Find where navigation links are defined.
+4. **Identify the style architecture.** Find global stylesheet, design tokens, page-scoped patterns.
+5. **Identify the meta pattern.** Find how pages provide title/description to the layout.
+6. **Identify the base URL pattern.** Find how internal links are constructed.
 
 ### Phase 2: Implement (the change)
 
-7. **Create only the page content.** The new file must contain ONLY the content unique to this
-   page. No `<html>`, no `<head>`, no `<body>`, no navbar, no footer, no global styles. If the
-   framework requires a page component, it wraps content in the layout — it does not replicate
-   the layout.
-
-8. **Register the route correctly.** Add the route as a child of the layout route. For
-   file-based routing, place the file in the correct directory. For config-based routing, add it
-   to the children array of the layout route.
-
-9. **Update navigation.** Add the new page's link to the single navigation source identified in
-   step 3. Do NOT add navigation links inside the page file itself.
-
-10. **Provide meta values.** Pass title, description, and any OG/Twitter overrides to the layout
-    using the project's established pattern.
-
-11. **Use the project's style conventions.** Apply the same CSS approach (Tailwind, CSS Modules,
-    scoped styles, utility classes) used by existing pages. Do not introduce a new styling method.
-
-12. **Use the project's link conventions.** Construct internal hrefs using the same base URL
-    utility or pattern used by existing pages. Maintain the trailing-slash convention.
+7. **Create only the page content.** No `<html>`, `<head>`, `<body>`, navbar, footer, global styles.
+8. **Register the route correctly.** Child of the layout route. File-based: place in correct
+   directory. Config-based: add to children array.
+9. **Update navigation.** Add link to the single navigation source. Do NOT add nav links in page file.
+10. **Provide meta values.** Pass title, description, OG/Twitter overrides using project pattern.
+11. **Use project's style conventions.** Same CSS approach as existing pages.
+12. **Use project's link conventions.** Same base URL utility or pattern. Maintain trailing-slash.
 
 ### Phase 3: Verify (after making changes)
 
-13. **Shell inheritance check.** The new page must render inside the shared layout. Visually
-    confirm: navbar present, footer present, global styles applied, favicon/meta tags present.
+13. **Shell inheritance check.** Navbar present, footer present, global styles applied, favicon/meta tags.
+14. **Navigation check.** New page in nav. Existing links work. Back-links correct.
+15. **Style consistency check.** Same fonts, color palette, spacing, component styles.
+16. **Meta check.** View source: title, description, canonical, OG tags present and correct.
+17. **Link integrity check.** All internal links resolve. No broken anchors.
+18. **Responsive check.** Reflows at mobile/tablet/desktop. No horizontal scroll.
 
-14. **Navigation check.** The new page appears in the navigation. Existing navigation links
-    still work. The new page's back-links (if any) point to correct destinations.
+## Five — Framework-Specific Patterns
 
-15. **Style consistency check.** The new page looks like it belongs to the same site. Same
-    fonts, same color palette, same spacing, same component styles.
+**Read only the section for the detected stack.**
 
-16. **Meta check.** View source or inspect the `<head>`: title, description, canonical, OG tags
-    are present and correct. No empty or missing meta.
+### Astro
+Layout: `src/layouts/Base.astro`. Routing: file-based (`src/pages/`). Layouts NOT in `pages/`.
+Navigation: single `Navbar.astro` imported by layout. Styles: global CSS imported once in layout.
+Meta: layout accepts `title` and `description` props. Common error: creating a page that includes
+its own `<html>`, `<head>`, `<body>`, navbar, and footer instead of importing the layout.
 
-17. **Link integrity check.** All internal links on the new page resolve correctly. All links
-    to the new page (from nav, from other pages) resolve correctly. No broken anchors.
+### Next.js (App Router)
+Layout: `app/layout.tsx` (root) and optional segment layouts. Routing: file-based.
+Navigation: shared `<Nav>` in root layout. Styles: `app/globals.css` in root layout.
+Meta: `export const metadata` or `generateMetadata()`. Common error: adding `layout.tsx` to every
+route segment unnecessarily, or duplicating shell in `page.tsx` files.
 
-18. **Responsive check.** The new page reflows correctly at common breakpoints (mobile, tablet,
-    desktop). No horizontal scroll. No layout breakage.
+### Next.js (Pages Router)
+Layout: `pages/_app.tsx` wraps all pages. `pages/_document.tsx` controls `<html>` shell.
+Navigation: shared component in `_app.tsx`. Styles: global CSS in `_app.tsx`.
+Meta: per-page via `<Head>` from `next/head`. Common error: adding `<html>`, `<head>`, `<body>`
+tags in individual pages.
 
----
+### Vue / Nuxt
+Layout: `layouts/default.vue` (Nuxt) or root `App.vue` wrapper. Routing: file-based in Nuxt.
+Navigation: `<NuxtLayout>` + `<NuxtPage>` in `app.vue`. Styles: global CSS imported by layout.
+Meta: `useHead()` or `useSeoMeta()`. Common error: adding `<NuxtLayout>` inside individual pages.
 
-## Anti-Patterns (What NOT to Do)
+### SvelteKit
+Layout: `src/routes/+layout.svelte` (root) and nested. Routing: file-based.
+Navigation: nav component in root `+layout.svelte`. Styles: global CSS in `+layout.svelte` or
+`app.html`. Meta: `<svelte:head>`. Common error: creating a `+page.svelte` with its own
+`<svelte:head>`, `<nav>`, and `<footer>` instead of relying on layout.
 
-### Shell Duplication
-**Symptom:** New page file contains `<html>`, `<head>`, `<body>`, `<nav>`, `<footer>`, or any
-combination of these.
-**Fix:** Delete the duplicated shell. Import and use the project's layout component/template.
+### Angular
+Layout: root `AppComponent` with `<router-outlet>`. Routing: `app-routing.module.ts`.
+Navigation: `NavComponent` in `AppComponent` template. Styles: global `styles.css`.
+Meta: `Meta` service from `@angular/platform-browser`. Common error: including `<app-nav>` and
+`<app-footer>` in every component template instead of only in `AppComponent`.
 
-### Flat Route Registration
-**Symptom:** New route is registered as a top-level route, outside the layout hierarchy.
-**Fix:** Register it as a child of the layout route so it inherits the shell.
+### React (SPA, no framework router)
+Layout: `<Layout>` component with `<Outlet>`. Routing: nested route config.
+Navigation: `<Nav>` inside `<Layout>`. Styles: global CSS imported once.
+Meta: `react-helmet-async`. Common error: wrapping every page in its own `<Layout>` instead
+of using nested routes.
 
-### Navigation Copy-Paste
-**Symptom:** New page contains its own `<nav>` with hardcoded links instead of using the shared
-navigation component.
-**Fix:** Delete the page's nav. Use the shared nav from the layout. Add the new link to the
-shared nav source.
+### Traditional Server-Rendered (Rails, Django, Laravel, PHP)
+Layout: master template (`base.html`, `layout.blade.php`, `application.html.erb`) with
+`{% block content %}` / `@yield('content')` / `<%= yield %>`. Navigation: partial template
+included by layout. Meta: template blocks filled by each page view. Common error: creating a new
+view that duplicates the full HTML shell instead of extending the master template.
 
-### Footer Drift
-**Symptom:** Some pages have a footer, others don't. Or the footer content differs across pages.
-**Fix:** The footer belongs in the layout, once. Remove any per-page footers.
+## Six — Anti-Patterns
 
-### Meta Tag Inconsistency
-**Symptom:** Some pages have `<meta name="description">`, others don't. OG tags appear on some
-pages but not all. Titles follow different patterns.
-**Fix:** The layout must provide a meta tag structure with defaults. Pages override values, not
-structure.
+| Anti-Pattern | Symptom | Fix |
+|-------------|---------|-----|
+| Shell duplication | Page has its own `<html>`/`<head>`/`<body>`/`<nav>`/`<footer>` | Delete shell; use layout |
+| Flat route registration | Route outside layout hierarchy | Nest under layout route |
+| Navigation copy-paste | Page has its own `<nav>` | Use shared nav; add link to shared source |
+| Footer drift | Footer missing or different on some pages | Footer in layout, once |
+| Meta inconsistency | Some pages missing `<title>` or description | Layout provides defaults |
+| Style method drift | Page uses different CSS approach | Match existing convention |
+| Broken internal links | Hardcoded absolute URLs | Use relative paths or base utility |
+| Inconsistent trailing slashes | Mix of `/about` and `/about/` | Pick convention; enforce in router config |
+| Scattered global styles | `body`/`html` styles in multiple files | Consolidate into layout's global stylesheet |
+| Missing favicon/OG | Some pages lack favicon or OG image | Layout `<head>` includes them |
 
-### Style Method Drift
-**Symptom:** Some pages use Tailwind, others use CSS Modules, others use inline styles for the
-same type of component.
-**Fix:** Pick one approach per category (utility classes for layout, scoped CSS for components)
-and apply it consistently. Refactor outliers.
+## Seven — Evidence & Checklist
 
-### Broken Internal Links
-**Symptom:** Links use hardcoded absolute URLs (`http://localhost:3000/about`) instead of
-relative paths or base-aware utilities. Links break when the base path or domain changes.
-**Fix:** Use relative paths or a base URL utility derived from site config.
-
-### Inconsistent Trailing Slashes
-**Symptom:** Some links end with `/` and others don't (`/about` vs `/about/`). This causes
-redirects, duplicate content, or broken relative link resolution.
-**Fix:** Pick a convention (always or never) and enforce it in the router config and all
-internal links.
-
-### Scattered Global Styles
-**Symptom:** `body`, `html`, or `:root` styles are defined in multiple files (page-level
-stylesheets, component-level resets).
-**Fix:** Consolidate into a single global stylesheet imported by the layout.
-
-### Missing Favicon / OG Image
-**Symptom:** Some pages have a favicon, others don't. OG image is missing or inconsistent.
-**Fix:** The layout's `<head>` must include favicon and a default OG image. Pages can override
-the OG image but must not omit it.
-
----
-
-## Advanced Architecture Patterns
-
-### Micro-frontend considerations
-
-When the project uses micro-frontends (Module Federation, single-spa, or framework-native):
-
-- each micro-frontend owns its own routes within its bounded context;
-- the shell layout remains the single source of truth for shared navigation, footer, and meta;
-- shared dependencies (React, Vue, design system) are hoisted to the shell — not duplicated;
-- navigation updates propagate from the shell, not from individual micro-frontends;
-- styles must be scoped to the micro-frontend (CSS Modules, shadow DOM, or unique class prefix);
-- never let a micro-frontend redefine global styles, fonts, or CSS custom properties.
-
-### Monorepo structural patterns
-
-For projects using monorepo tooling (Turborepo, Nx, Lerna, pnpm workspaces):
-
-- shared packages (UI library, utilities, config) live in `packages/` or `libs/`;
-- each app imports shared code — never copy-paste between apps;
-- the layout component is shared via a package, not duplicated per app;
-- lint rules enforce import boundaries (apps can import from packages, not from each other);
-- CI builds only affected packages, not the entire monorepo.
-
-### Internationalization (i18n) routing patterns
-
-For multilingual web projects:
-
-- locale prefix in the URL: `/en/about`, `/es/about`, or domain-based: `en.example.com`;
-- the layout reads the locale from the URL and applies the correct language;
-- translation files live in a `locales/` or `i18n/` directory, not inline in components;
-- the navigation component renders links for the current locale;
-- `hreflang` alternate links in `<head>` for SEO;
-- default locale redirects (e.g., `/` → `/en/`) are handled by the router, not the page.
-
-### Performance architecture
-
-For route-level performance optimization:
-
-- code-split by route: each page loads only its own JavaScript;
-- lazy-load components below the fold (accordion content, modal bodies, tab panels);
-- preload the LCP element (hero image, main heading) with `fetchpriority="high"`;
-- reserve space for async content (skeleton screens, aspect-ratio on images);
-- move non-critical CSS to `media="print"` swap or inline critical styles;
-- use `loading="lazy"` for images below the fold; `loading="eager"` for LCP.
-
----
-
-## Pre-Delivery Checklist
-
-Before declaring a page addition or structural change complete, verify:
+**Pre-delivery checklist:**
 
 - [ ] **Layout:** New page renders inside the shared layout (navbar, footer, global styles present)
 - [ ] **Routing:** Route is registered as a child of the layout route (not standalone)
 - [ ] **Navigation:** New page appears in the shared nav; existing nav links unchanged
 - [ ] **Meta:** `<title>`, `<meta description>`, canonical, OG tags present and correct
 - [ ] **Styles:** Same fonts, colors, spacing as existing pages; no new style method introduced
-- [ ] **Links:** All internal links use relative paths or base-aware utilities; trailing-slash convention maintained
+- [ ] **Links:** All internal links use relative paths or base-aware utilities; trailing-slash maintained
 - [ ] **No shell duplication:** Page file does not contain `<html>`, `<head>`, `<body>`, `<nav>`, or `<footer>`
 - [ ] **No style leakage:** Page does not define `body`/`html`/`:root` styles
 - [ ] **Responsive:** Page reflows at mobile/tablet/desktop; no horizontal scroll
 - [ ] **Favicon/OG:** Present and consistent with other pages
 - [ ] **Consistency:** Page looks like it belongs to the same site as existing pages
 
----
+**Evidence required:**
 
-## Gate Implications
+- The layout file(s) that wrap the new page (show the shared shell is used);
+- The route registration (show the route is a child of the layout);
+- The navigation source (show where the new link was added);
+- The new page file (show it contains only page content, no shell);
+- The `<head>` output (show meta tags are present and correct);
+- A visual or structural comparison with at least one existing page (show consistency);
+- Build/type/lint checks passing when available.
 
-Gate must BLOCK when:
+**Gate implications — BLOCK when:**
 
 - New page duplicates the shell (`<html>`, `<head>`, `<body>`, `<nav>`, `<footer>`) instead of
-  using the shared layout
-- Route is registered outside the layout hierarchy
-- Navigation links are hardcoded in the page file instead of the shared nav source
-- Global styles (`body`, `html`, `:root`) are redefined in the page
-- Internal links use hardcoded absolute URLs instead of relative paths or base-aware utilities
-- Meta tags are missing or inconsistent with the project's established pattern
-- The new page introduces a different style method (e.g., inline styles when the project uses
-  Tailwind) without justification
+  using the shared layout;
+- Route is registered outside the layout hierarchy;
+- Navigation links are hardcoded in the page file instead of the shared nav source;
+- Global styles (`body`, `html`, `:root`) are redefined in the page;
+- Internal links use hardcoded absolute URLs instead of relative paths or base-aware utilities;
+- Meta tags are missing or inconsistent with the project's established pattern;
+- The new page introduces a different style method without justification.
 
-Gate may WARN when:
+**Gate may WARN when:**
 
-- The page uses a slightly different component composition pattern (e.g., different card variant)
-  but still inherits the shell correctly
-- The page's meta description is shorter or longer than typical but still present
-- The page introduces a new CSS custom property that could have reused an existing token
-- Trailing-slash convention is inconsistent on the new page but matches the majority of existing
-  pages
+- The page uses a slightly different component composition pattern but inherits the shell correctly;
+- The page's meta description is shorter/longer than typical but still present;
+- The page introduces a new CSS custom property that could have reused an existing token;
+- Trailing-slash convention is inconsistent on the new page but matches majority of existing pages.
 
----
+**Regression test reconciliation:**
 
-## Evidence Required
+When a structural change adds or modifies a page, navigation item, or route:
+- Do not leave older tests expecting the previous navigation or route structure unchanged;
+- Update any snapshot tests that capture the nav or page shell;
+- If link assertions exist, ensure they still pass after the change;
+- Prefer testing navigation through the shared nav component, not per-page nav markup.
 
-A request using this skill should provide:
+**Advanced architecture patterns:**
 
-- The layout file(s) that wrap the new page (show the shared shell is used)
-- The route registration (show the route is a child of the layout)
-- The navigation source (show where the new link was added)
-- The new page file (show it contains only page content, no shell)
-- The `<head>` output (show meta tags are present and correct)
-- A visual or structural comparison with at least one existing page (show consistency)
-- Build/type/lint checks passing when available
+- **Micro-frontend:** each micro-frontend owns routes within its bounded context; shell layout
+  remains single source of truth; shared dependencies hoisted to shell; styles scoped.
+- **Monorepo:** shared packages in `packages/` or `libs/`; layout shared via package; lint rules
+  enforce import boundaries; CI builds only affected packages.
+- **i18n routing:** locale prefix in URL; layout reads locale; translation files in `locales/`;
+  `hreflang` alternate links; default locale redirects handled by router.
+- **Performance:** code-split by route; lazy-load below fold; preload LCP element; reserve space
+  for async content; `loading="lazy"` for below-fold images.
 
----
+**Reference guides:**
+
+| Reference | Description |
+|-----------|-------------|
+| `references/condensed.md` | Condensed version for tools that don't read SKILL.md format |
 
 ## Test Cases
 
@@ -476,16 +364,3 @@ A request using this skill should provide:
 **Input:** A page with no `<title>`, no `<meta name="description">`, and no Open Graph tags.
 **Expected output:** Identification of missing meta tags: title (required), description (required), OG tags (recommended). Recommended values based on page content.
 **Assertion:** Output identifies all missing meta tags. Provides recommended title and description values.
----
-
-## Regression Test Reconciliation
-
-When a structural change adds or modifies a page, navigation item, or route:
-
-- Do not leave older tests expecting the previous navigation or route structure unchanged
-- Update any snapshot tests that capture the nav or page shell
-- If link assertions exist (e.g., "navbar contains link to /about"), ensure they still pass
-  after the change
-- Prefer testing navigation through the shared nav component, not through per-page nav markup
-
-

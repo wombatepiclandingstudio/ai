@@ -35,15 +35,16 @@ Use an API client boundary, not hidden fetches inside components.
 3. Performance (HIGH): lazy-load, reserve space (CLS<0.1), virtualize long lists, debounce input.
 4. Style consistency (HIGH): match product type, consistent system, vector icons (no emoji).
 5. Layout & responsive (HIGH): mobile-first, no horizontal scroll, no fixed-px, allow zoom.
- 6. Typography & color (MEDIUM): 16px base / 1.5 line-height, semantic color tokens, no <12px body.
- 7. Animation (MEDIUM): 150–300ms, conveys meaning, spatial continuity, honor reduced-motion.
- 8. Forms & feedback (MEDIUM): visible labels, inline errors near field, progressive disclosure.
- 9. Navigation (HIGH): predictable back, bottom nav ≤5, deep links, route-scoped test selectors.
- 10. Charts & data (LOW): legends, tooltips, never color-alone to convey meaning.
- 11. Security & robustness (HIGH): HTTPS-only + HSTS/CSP/nosniff; sanitize HTML sinks (Trusted
-     Types); SRI for third-party; semantic valid HTML; secure cookies; global error handling.
- Deep web-quality detail (WCAG 2.2, Core Web Vitals LCP/INP/CLS, security baseline) is in
- `web-quality.md`; the structural patterns are in `design-patterns.md`.
+6. Typography & color (MEDIUM): 16px base / 1.5 line-height, semantic color tokens, no <12px body.
+7. Animation (MEDIUM): 150–300ms, conveys meaning, spatial continuity, honor reduced-motion.
+8. Forms & feedback (MEDIUM): visible labels, inline errors near field, progressive disclosure.
+9. Navigation (HIGH): predictable back, bottom nav ≤5, deep links, route-scoped test selectors.
+10. Charts & data (LOW): legends, tooltips, never color-alone to convey meaning.
+11. Security & robustness (HIGH): HTTPS-only + HSTS/CSP/nosniff; sanitize HTML sinks (Trusted
+    Types); SRI for third-party; semantic valid HTML; secure cookies; global error handling.
+
+Deep web-quality detail (WCAG 2.2, Core Web Vitals LCP/INP/CLS, security baseline) is in
+`web-quality.md`; the structural patterns are in `design-patterns.md`.
 
 ## Evidence required
 

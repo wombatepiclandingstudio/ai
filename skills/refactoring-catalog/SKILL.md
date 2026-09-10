@@ -7,40 +7,15 @@ description: >
   before/after examples, the exact catalog technique to apply, and test verification
   steps. Includes automated smell detection guidance and the full Composing Methods,
   Moving Features, Organizing Data, Simplifying Conditionals, and Generalization catalog.
-version: "1.0"
-license: MIT
-metadata:
-  author: personal
-  type: workflow
-  tags: [refactoring, code-smells, clean-code, design, fowler, technical-debt, before-after, behavior-preserving]
 ---
 
-# Refactoring Catalog Skill
-
-Applies Martin Fowler's disciplined refactoring technique: a series of small,
-behavior-preserving transformations that improve internal structure without changing
-external behavior. Each refactoring is a named, proven technique with clear mechanics.
-
-## Use when
-
-- The user asks to refactor, clean up, or restructure existing code
-- Code smells are identified (long methods, large classes, duplication, etc.)
-- Before adding a feature to messy code — clean up first
-- After adding a feature — improve the design you just worked with
-- When fixing a bug — understand the code better while you're in there
-- During code review — identify refactoring opportunities
-- The user mentions "technical debt," "code smells," "clean code," or "design improvement"
-
-## Do not use when
-
-- The user is writing new code from scratch (no existing code to refactor)
-- There are no tests and the user won't write characterization tests first
-- The user wants to rewrite the entire system (that's a rewrite, not refactoring)
-- The request is about performance optimization (refactoring preserves behavior, not improves performance)
+**Scope:** Applies Martin Fowler's disciplined refactoring technique: a series of small, behavior-preserving transformations that improve internal structure without changing external behavior. Each refactoring is a named, proven technique with clear mechanics.
 
 ---
 
-## Core Principles
+## Zero — Core Concepts
+
+**Seven Principles of Refactoring:**
 
 1. **Refactoring is behavior-preserving** — external behavior never changes
 2. **Small, incremental steps** — each change is tiny and safe
@@ -50,9 +25,7 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 6. **Clean code is the goal** — obvious, minimal, no duplication, passes all tests
 7. **Refactoring is continuous** — not a one-time activity; part of daily development
 
----
-
-## When to Refactor
+**When to Refactor:**
 
 | Trigger | Action |
 |---------|--------|
@@ -65,9 +38,114 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 
 ---
 
-## Code Smells (When to Refactor)
+## One — When to Use
 
-### Bloaters
+- The user asks to refactor, clean up, or restructure existing code
+- Code smells are identified (long methods, large classes, duplication, etc.)
+- Before adding a feature to messy code — clean up first
+- After adding a feature — improve the design you just worked with
+- When fixing a bug — understand the code better while you're in there
+- During code review — identify refactoring opportunities
+- The user mentions "technical debt," "code smells," "clean code," or "design improvement"
+
+**Do NOT use when:**
+
+- The user is writing new code from scratch (no existing code to refactor)
+- There are no tests and the user won't write characterization tests first
+- The user wants to rewrite the entire system (that's a rewrite, not refactoring)
+- The request is about performance optimization (refactoring preserves behavior, not improves performance)
+
+---
+
+## Two — Hard Prohibitions
+
+> **HR-1.** Do NOT refactor without a test suite — tests are mandatory.
+
+> **HR-2.** Do NOT change external behavior — refactoring is behavior-preserving only.
+
+> **HR-3.** Do NOT make large, risky changes — always small, incremental steps.
+
+> **HR-4.** Do NOT continue if tests fail after a refactoring step — fix or revert first.
+
+> **HR-5.** Do NOT introduce new code smells while fixing existing ones.
+
+> **HR-6.** Do NOT refactor without first identifying the code smell (use the catalog).
+
+> **HR-7.** Do NOT skip automated smell detection — run tools before manual review.
+
+> **HR-8.** Do NOT refactor code with no tests without writing characterization tests first (use legacy-code-workshop).
+
+---
+
+## Three — Decision Tree: Which Refactoring to Apply
+
+```
+What code smell are you seeing?
+├── Long Method (function does too much)
+│   └── APPLY → Extract Method
+│               Turn code fragment into its own method with descriptive name
+├── Large Class (too many fields/methods)
+│   └── Does it have two distinct responsibilities?
+│       ├── YES → Extract Class
+│       └── NO → Is it doing too little?
+│           ├── YES → Inline Class
+│           └── NO → Extract Class (split by cohesion)
+├── Duplicate Code
+│   ├── Same code in subclasses?
+│   │   └── APPLY → Pull Up Method
+│   ├── Same code in one class?
+│   │   └── APPLY → Extract Method
+│   └── Same code in different classes?
+│       └── APPLY → Extract Method + Pull Up or Extract Superclass
+├── Feature Envy (method uses another class's data more)
+│   └── APPLY → Move Method
+│               Move to the class where it's used most
+├── Switch Statements (long chains of if-else/switch)
+│   └── APPLY → Replace Conditional with Polymorphism
+├── Data Clumps (fields always appear together)
+│   └── APPLY → Extract Class
+├── Long Parameter List
+│   └── APPLY → Introduce Parameter Object
+├── Primitive Obsession
+│   └── APPLY → Replace Data Value with Object
+├── Temporary Field (used only in certain circumstances)
+│   └── APPLY → Extract Class
+├── Message Chains (a.getB().getC())
+│   └── APPLY → Hide Delegate
+├── Middle Man (class just delegates everything)
+│   └── APPLY → Remove Middle Man
+├── Divergent Change (one class changed for many reasons)
+│   └── APPLY → Extract Class
+├── Shotgun Surgery (one change touches many classes)
+│   └── APPLY → Move Method / Move Field
+├── Parallel Inheritance Hierarchies
+│   └── APPLY → Move Method
+├── Refused Bequest (subclass doesn't use inherited members)
+│   └── APPLY → Replace Inheritance with Delegation
+├── Dead Code
+│   └── APPLY → Remove
+├── Comments (explaining bad code)
+│   └── APPLY → Fix the code, not the comment
+└── Speculative Generality (code created "just in case")
+    └── APPLY → Inline Class / Remove
+```
+
+---
+
+## Four — Process: Refactoring Mechanics
+
+Every refactoring follows this process:
+
+1. **Ensure tests exist** — characterize current behavior
+2. **Make a small change** — one behavior-preserving transformation
+3. **Run tests** — verify nothing broke
+4. **Repeat** — make the next small change
+5. **Clean up** — remove any intermediate artifacts
+
+### Code Smells Catalog
+
+**Bloaters:**
+
 | Smell | Description | Primary Refactoring |
 |-------|-------------|-------------------|
 | **Long Method** | A method that does too much | Extract Method |
@@ -76,7 +154,8 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Long Parameter List** | Methods with too many parameters | Introduce Parameter Object |
 | **Data Clumps** | Groups of fields that always appear together | Extract Class |
 
-### Object-Orientation Abusers
+**Object-Orientation Abusers:**
+
 | Smell | Description | Primary Refactoring |
 |-------|-------------|-------------------|
 | **Switch Statements** | Long chains of switch/if-else | Replace Conditional with Polymorphism |
@@ -84,14 +163,16 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Refused Bequest** | Subclass doesn't use inherited members | Replace Inheritance with Delegation |
 | **Alternative Classes** | Classes that do the same thing but differently | Unify Interface |
 
-### Change Preventers
+**Change Preventers:**
+
 | Smell | Description | Primary Refactoring |
 |-------|-------------|-------------------|
 | **Divergent Change** | One class changed for many different reasons | Extract Class |
 | **Shotgun Surgery** | One change requires modifications in many classes | Move Method / Move Field |
 | **Parallel Inheritance Hierarchies** | Subclassing one requires subclassing another | Move Method |
 
-### Dispensables
+**Dispensables:**
+
 | Smell | Description | Primary Refactoring |
 |-------|-------------|-------------------|
 | **Comments** | Comments that explain bad code | Fix the code, not the comment |
@@ -101,7 +182,8 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Dead Code** | Code never executed or reachable | Remove |
 | **Speculative Generality** | Code created "just in case" | Inline Class / Remove |
 
-### Couplers
+**Couplers:**
+
 | Smell | Description | Primary Refactoring |
 |-------|-------------|-------------------|
 | **Feature Envy** | A method uses data from another class more than its own | Move Method |
@@ -109,11 +191,9 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Message Chains** | Navigating through multiple objects (`a.getB().getC()`) | Hide Delegate |
 | **Middle Man** | A class that does nothing but delegate | Remove Middle Man |
 
----
+### Refactoring Catalog by Category
 
-## Refactoring Catalog
-
-### Composing Methods
+**Composing Methods:**
 
 | Refactoring | Description | When to Use |
 |-------------|-------------|-------------|
@@ -127,7 +207,7 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Replace Method with Method Object** | Turn a long method into its own object so locals become fields | Very long local variables |
 | **Substitute Algorithm** | Replace the method body with a cleaner algorithm | Simpler way to express |
 
-### Moving Features Between Objects
+**Moving Features Between Objects:**
 
 | Refactoring | Description | When to Use |
 |-------------|-------------|-------------|
@@ -140,7 +220,7 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Introduce Foreign Method** | Create a method in a class that takes another class's instance | Adding behavior to third-party class |
 | **Introduce Local Extension** | Create a subclass or wrapper to extend a class | Need to add methods to existing class |
 
-### Organizing Data
+**Organizing Data:**
 
 | Refactoring | Description | When to Use |
 |-------------|-------------|-------------|
@@ -157,7 +237,7 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Replace Type Code with State/Strategy** | Replace type codes with state or strategy pattern | Type changes at runtime |
 | **Replace Subclass with Fields** | Replace subclasses with fields in parent | Subclasses don't differ in behavior |
 
-### Simplifying Conditional Expressions
+**Simplifying Conditional Expressions:**
 
 | Refactoring | Description | When to Use |
 |-------------|-------------|-------------|
@@ -170,7 +250,7 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Introduce Null Object** | Return a Null Object instead of null | Repeated null checks |
 | **Introduce Assertion** | Add assertions to state invariants | Precondition/postcondition |
 
-### Simplifying Method Calls
+**Simplifying Method Calls:**
 
 | Refactoring | Description | When to Use |
 |-------------|-------------|-------------|
@@ -189,7 +269,7 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Replace Error Code with Exception** | Use exceptions instead of return codes | Error codes force coupling |
 | **Replace Exception with Test** | Check before calling instead of catching | Caller should check first |
 
-### Dealing with Generalization
+**Dealing with Generalization:**
 
 | Refactoring | Description | When to Use |
 |-------------|-------------|-------------|
@@ -206,23 +286,7 @@ external behavior. Each refactoring is a named, proven technique with clear mech
 | **Replace Inheritance with Delegation** | Use composition instead of inheritance | Subclass doesn't need inherited behavior |
 | **Replace Delegation with Inheritance** | Use inheritance when delegation is excessive | Wrapper does nothing but delegate |
 
----
-
-## Refactoring Mechanics
-
-Every refactoring follows this process:
-
-1. **Ensure tests exist** — characterize current behavior
-2. **Make a small change** — one behavior-preserving transformation
-3. **Run tests** — verify nothing broke
-4. **Repeat** — make the next small change
-5. **Clean up** — remove any intermediate artifacts
-
----
-
-## Automated Smell Detection
-
-Use tools to find smells before manual review:
+### Automated Smell Detection
 
 | Smell | Tool/Technique | What to Look For |
 |-------|---------------|------------------|
@@ -243,9 +307,41 @@ Use tools to find smells before manual review:
 
 ---
 
-## Pre-Delivery Checklist
+## Five — Error Handling
 
-Before declaring a refactoring complete:
+| Error | Recovery |
+|-------|----------|
+| Tests fail after refactoring step | Revert immediately; the refactoring was not behavior-preserving |
+| No tests exist | Stop; write characterization tests first (use legacy-code-workshop) |
+| Refactoring introduces new smell | Choose a different technique from the catalog; do not proceed |
+| Large refactoring needed | Break into smaller refactorings; use Mikado method for planning |
+| Automated tool reports false positive | Manually verify; tools flag candidates, not certainties |
+| Refactoring changes external behavior | Revert; refactoring must be behavior-preserving only |
+
+---
+
+## Six — Key Rules
+
+| ID | Rule |
+|----|------|
+| **HR-1** | Never refactor without tests |
+| **HR-2** | Refactoring is behavior-preserving only |
+| **HR-3** | Small, incremental steps only |
+| **HR-4** | Fix or revert if tests fail |
+| **HR-5** | Don't introduce new smells |
+| **HR-6** | Identify the smell first (catalog lookup) |
+| **HR-7** | Automated detection before manual review |
+| **HR-8** | Characterization tests before refactoring untested code |
+| **R3** | Rule of Three — refactor on the third duplication |
+| **MECHANICS** | Ensure tests → Small change → Run tests → Repeat → Clean up |
+| **SMELL** | Code smells are signals, not problems themselves |
+| **VOCABULARY** | The catalog is a named vocabulary with proven mechanics |
+
+---
+
+## Seven — Evidence & Checklist
+
+**Pre-Delivery Checklist:**
 
 - [ ] All existing tests pass
 - [ ] New tests added for any new behavior (if any)
@@ -260,29 +356,20 @@ Before declaring a refactoring complete:
 - [ ] No feature envy — methods live with their data
 - [ ] The boy scout rule applied — code is cleaner than before
 
----
+**Gate Implications:**
 
-## Gate Implications
+| Gate | Condition |
+|------|-----------|
+| **BLOCK** | Refactoring is attempted without a test suite |
+| **BLOCK** | External behavior changes during refactoring |
+| **BLOCK** | Large, risky changes are made instead of small incremental steps |
+| **BLOCK** | Tests fail after a refactoring step and aren't fixed |
+| **BLOCK** | The refactoring introduces new code smells |
+| **WARN** | Not all identified code smells are addressed (prioritize) |
+| **WARN** | Some refactorings require more test coverage to proceed safely |
+| **WARN** | The refactoring is part of a larger plan that isn't yet complete |
 
-Gate must **BLOCK** when:
-
-- Refactoring is attempted without a test suite
-- External behavior changes during refactoring
-- Large, risky changes are made instead of small incremental steps
-- Tests fail after a refactoring step and aren't fixed
-- The refactoring introduces new code smells
-
-Gate may **WARN** when:
-
-- Not all identified code smells are addressed (prioritize)
-- Some refactorings require more test coverage to proceed safely
-- The refactoring is part of a larger plan that isn't yet complete
-
----
-
-## Evidence Required
-
-A refactoring using this skill should produce:
+**Evidence Required:**
 
 - A list of code smells identified
 - The refactoring(s) applied from the catalog
@@ -292,21 +379,12 @@ A refactoring using this skill should produce:
 
 ---
 
-## Test Cases
+## Reference Guides
 
-### Test Case 1: Long method refactoring
-**Input:** A 60-line method that handles customer validation, database persistence, email notification, and audit logging.
-**Expected output:** Recommendation to Apply Extract Method, breaking the method into 4 focused methods (validateCustomer, saveToDatabase, sendNotification, logAuditEvent), with before/after code examples.
-**Assertion:** Output identifies the smell (Long Method), recommends Extract Method, and provides before/after code with test verification steps.
-
-### Test Case 2: Feature envy detection
-**Input:** A class `OrderFormatter` that repeatedly calls `order.getCustomer().getName()`, `order.getCustomer().getAddress()`, `order.getCustomer().getPaymentMethod()`.
-**Expected output:** Recommendation to Apply Move Method — move the formatting logic to the Customer class or extract a CustomerFormatter.
-**Assertion:** Output identifies Feature Envy smell and recommends Move Method or Extract Class.
-
-### Test Case 3: Switch statement refactoring
-**Input:** A 15-case switch statement that calculates shipping cost based on order type (standard, express, international, wholesale, etc.).
-**Expected output:** Recommendation to Apply Replace Conditional with Polymorphism, with a strategy pattern or subclass approach, and before/after code.
-**Assertion:** Output identifies Switch Statements smell and recommends polymorphism. Before/after code preserves behavior.
-
-
+| Topic | See |
+|-------|-----|
+| Clean Code principles for the goal state | `clean-code-review` skill |
+| Breaking dependencies for untested code | `legacy-code-workshop` skill |
+| Pragmatic practices for continuous refactoring | `pragmatic-development` skill |
+| Metrics to quantify code smells | `software-metrics-quality` skill |
+| Detailed test cases and examples | `references/condensed.md` |

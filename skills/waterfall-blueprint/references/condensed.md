@@ -1,9 +1,8 @@
 # Waterfall Blueprint (condensed)
 
-This is a condensed version of `SKILL.md` for tools that do not natively read the Agent
-Skills `SKILL.md` format. Point your tool's memory/instructions file (e.g. `AGENTS.md`,
-`CLAUDE.md`, `GEMINI.md`, `.windsurferules`) at this content, or paste it into the relevant
-rules file. The canonical source remains `SKILL.md`.
+Condensed version of `SKILL.md` for tools that do not natively read the Agent Skills
+`SKILL.md` format. Point your tool's memory/instructions file (e.g. `AGENTS.md`,
+`CLAUDE.md`, `GEMINI.md`, `.windsurferules`) at this content. Canonical source: `SKILL.md`.
 
 ## Trigger Phrases
 
@@ -13,21 +12,25 @@ rules file. The canonical source remains `SKILL.md`.
 - "IEEE 830", "IEEE 829", "IEEE 1016", "DOD-STD-2167A"
 - "complete specification", "follow to the letter", "buildable spec"
 
-## When to use
+## When to Use
 
 - User has an idea or partial requirements and wants a complete, buildable specification
 - User wants IEEE-standard documents (SRS, SDD, test plan) for a real project
 - User wants interactive guidance through requirements elicitation with follow-up questions
 - Starting a new project and wants thorough upfront specification before code
 
-## Do not use when
+## Do Not Use When
 
 - User wants to start coding immediately ("just build it", "skip the docs")
 - User wants an agile/iterative approach
 - User only wants a single document (this skill produces the full package)
 - Project is a quick prototype or throwaway experiment
 
-## Seven-Phase Pipeline
+## Core Concepts
+
+> "The payoff from quality planning... is very high. The single most important project failure cause is incomplete requirements." — Steve McConnell
+
+**Seven-Phase Pipeline:**
 
 ```
 Intake & Scoping → Requirements Elicitation → High-Level Design → Detailed Design
@@ -36,57 +39,7 @@ Intake & Scoping → Requirements Elicitation → High-Level Design → Detailed
 
 Each phase produces baselined documents and requires a formal gate review before proceeding.
 
-### Phase 0 — Intake & Scoping
-Produce a one-page Project Context Document (PCD): project name, business context, scope
-boundary (IN/OUT), stakeholder map, constraints, existing systems, success criteria.
-Present to user for confirmation before proceeding.
-
-### Phase 1 — Requirements Elicitation & SRS (IEEE 830)
-Work through 8 requirement categories systematically with follow-up questions:
-1. Functional Requirements (FR-001, FR-002… — each with ID, description, inputs, processing,
-   outputs, preconditions, postconditions, error conditions, priority)
-2. External Interfaces (UI, API, hardware, software, communication)
-3. Performance Requirements (response time, throughput, concurrency — quantified)
-4. Database Requirements (entities, relationships, volume, growth)
-5. Security Requirements (authn, authz, encryption, audit)
-6. Safety Requirements (fail-safe, rollback, disaster recovery)
-7. Quality Attributes (reliability/MTBF, availability/uptime%, maintainability, portability)
-8. Assumptions and Constraints
-
-**Requirements quality criteria** — every requirement must be: necessary, unambiguous, complete,
-consistent, verifiable, traceable, modifiable, ranked.
-
-**Follow-up question strategy:** Drill down on vagueness, enumerate lists, ask edge cases,
-request quantified constraints, ask for negatives (what NOT to do), prioritize with MoSCoW,
-ask how each requirement will be validated.
-
-### Phase 2 — High-Level Design / SDD (IEEE 1016)
-Architecture decomposition, data flow (DFDs), data architecture (ERDs), interface design,
-technology selection (justified), risk identification. Every module traces to ≥1 SRS
-requirement. Every SRS requirement traces to ≥1 module.
-
-### Phase 3 — Detailed Design / DDS
-For each module: purpose, inputs, outputs, algorithms (pseudocode), interface contracts,
-state diagrams, error handling, dependencies. Each spec is self-contained.
-
-### Phase 4 — Implementation Planning
-Coding standards, code review process (Fagan inspections), version control plan, build plan.
-
-### Phase 5 — Test Planning (IEEE 829)
-Test plan, test design, test case specs (each traced to SRS requirement), test procedures,
-entry/exit criteria. Cover: unit, integration, system, acceptance, performance, security,
-regression, usability testing.
-
-### Phase 6 — Deployment & Maintenance
-Deployment plan (with rollback), user documentation, maintenance plan, configuration
-management plan, quality assurance plan.
-
-## Traceability
-
-Bidirectional traceability: Business Need → SRS Requirement → SDD Module → DDS Spec →
-Test Case → Test Result. The RTM must show 100% coverage at every gate.
-
-## Configuration Management Baselines
+**Configuration Management Baselines:**
 
 | Baseline | Created When |
 |----------|-------------|
@@ -95,10 +48,54 @@ Test Case → Test Result. The RTM must show 100% coverage at every gate.
 | Developmental Baseline | After DDS approval |
 | Product Baseline | After testing |
 
-## Quality Gates
+**Bidirectional Traceability:** Business Need → SRS Requirement → SDD Module → DDS Spec → Test Case → Test Result.
 
-Every phase transition requires a Gate Review Report with checklist, findings, and
-go/no-go decision. The agent must not skip phases or merge gates.
+## Pipeline
+
+### Phase 0 — Intake & Scoping
+Establish: project identity, business context, scope boundary (IN/OUT), stakeholder map, constraints, existing systems, success criteria. Produce one-page Project Context Document (PCD). Present to user for confirmation.
+
+**Follow-up:** "Who is the primary user?", "Regulatory requirements?", "Target deployment?", "Integration points?", "Timeline?", "Sign-off authority?"
+
+### Phase 1 — Requirements Elicitation & SRS (IEEE 830)
+Work through 9 categories: Functional Requirements, External Interfaces, Performance, Database, Security, Safety, Quality Attributes, Assumptions, Constraints. Each requirement gets unique ID (FR-NNN) with: description, inputs, processing, outputs, pre/postconditions, error conditions, priority.
+
+**Requirements quality:** necessary, unambiguous, complete, consistent, verifiable, traceable, modifiable, ranked.
+
+**Follow-up strategy:** Drill down, enumerate, edge cases, quantified constraints, negatives, MoSCoW priorities, validation method.
+
+### Phase 2 — High-Level Design / SDD (IEEE 1016)
+Architecture decomposition, data flow (DFDs), data architecture (ERDs), interface design, technology selection (justified), risk identification. Module-to-requirement mapping must be 100%.
+
+### Phase 3 — Detailed Design / DDS
+For each module: purpose, inputs, outputs, algorithms (pseudocode), interface contracts, state diagrams, error handling, dependencies. Each spec is self-contained.
+
+### Phase 4 — Implementation Planning
+Coding standards, code review process (Fagan inspections), version control plan, build plan, developer assignments.
+
+### Phase 5 — Test Planning (IEEE 829)
+Test plan, test design, test case specs (traced to requirements), test procedures, entry/exit criteria. Cover: unit, integration, system, acceptance, performance, security, regression, usability.
+
+### Phase 6 — Deployment & Maintenance
+Deployment plan (with rollback), user documentation, maintenance plan, configuration management plan, quality assurance plan.
+
+## Hard Rules
+
+> **HR-1.** Never invent requirements. If not specified, ask.
+
+> **HR-2.** Never stop asking until user says "that's complete" for each category.
+
+> **HR-3.** Every requirement must have unique ID (FR-NNN) and be traceable.
+
+> **HR-4.** Gate Review Report required at every phase transition. Even if user says "just move on," produce report and note skip as risk.
+
+> **HR-5.** RTM updated at every gate review. 100% coverage mandatory.
+
+> **HR-6.** No orphaned requirements or orphaned modules.
+
+> **HR-7.** SRS must be technology-agnostic. Implementation details in SDD.
+
+> **HR-8.** Changes to baselined documents require formal Change Request with impact analysis.
 
 ## Interactive Guidance Rules
 
@@ -120,7 +117,7 @@ go/no-go decision. The agent must not skip phases or merge gates.
 5. Missing acceptance criteria — add testable definitions
 6. Orphaned requirements — ensure RTM coverage
 7. Skipped gates — each gate catches defects early
-8. Missing non-functional requirements — work all 8 categories
+8. Missing non-functional requirements — work all 9 categories
 9. Premature design in requirements — keep SRS technology-agnostic
 10. Incomplete traceability — every RTM row must be filled
 
@@ -132,10 +129,12 @@ go/no-go decision. The agent must not skip phases or merge gates.
 - Contradictory requirements
 - Unquantified performance requirements
 - Orphaned modules (design with no requirement)
+- Orphaned requirements (requirement with no design)
 - Incomplete DDS (missing algorithms, error handling, interfaces)
 - Test plan not covering every SRS requirement
 - Missing Gate Review Reports
 - Missing rollback procedure in deployment plan
+- Missing CM Plan baselines
 
 ## Gate (WARN)
 

@@ -1,7 +1,6 @@
 # Team Lead (condensed)
 
-Condensed version of `SKILL.md` for tools that do not natively read the Agent Skills
-`SKILL.md` format. Canonical source: `SKILL.md`.
+Condensed version of `SKILL.md` for tools that do not natively read the Agent Skills `SKILL.md` format. Canonical source: `SKILL.md`.
 
 ## Trigger Phrases
 
@@ -10,54 +9,122 @@ Condensed version of `SKILL.md` for tools that do not natively read the Agent Sk
 - "team management", "Peopleware", "Project Aristotle", "DORA", "Team Topologies"
 - "decompose", "distribute", "multi-agent"
 
-## When to use
+## When to Use
 
 - Multiple agents needed for parallel work
 - Communication overhead is wasting tokens
 - Tasks need decomposition and specialist assignment
 - Inter-agent handoffs need structure
 
-## Do not use when
+## Do Not Use When
 
 - Task is simple enough for one agent
 - No agent coordination needed
 - Request is about code, not agent workflow
 
-## Core Principles
+## Section Zero: Core Concepts
 
-1. **Brooks's Law:** Don't throw more agents at a problem. Each adds overhead.
-2. **Peopleware:** Protect flow. Don't interrupt unnecessarily.
+1. **Brooks (1975):** Don't throw more agents at a problem. Each adds overhead. Small teams of specialists outperform generalists.
+2. **Peopleware (1987):** Protect flow. Don't interrupt unnecessarily. Context windows are finite.
 3. **Caveman Principle:** Say only what matters, nothing extra.
 
-## Seven-Stage Pipeline
+**Communication Budget:**
+
+| Channel | Max Tokens |
+|---------|-----------|
+| Task assignment | 150 |
+| Status update | 80 |
+| Handoff | 120 |
+| Conflict notification | 60 |
+| Error escalation | 100 |
+
+**Anti-Patterns (token waste):** preamble, context dumps, restating, confirmation asking, status theater.
+
+## Section One: When to Use
+
+See "When to Use" and "Do Not Use When" above.
+
+## Section Two: Hard Rules
+
+> **HR-1.** Every task assignment uses the Caveman Handoff Protocol — no exceptions.
+
+> **HR-2.** No preamble in agent-to-agent messages.
+
+> **HR-3.** Never pass full file contents. Use paths + line numbers.
+
+> **HR-4.** Never restate context the other agent has.
+
+> **HR-5.** One task per assignment.
+
+> **HR-6.** Every task has a testable done condition.
+
+> **HR-7.** Handoffs are explicit events, not implicit.
+
+> **HR-8.** Gaps must be called out in handoffs.
+
+> **HR-9.** Agents report status only when asked or blocked.
+
+> **HR-10.** Max 5-9 parallel tasks per wave.
+
+> **HR-11.** One task = one specialist.
+
+> **HR-12.** Token budget >50% over without justification = BLOCK.
+
+## Section Three: Decision Trees
+
+### Agent Selection
+
+```
+Code review? → code-quality-reviewer
+  ├── Needs refactoring? → + refactoring-guide
+  └── Needs metrics? → + metrics-analyst
+Specification/design? → waterfall-blueprint
+Test quality? → test-case-validation
+Fact-check? → bookworm
+Comprehensive? → software-engineering-analyst
+```
+
+### Conflict Resolution
+
+```
+Agent factually wrong? → Correct with facts
+Genuine trade-off? → Apply priority hierarchy:
+  1. Safety  2. Behavior preservation  3. Metrics
+  4. Psychological safety  5. Simplicity  6. Token efficiency
+Scope conflict? → Check done condition
+Coordinator decides → Document rationale → Notify
+```
+
+### Error Recovery
+
+```
+Transient error? → Retry same agent
+Specialization mismatch? → Reassign
+Task too large? → Decompose
+Integration failure? → Isolate → Diagnose → Resolve → Re-verify
+```
+
+## Section Four: Pipeline
 
 ```
 Work Decomposition → Agent Selection → Task Assignment → Execution Monitoring
   → Handoff Management → Conflict Resolution → Integration & Verification
 ```
 
-## Caveman Handoff Protocol
+### Caveman Handoff Formats
 
-### Task Assignment (≤150 tokens)
+**Task Assignment (≤150 tokens):**
 ```
 ASSIGN: T-XXX
 TO: [agent]
 TASK: [one line]
-CONTEXT: [file paths + line numbers only]
+CONTEXT: [paths + line numbers]
 OUTPUT: [what to produce, format]
 DONE: [testable condition]
 CONSTRAINTS: [limits]
 ```
 
-### Status Response (≤80 tokens)
-```
-STATUS: T-XXX
-STATE: [in_progress | done | blocked]
-OUTPUT: [file path or artifact]
-BLOCKED: [reason, if any]
-```
-
-### Handoff (≤120 tokens)
+**Handoff (≤120 tokens):**
 ```
 HANDOFF: T-XXX → T-YYY
 ARTIFACTS: [paths]
@@ -66,16 +133,7 @@ NEXT: [what to do]
 GAPS: [what's missing]
 ```
 
-### Conflict Notification (≤60 tokens)
-```
-CONFLICT: T-XXX vs T-YYY
-CLAIM_A: [output A]
-CLAIM_B: [output B]
-DECISION: [resolution]
-RATIONALE: [one line]
-```
-
-### Error Escalation (≤100 tokens)
+**Error Escalation (≤100 tokens):**
 ```
 ERROR: T-XXX
 PROBLEM: [what failed]
@@ -83,30 +141,29 @@ CONTEXT: [minimal]
 REQUEST: [what you need]
 ```
 
-## Token Economy Rules
+## Section Five: Error Handling
 
-- **Never** dump full file contents (reference paths)
-- **Never** restate context the other agent has
-- **Never** use preamble
-- **Never** ask for confirmation when protocol suffices
-- **Never** send "working on it" without progress data
+| Error | Response | Escalation |
+|-------|----------|------------|
+| Agent timeout | Retry → reassign | After 2 retries → human |
+| Mismatch | Reassign to correct specialist | No specialist → decompose |
+| Token overage | BLOCK, require justification | Unjustifiable → human |
+| Conflicting outputs | Apply hierarchy | Can't resolve → human |
+| Integration failure | Isolate, diagnose, fix | Systemic → decompose differently |
 
-## Conflict Resolution Priority
+## Section Six: Key Rules
 
-1. Safety (never proceed without tests)
-2. Behavior preservation (refactoring doesn't change behavior)
-3. Metrics (data drives decisions)
-4. Simplicity (prefer simpler when equal)
-5. Token efficiency (prefer fewer tokens when equal)
+**Team Patterns:** Surgical Team (O(n)), Parallel Workers (O(n) parallel), Pipeline (O(depth)), Hub/Spoke (O(1) delta).
 
-## Team Patterns
+**Gate BLOCK:** missing done condition, no specialization match, implicit handoffs, >50% token overage, unresolved conflicts, failed integration.
 
-| Pattern | When | Token Cost |
-|---------|------|-----------|
-| Surgical Team | One critical path + support | O(n) |
-| Parallel Workers | Independent tasks | O(n), parallel |
-| Pipeline | Sequential stages | O(depth) |
-| Hub and Spoke | Shared state | O(1) per delta |
+**Gate WARN:** <50% token overage, approximate done conditions, uneven workload, incomplete handoff summaries.
+
+## Section Seven: Evidence & Checklist
+
+**Evidence:** decomposition plan, assignment matrix, handoff messages, progress reports, conflict log, integration results, token summary, DORA metrics.
+
+**Checklist:** tasks decomposed with done conditions → specialists assigned via Caveman Handoff → tokens tracked → handoffs explicit → conflicts resolved → integration verified → DORA recorded → no anti-patterns.
 
 ## Agent Registry
 
@@ -117,32 +174,5 @@ REQUEST: [what you need]
 | metrics-analyst | CK metrics, CC, Halstead | Low |
 | bookworm | Verification, fact-checking | Low |
 | software-engineering-analyst | All quality skills | High |
-
-## Anti-Patterns
-
-1. Over-decomposition → too many micro-tasks
-2. Under-decomposition → one massive task
-3. Context flooding → full file dumps
-4. Preamble pollution → "Let me explain..."
-5. Status theater → "I'm working hard!"
-6. Implicit handoffs → no HANDOFF protocol
-7. Conflict avoidance → decisions delayed
-8. Agent overload → too many tasks per agent
-9. Missing done conditions → "make it good"
-10. Token budget blindness → not tracking usage
-
-## Gate (BLOCK)
-
-- Task lacks done condition
-- Task assigned without specialization match
-- Implicit handoffs (no HANDOFF protocol)
-- Token budget exceeded >50% without justification
-- Conflicts unresolved
-- Integration verification fails
-
-## Gate (WARN)
-
-- Token budget exceeded <50%
-- Approximate done conditions
-- Uneven agent workload
-- Incomplete handoff summaries
+| waterfall-blueprint | Phase-gated specification | High |
+| test-case-validation | Test review, categorization | Medium |

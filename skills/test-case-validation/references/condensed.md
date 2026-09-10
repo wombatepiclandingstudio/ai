@@ -12,7 +12,7 @@ Condensed version of `SKILL.md` for tools that do not natively read the Agent Sk
 - "automate tests", "manual vs automated", "test design techniques"
 - "equivalence partitioning", "boundary value analysis", "decision table testing"
 
-## When to use
+## When to Use
 
 - User has test cases and wants them reviewed, validated, or improved
 - User wants to know if test suite covers all requirements
@@ -20,27 +20,17 @@ Condensed version of `SKILL.md` for tools that do not natively read the Agent Sk
 - User wants help deciding what to automate vs. test manually
 - User wants test cases designed using formal techniques
 
-## Do not use when
+## Do Not Use When
 
 - User wants to write test framework code (not test cases)
 - User wants to run tests, not design/review them
 - Request is about testing theory, not practical application
 
-## Six-Stage Pipeline
+## Core Concepts
 
-```
-Intake & Inventory → Categorization → Overlap Detection → Quality Validation
-  → Design Technique Application → Documentation & Reporting
-```
+> "Testing shows the presence of defects, not their absence." — Edsger Dijkstra
 
-### Stage 0 — Intake & Inventory
-Collect all test artifacts. Parse structure (ID, name, requirement trace, level, type,
-preconditions, steps, expected results, priority). Produce Test Inventory Report.
-
-### Stage 1 — Categorization
-Assign every test case to exactly one level and one or more types:
-
-**Levels:** Unit → Integration → System → Acceptance
+**Test Levels:** Unit → Integration → System → Acceptance
 
 | Level | What | Who | When |
 |-------|------|-----|------|
@@ -49,9 +39,19 @@ Assign every test case to exactly one level and one or more types:
 | System | End-to-end workflows | QA | After integration |
 | Acceptance | Business requirements | Business users | Before deployment |
 
-**Integration sub-types:** Top-down, Bottom-up, Sandwich, Big-bang
-**System sub-types:** Functional, Performance, Stress, Load, Volume, Security, Recovery, Configuration, Documentation, Usability, Regression, Smoke, Sanity
-**Acceptance sub-types:** Alpha, Beta, UAT, Contract, Regulatory
+**Integration Sub-Types:** Top-down, Bottom-up, Sandwich, Big-bang
+**System Sub-Types:** Functional, Performance, Stress, Load, Volume, Security, Recovery, Configuration, Documentation, Usability, Regression, Smoke, Sanity
+**Acceptance Sub-Types:** Alpha, Beta, UAT, Contract, Regulatory
+
+**Quality Criteria (10):** Necessary, Complete, Correct, Consistent, Independent, Traceable, Verifiable, Feasible, Precise, Atomic
+
+## Pipeline
+
+### Stage 0 — Intake & Inventory
+Collect all test artifacts. Parse structure. Produce Test Inventory Report.
+
+### Stage 1 — Categorization
+Assign every test case to exactly one level and one or more types.
 
 **Rules:**
 - Level = what is tested, not who tests it
@@ -61,45 +61,23 @@ Assign every test case to exactly one level and one or more types:
 
 ### Stage 2 — Overlap Detection
 
-**Methods:**
-1. Traceability matrix analysis (requirements → tests, find gaps and excess)
-2. Functional overlap (same requirement + same inputs + same results = duplicate)
-3. Code path overlap (identical coverage = consolidate)
-4. Scenario overlap (same workflow + same data = duplicate)
+**Methods:** Traceability matrix analysis, functional overlap, code path overlap, scenario overlap.
 
-**Classifications:**
-| Class | Action |
-|-------|--------|
+| Classification | Action |
+|----------------|--------|
 | Exact Duplicate | Remove one |
 | Functional Duplicate | Consolidate |
 | Partial Overlap | Keep both, document divergence |
 | Redundant Coverage (5+ tests for same req) | Consolidate to 2-3 |
 | No Overlap | Keep all |
 
-Produce an Overlap Report with every pair classified and recommended action.
+Produce Overlap Report with every pair classified and recommended action.
 
 ### Stage 3 — Quality Validation
 
-Validate every test case against 10 criteria:
-
-| Criterion | Definition |
-|-----------|-----------|
-| Necessary | Has clear purpose, no exact duplicate |
-| Complete | Happy + error + edge cases covered |
-| Correct | Tests the right thing with right inputs/results |
-| Consistent | No contradictions with other tests |
-| Independent | Can run in any order |
-| Traceable | Maps to a specific requirement |
-| Verifiable | Expected results are unambiguous and measurable |
-| Feasible | Can be executed with available resources |
-| Precise | Steps clear enough for any tester |
-| Atomic | Tests one thing per test case |
-
-Produce Validation Report: PASS / CONDITIONAL / FAIL per test case per criterion.
+Validate every test case against 10 criteria. Produce Validation Report: PASS / CONDITIONAL / FAIL per test case per criterion.
 
 ### Stage 4 — Design Technique Application
-
-For gaps identified in Stage 3, generate new test cases using systematic techniques:
 
 | Situation | Technique |
 |-----------|-----------|
@@ -111,9 +89,7 @@ For gaps identified in Stage 3, generate new test cases using systematic techniq
 | Known error-prone areas | Error Guessing |
 | Need code execution verification | Statement/Branch/Path Coverage |
 
-**Rules:** ECP + BVA always together. Error guessing supplements, never replaces,
-formal techniques. Pairwise for parameter interactions only. State transition for
-stateful systems only.
+**Rules:** ECP + BVA always together. Error guessing supplements, never replaces, formal techniques. Pairwise for parameter interactions only. State transition for stateful systems only.
 
 ### Stage 5 — Manual vs. Automation Decision
 
@@ -130,25 +106,35 @@ stateful systems only.
 
 ### Stage 6 — Documentation (IEEE 829)
 
-Produce:
-- Master Test Plan (MTP) or Level Test Plan (LTP)
-- Level Test Design (LTD)
-- Level Test Case (LTC) specifications
-- Level Test Procedure (LTPr)
-- Level Test Report (LTR)
-- Anomaly Reports
-- Bidirectional Requirements Traceability Matrix
-- Test Metrics Report
+Produce: MTP, LTD, LTC, LTPr, LTR, Anomaly Reports, Bidirectional RTM, Test Metrics Report.
+
+## Hard Rules
+
+> **HR-1.** Level is determined by what is tested, not who tests it.
+
+> **HR-2.** Multi-module via UI = system-level, not integration.
+
+> **HR-3.** Every test must have exactly one level. Straddle-level tests must be split.
+
+> **HR-4.** Regression tests inherit the original test's level.
+
+> **HR-5.** Never use only one test design technique. ECP + BVA minimum.
+
+> **HR-6.** ECP creates partitions; BVA tests boundaries. Complementary, not alternatives.
+
+> **HR-7.** Every test case must trace to ≥1 requirement. Orphaned tests justified or removed.
+
+> **HR-8.** Gate BLOCKS when 0% coverage or overlap >30%.
 
 ## Anti-Patterns
 
-1. Vague expected results — "works correctly" → quantify
+1. Vague expected results → quantify
 2. Happy-path-only testing → add error, boundary, edge cases
-3. Untestable requirements — "fast" → quantify before testing
-4. Test interdependence → make each test self-contained
-5. Orphaned test cases (no requirement) → justify or remove
-6. Orphaned requirements (no tests) → add tests
-7. Massive redundant test suites → overlap detection, consolidate
+3. Untestable requirements → quantify before testing
+4. Test interdependence → make self-contained
+5. Orphaned test cases → justify or remove
+6. Orphaned requirements → add tests
+7. Massive redundant suites → overlap detection, consolidate
 8. Manual regression testing → automate
 9. Missing error handling tests → add error conditions
 10. Wrong test level → recategorize

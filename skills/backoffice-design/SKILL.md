@@ -8,15 +8,15 @@ description: >
   accessibility, touch targets, responsive design), WCAG 2.2 AA compliance,
   Core Web Vitals performance (LCP/INP/CLS), and security baselines. Tech-agnostic:
   applies design patterns, not framework code.
-version: "1.1"
-license: MIT
-metadata:
-  author: personal
-  type: workflow
-  tags: [ui, ux, backoffice, admin-panel, operator-console, accessibility, wcag-22, performance, task-workflow, design-system]
 ---
 
+**Scope:** This skill governs operator-facing internal tool UIs — backoffice consoles, task
+inboxes, validation workflows, configuration panels, and AI-assistant surfaces. It does not
+apply to landing pages, marketing sites, or backend-only modules with no operator workflow.
+
 # Backoffice Design Skill
+
+## Zero — Core Concepts
 
 A backoffice is operational software. This skill prevents generating a single superficial dashboard
 when the requirement describes multiple capabilities, task workflows, search-heavy archives,
@@ -25,7 +25,76 @@ operational UX structure (one capability per route, resilient state handling, ba
 with cross-cutting design-pattern discipline (accessibility, touch, layout, typography, color,
 animation, forms, navigation, charts) expressed framework-neutrally.
 
-## Use when
+**UI/UX 101 — The basics.** Every rule below is non-negotiable for operator-facing software:
+
+- **Visibility of system status:** Show loading indicators for any async operation > 200ms. Show
+  success/error messages after every mutation. Show progress for multi-step operations. Disable
+  submit buttons while a request is in flight.
+
+| Pattern | When to use | Anti-pattern |
+|---------|-------------|--------------|
+| **Skeleton screen** | Page or section loading with known structure (list, card grid, form) | Spinner on an entire page that could show layout immediately |
+| **Spinner** | Inline action, button click, short operation (< 3s) | Spinner for page-level loads — user can't see what's coming |
+| **Progress bar** | Determinate duration (upload, batch, export) | Indeterminate bar for unknown duration — user doesn't know if it's stuck |
+| **Inline text** | Tiny operations (auto-save, status flip) | Toast for every micro-action — noise |
+| **Disabled + spinner** | Submitting a form | Nothing — user clicks again and again |
+
+- **Empty states are not blank screens.** Every list, table, and search result needs an empty state:
+  what happened, why, what to do. Never show a blank area where content should be.
+
+- **Color and contrast:** 4.5:1 minimum for body text, 3:1 for large text. Never use color alone
+  to convey meaning. Semantic color tokens (`--color-error`, `--color-success`) not raw hex.
+  Gray-on-gray is a readability killer. Dark mode needs separate token definitions.
+
+- **Typography:** Base size 16px, line height 1.5× for body text, 50–75 characters per line.
+  One typeface family, use weight/size for hierarchy. Monospace for code/IDs only.
+
+- **Touch vs. mouse:** Minimum touch target 44×44px (aim 48×48px), 8px spacing between targets.
+  No hover-only affordances. Press states within 50ms.
+
+- **Responsive:** Mobile-first, breakpoints by content not device, 320px minimum, allow zoom,
+  stack over sprawl on narrow screens.
+
+- **Modals:** Confirmation only (destructive actions). Escape always works. Focus trap.
+  No modal-on-modal. Short content — if scrolling needed, use a full page.
+
+- **Toast:** Brief, non-blocking, auto-dismiss 3–5 seconds. Max 3 visible. Error toasts persist
+  until dismissed. Never use for complex information.
+
+- **Data tables:** Sticky header, row height 48–56px for touch, right-align numbers, sortable
+  headers, row hover state, selection indicator, empty table state required.
+
+- **Search and filtering:** Search input visible by default, clear scope, debounce 300ms, clear
+  button, filter chips/tags, filter reset, results count.
+
+- **The "grandma test":** If someone unfamiliar can complete the core task without instructions,
+  the UI is clear enough.
+
+**Loading variants:**
+
+| Pattern | When to use | Anti-pattern |
+|---------|-------------|--------------|
+| **Skeleton screen** | Page or section loading with known structure | Spinner on an entire page |
+| **Spinner** | Inline action, button click, short operation (< 3s) | Spinner for page-level loads |
+| **Progress bar** | Determinate duration (upload, batch, export) | Indeterminate bar for unknown duration |
+| **Inline text** | Tiny operations (auto-save, status flip) | Toast for every micro-action |
+| **Disabled + spinner** | Submitting a form | Nothing — user clicks again |
+
+**When to disable, hide, or enable inputs:**
+
+| Situation | Action | Why |
+|-----------|--------|-----|
+| Field depends on another field's value | **Disable** until parent is selected | Prevents invalid combinations |
+| Action requires permission the user lacks | **Hide** the control entirely | Don't show what they can't do |
+| Action requires permission user lacks but should know exists | **Disable** with tooltip explaining why | Awareness without confusion |
+| Form is incomplete (required fields empty) | **Disable** submit button | Prevents partial submissions |
+| Operation is in progress | **Disable** the triggering button | Prevents duplicate requests |
+| Data is read-only by design | **Disable** all edit controls | Clear signal: "this can't be changed" |
+| Network is offline or API is unreachable | **Disable** all mutation controls | Prevent guaranteed failures |
+
+**Never** disable a field without telling the user WHY.
+
+## One — When to Use
 
 Use this skill when a request touches:
 
@@ -37,168 +106,82 @@ Use this skill when a request touches:
 - AI assistant page or copilot surface inside an internal tool;
 - enterprise dashboard, internal tool, or operator-facing UI.
 
-## Do not use when
+**Do not use** for landing pages, pure marketing pages, simple static forms, or backend-only
+modules with no operator/user workflow.
 
-Do not use this skill for landing pages, pure marketing pages, simple static forms, or
-backend-only modules with no operator/user workflow.
+## Two — Hard Rules
 
-## UI/UX 101 — The basics
+> **HR-1.** One route/page per major capability. Never a single decorative dashboard for a
+> multi-capability request.
 
-Before applying any advanced pattern, internalize these fundamentals. Every rule below is
-non-negotiable for operator-facing software.
+> **HR-2.** Shared shell/navigation across capabilities. Every page must inherit the shared
+> layout — navbar, footer, global styles, meta tags.
 
-### Visibility of system status
+> **HR-3.** Backend is source of truth. Frontend must NOT duplicate lifecycle transition rules,
+> authorization rules, archive eligibility, AI document eligibility, export permission rules, or
+> validation preconditions. Hide/disable for UX only; backend denial stays authoritative.
 
-The user must always know what is happening. Never leave the user wondering "did that work?"
+> **HR-4.** Every critical workflow needs loading, empty, error, permission-denied, and success
+> states. Destructive/irreversible actions require confirmation.
 
-- Show loading indicators for any async operation > 200ms.
-- Show success/error messages after every mutation (create, update, delete).
-- Show progress for multi-step operations (upload percentage, batch processing count).
-- Disable submit buttons while a request is in flight to prevent double-submission.
+> **HR-5.** Server-side filters and pagination for large datasets. No unbounded client-side loads.
+> Include stable sorting, search input with clear scope, filter reset, and results count.
 
-**Loading variants — use the right one:**
-| Pattern | When to use | Anti-pattern |
-|---------|-------------|--------------|
-| **Skeleton screen** | Page or section loading with known structure (list, card grid, form) | Spinner on an entire page that could show layout immediately |
-| **Spinner** | Inline action, button click, short operation (< 3s) | Spinner for page-level loads — user can't see what's coming |
-| **Progress bar** | Determinate duration (upload, batch, export) | Indeterminate bar for unknown duration — user doesn't know if it's stuck |
-| **Inline text** | Tiny operations (auto-save, status flip) | Toast for every micro-action — noise |
-| **Disabled + spinner** | Submitting a form | Nothing — user clicks again and again |
+> **HR-6.** Never use color alone to convey meaning. A red field must also have an icon, text,
+> or border change.
 
-**Empty states are not blank screens.** Every list, table, and search result needs an empty
-state that tells the user:
-1. **What happened** — "No results found" or "No records yet"
-2. **Why** — "No records match your filters" or "You haven't created any orders"
-3. **What to do** — "Try adjusting your search" or "Create your first order"
-Never show a blank area where content should be — it looks broken.
+> **HR-7.** Minimum touch target 44×44px. Below 24×24px is inaccessible regardless of input method.
 
-### When to disable, hide, or enable inputs
+> **HR-8.** Text contrast 4.5:1 minimum for body text, 3:1 for large text. UI component contrast
+> 3:1 for borders, icons, focus indicators.
 
-| Situation | Action | Why |
-|-----------|--------|-----|
-| Field depends on another field's value (e.g., "State" depends on "Country") | **Disable** until parent is selected | Prevents invalid combinations |
-| Action requires permission the user lacks | **Hide** the control entirely | Don't show what they can't do |
-| Action requires permission the user lacks but should know exists | **Disable** with tooltip explaining why | Awareness without confusion |
-| Form is incomplete (required fields empty) | **Disable** submit button | Prevents partial submissions |
-| Operation is in progress | **Disable** the triggering button | Prevents duplicate requests |
-| Data is read-only by design (audit logs, finalized records) | **Disable** all edit controls | Clear signal: "this can't be changed" |
-| Network is offline or API is unreachable | **Disable** all mutation controls | Prevent guaranteed failures |
+> **HR-9.** Never set `user-scalable=no` or `maximum-scale=1`. Users with low vision need to zoom.
 
-**Never** disable a field without telling the user WHY. A greyed-out input with no
-explanation is a mystery, not a feature.
+> **HR-10.** CSS/JS budgets: JS < 300KB compressed, CSS < 100KB. Core Web Vitals targets: LCP ≤
+> 2.5s, INP ≤ 200ms, CLS ≤ 0.1.
 
-### Color and contrast
+> **HR-11.** HTTPS only. No mixed content. HSTS, CSP, Trusted Types for HTML sinks, SRI for
+> third-party scripts. No `innerHTML`/`document.write` fed untrusted input.
 
-- **Text contrast:** 4.5:1 minimum for body text, 3:1 for large text (≥18pt or ≥14pt bold).
-- **UI component contrast:** 3:1 for borders, icons, and focus indicators against their background.
-- **Never use color alone** to convey meaning. A red field must also have an icon, text, or
-  border change. Colorblind users (~8% of males) won't see it otherwise.
-- **Semantic color tokens** (not raw hex). `--color-error`, `--color-success`, `--color-warning`
-  instead of `#ff0000`. This enforces consistency and makes theming possible.
-- **Gray-on-gray is a readability killer.** If you squint to read it, it fails. Test with a
-  contrast checker tool.
-- **Dark mode is not just inverting colors.** It needs separate token definitions, reduced
-  saturation for backgrounds, and adjusted shadow/elevation strategy.
+> **HR-12.** An API client boundary instead of hidden fetches inside presentation components.
 
-### Typography fundamentals
+> **HR-13.** Configuration gets a dedicated page or route. Distinguish technical keys from
+> user-facing labels. Support add/edit/remove. Show examples and validation hints.
 
-- **Base size: 16px.** Body text smaller than 14px is hard to read for anyone over 40.
-- **Line height: 1.5× for body text.** Tighter (1.3×) is acceptable in dense data tables
-  but test readability.
-- **Line length: 50–75 characters per line.** Longer lines fatigue the eye. Use `max-width`
-  on text containers (~65ch).
-- **One typeface family** for the entire UI. Use weight (400, 500, 600, 700) and size for
-  hierarchy, not different fonts.
-- **Monospace for code, IDs, and technical values.** Never use monospace for body text.
-- **Don't use bold for everything.** Bold is a highlight, not a paragraph style.
+> **HR-14.** AI assistant pages must state what the AI can and cannot do, show citation/source
+> policy, provide guided prompt examples, avoid anthropomorphic claims.
 
-### Touch vs. mouse interactions
+> **HR-15.** Never leave older tests expecting the previous navigation or section list unchanged
+> when new behavior is intentionally additive.
 
-- **Minimum touch target: 44×44px** (WCAG 2.2). Aim for 48×48px. Below 24×24px is
-  inaccessible regardless of input method.
-- **8px minimum spacing** between adjacent touch targets to prevent mis-taps.
-- **No hover-only affordances.** If a tooltip or dropdown only appears on hover, touch
-  users can never see it. Provide an alternative (tap, long-press, or always-visible).
-- **Press states matter.** A button needs `:active` feedback (scale, darken, or shift)
-  within 50ms. Delayed feedback feels unresponsive.
+## Three — Decision Trees
 
-### Responsive design basics
+```
+Is the request for a backoffice / operator console / admin panel?
+├── Yes → Is it a multi-capability request?
+│   ├── Yes → One route per capability, shared shell, list/detail patterns
+│   │   └── Apply HR-1, HR-2, HR-4, HR-5
+│   └── No → Is it a single capability page?
+│       └── Yes → Shared layout, loading/empty/error states, server-side filtering
+│           └── Apply HR-2, HR-4, HR-5
+├── No → Does it touch task inbox / work queue / approvals?
+│   ├── Yes → Apply this skill with stepper/wizard patterns
+│   └── No → Does it touch configuration / settings / rules?
+│       ├── Yes → Dedicated config page, key-label distinction, add/edit/remove
+│       └── No → Is it a landing page / marketing / static form?
+│           └── Yes → Do NOT use this skill
+└── No → Is it backend-only with no operator workflow?
+    └── Yes → Do NOT use this skill
+```
 
-- **Mobile-first:** Start with the smallest screen, add complexity as space grows.
-- **Breakpoints by content, not device:** When the layout breaks or text wraps badly,
-  that's a breakpoint — not "because iPad."
-- **No horizontal scroll.** Ever. Content reflows. Tables become cards on small screens.
-- **320px minimum.** The UI must work at 320px viewport width without zooming.
-- **Allow zoom.** Never set `user-scalable=no` or `maximum-scale=1`. Users with low
-  vision need to zoom.
-- **Stack over sprawl.** On narrow screens, side-by-side elements stack vertically.
-  Two-column forms become one-column. Sidebar moves above content.
+```
+Data volume check:
+├── < 100 records → Client-side filtering acceptable
+├── 100–1000 records → Consider server-side, paginate
+└── > 1000 records → Server-side filtering mandatory, virtualize if needed
+```
 
-### Modals and dialogs
-
-Use modals sparingly — they interrupt the user's workflow.
-
-- **Confirmation only.** Use modals for destructive actions that need explicit confirmation.
-  Not for informational messages (use inline text or toast).
-- **Escape always works.** `Esc` closes the modal. Clicking the backdrop closes it.
-  A visible close button is mandatory.
-- **Focus trap.** When a modal opens, focus moves into it. Tab cycles within the modal.
-  When it closes, focus returns to the trigger element.
-- **No modal-on-modal.** Never stack modals. If a modal needs a confirmation, replace the
-  first modal's content instead.
-- **Short content.** If the modal body needs scrolling, it's too long. Use a full page instead.
-
-### Toast and notification patterns
-
-- **Toast = brief, non-blocking, auto-dismiss.** Use for success confirmations, minor errors,
-  or status updates. 3–5 seconds display time.
-- **Stack from top-right or bottom-right.** Never obscure critical UI elements (navigation,
-  form fields, primary action buttons).
-- **Max 3 visible toasts.** Older toasts dismiss when new ones arrive. Don't flood the screen.
-- **Actionable toasts** when possible: "Record saved. Undo?" is better than just "Saved."
-- **Error toasts should persist** until dismissed. Don't auto-dismiss error messages — the
-  user needs time to read and act on them.
-- **Never use toasts for complex information.** If it needs a title, body, and action button,
-  use a banner or inline notification instead.
-
-### Data tables basics
-
-Tables are the backbone of operator UIs. Get them right:
-
-- **Sticky header.** When scrolling long tables, the header must stay visible.
-- **Sticky first column** (optional but valuable). When horizontal scroll is needed, keep
-  the identifier column visible.
-- **Row height: 48–56px** for touch, 40px for mouse-only. Don't cram rows — readability
-  trumps density.
-- **Right-align numbers.** Decimal points should line up. Left-align text.
-- **Sortable column headers.** Show the current sort direction with an arrow icon.
-- **Row hover state.** Subtle background change on hover to help the eye track across rows.
-- **Selection indicator.** When rows are selectable, show a checkbox or highlight on the
-  entire row, not just a tiny checkbox.
-- **Empty table state.** Never show an empty table with just headers. Show "No records found"
-  with an explanation and action.
-
-### Search and filtering
-
-- **Search input visible by default.** Don't hide it behind an icon or toggle. Operators
-  search constantly.
-- **Search scope is clear.** "Search orders" or "Search by customer name" — not just a
-  magnifying glass icon.
-- **Debounce search input** (300ms). Don't fire a request on every keystroke.
-- **Clear button.** An × inside the search input to clear the query in one click.
-- **Filter chips/tags.** Show active filters as removable chips below the search bar.
-  "Status: Active × Country: US ×" — the user sees what's applied.
-- **Filter reset.** A single "Clear all filters" button when multiple filters are active.
-- **Results count.** Always show "Showing 1–25 of 342 orders" so the user knows the scope.
-
-### The "grandma test"
-
-If someone unfamiliar with the system can complete the core task without instructions, the
-UI is clear enough. If they need a manual, the design failed. This doesn't mean the UI is
-"simple" — it means it's intuitive. Complexity in the domain is fine; complexity in the
-interface is not.
-
-## Required UX shape
+## Four — Required UX Shape
 
 When this skill is selected, generated frontend should prefer:
 
@@ -213,125 +196,40 @@ When this skill is selected, generated frontend should prefer:
 - audit / provenance visibility where relevant;
 - an API client boundary instead of hidden fetches inside presentation components.
 
-## Capability page expectations
+**Capability page expectations** (for a backoffice MVP): `/ingest`, `/validation`, `/archive`,
+`/export`, `/qa`, `/settings`, `/extraction-profiles`, or equivalent routes for the detected
+framework. Do not hardcode exact paths unless the plan supports them. Use idiomatic routing.
 
-For a backoffice MVP, prefer explicit pages such as:
+**Large-data behavior** (archive, records, tasks, users, logs, document lists): no client-side
+all-loads, server-side filtering, pagination or cursor semantics, stable sorting, search input
+with clear scope, filter reset, document backend/source-of-truth assumptions.
 
-- `/ingest`;
-- `/validation`;
-- `/archive`;
-- `/export`;
-- `/qa`;
-- `/settings`;
-- `/extraction-profiles`;
-- equivalent routes for the selected framework.
+**Configuration UX:** dedicated page, distinguish keys from labels, support add/edit/remove,
+show examples and validation hints, persist via backend if required, document UI-local limitation.
 
-Do not hardcode these exact paths unless the plan supports them. Use idiomatic routing for the
-detected stack.
+**AI assistant UX:** explain what AI can/cannot do, no silent state mutation, show citation/no-source
+behavior, guided prompts, show provider/runtime, avoid anthropomorphism.
 
-## Large-data behavior
+### Operational UX patterns
 
-For archive, records, tasks, users, logs, or document lists:
+**Stepper / Wizard workflows** (multi-step processes): visible progress indicator, allow back
+navigation to completed steps, persist form state across steps, validate per step, show summary
+before final submission, support save-and-resume.
 
-- do not load all records client-side;
-- use server-side filtering when a backend exists;
-- include pagination or cursor semantics;
-- include stable sorting;
-- include a search input with clear scope;
-- include a filter reset;
-- avoid expensive client-only filtering as the primary strategy;
-- document backend / source-of-truth assumptions.
+**Bulk operations** (approve, reject, export, delete on multiple records): select-all/deselect-all,
+floating action bar, selected count, confirmation for destructive bulk, success/failure counts,
+cancellation support.
 
-## Configuration UX
+**Real-time status updates** (async backend processing): SSE or WebSocket, per-item status badges,
+elapsed/estimated time, manual refresh fallback, graceful reconnection, never poll > 5s.
 
-When users need to configure extraction, classification, rules, workflows, prompts, policies, or
-routing:
+**Keyboard shortcuts** (high-volume operator workflows): discoverable shortcuts (`?` help overlay),
+support `Ctrl+Enter`/`Esc`/`Tab`, avoid overriding browser defaults, visual feedback, configurable.
 
-- create a dedicated configuration page or route;
-- distinguish technical keys from user-facing labels;
-- support add / edit / remove flows;
-- show examples and validation hints;
-- avoid hiding important business configuration in source constants only;
-- persist configuration through the backend if the requirement requires it;
-- otherwise document the UI-local limitation.
+## Five — Cross-Cutting Design Patterns
 
-## AI assistant UX
-
-For AI-enabled backoffice pages:
-
-- explain what the AI can and cannot do;
-- state that the AI does not modify business state unless explicitly required;
-- show citation or source policy;
-- show no-source behavior;
-- provide guided prompt examples;
-- make provider / runtime profile visible where relevant;
-- avoid anthropomorphic claims or unsupported autonomy.
-
-## Backend source-of-truth rule
-
-The frontend must not duplicate backend business rules.
-
-Forbidden frontend-only duplication includes:
-
-- lifecycle transition rules;
-- authorization rules;
-- archive eligibility;
-- AI document eligibility;
-- export permission rules;
-- validation preconditions.
-
-The frontend may hide / disable actions for UX, but backend denial remains authoritative.
-
-## Operational UX patterns
-
-### Stepper / Wizard workflows
-
-For multi-step processes (onboarding, approval chains, data entry):
-
-- Show a visible progress indicator (step numbers or labels);
-- allow navigation to completed steps (but not forward past the current step);
-- persist form state across steps (no data loss on back navigation);
-- validate per step, not only at the end;
-- show a summary before final submission;
-- support save-and-resume for long processes.
-
-### Bulk operations
-
-For actions on multiple records (approve, reject, export, delete):
-
-- provide select-all / deselect-all checkboxes;
-- show a floating action bar or contextual toolbar when items are selected;
-- display a count of selected items;
-- require confirmation for destructive bulk actions (delete, archive);
-- report success/failure counts after bulk execution;
-- support cancellation of in-progress bulk operations.
-
-### Real-time status updates
-
-For workflows with asynchronous backend processing (extraction, validation, export):
-
-- use Server-Sent Events (SSE) or WebSocket for live status;
-- show per-item status badges (pending, processing, complete, failed);
-- display elapsed time or estimated completion when available;
-- provide a manual refresh fallback for environments where real-time is unavailable;
-- handle reconnection gracefully (show "reconnecting…" instead of breaking);
-- never poll more frequently than every 5 seconds.
-
-### Keyboard shortcuts for power users
-
-For high-volume operator workflows:
-
-- provide discoverable keyboard shortcuts (show a `?` help overlay);
-- support common patterns: `Ctrl+Enter` (submit), `Esc` (cancel/close), `Tab` (next field);
-- avoid overriding browser defaults (`Ctrl+S`, `Ctrl+F`);
-- provide visual feedback when a shortcut is triggered;
-- make shortcuts configurable when feasible.
-
-## Cross-cutting UI/UX design patterns
-
-Beyond structure, apply the following design-pattern disciplines. They are priority-ordered;
-resolve higher-priority items first. The full per-category rule list (key checks and anti-patterns)
-lives in `references/design-patterns.md` — read it before delivering UI rather than guessing.
+Apply these as principles, not framework recipes. Priority-ordered — resolve higher-priority
+items first. Full per-category rule list lives in `references/design-patterns.md`.
 
 | Priority | Discipline | Why | Must have | Avoid |
 |----------|------------|-----|-----------|-------|
@@ -347,105 +245,111 @@ lives in `references/design-patterns.md` — read it before delivering UI rather
 | 10 | Charts & data | LOW | Legends, tooltips, accessible colors, reserved space | Conveying meaning by color alone |
 | 11 | Security & robustness | HIGH | HTTPS-only + HSTS/CSP/nosniff; sanitize HTML sinks (Trusted Types); SRI for third-party; semantic valid HTML; global error handling; secure cookies | `innerHTML`=userInput, mixed content, untrusted-CDN polyfills, `document.write`, leaking source maps |
 
-Apply these as principles, not framework recipes. When a specific surface needs depth (e.g. a
-data-dense dashboard, a form-heavy settings page, or a chart panel), read the matching section in
-`references/design-patterns.md` (structural patterns) and `references/web-quality.md` (accessibility
-WCAG 2.2, performance/Core Web Vitals, and security best-practics) and reconcile them with the
-structural rules above.
+### Web quality & performance
 
-## Web quality & performance
+Internal tools are still user-facing software. Full checklists in `references/web-quality.md`.
 
-Internal tools are still user-facing software; treat web-quality as a first-class requirement, not
-an afterthought. The full checklists live in `references/web-quality.md`.
+- **Accessibility target:** WCAG 2.2 AA. Labels, alt text, contrast (text 4.5:1, UI 3:1, focus 3:1),
+  keyboard operability, visible focus, error announcement via `role="alert"`/`aria-live`,
+  `prefers-reduced-motion` support.
+- **Core Web Vitals (p75):** LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1. JS < 300KB, CSS < 100KB.
+- **Loading:** inline critical CSS, no render-blocking JS, preload LCP element, prefer SSR/streaming.
+- **Interactivity:** break long tasks, `await scheduler.yield()`, debounce search/filter, visual
+  feedback before heavy work, move CPU-heavy work off main thread.
+- **Stability:** reserve space for every image/embed, `font-display: swap` with matched fallback metrics.
+- **Scale:** virtualize lists > 100 rows, event delegation, clean up listeners on unmount.
 
-- **Accessibility target:** WCAG 2.2 **AA** (POUR principles). Critical: labels, alt text,
-  contrast (text 4.5:1, UI 3:1, focus 3:1), keyboard operability with no traps, visible focus,
-  error announcement via `role="alert"`/`aria-live`, and `prefers-reduced-motion` support.
-- **Core Web Vitals targets (p75):** LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1. Backoffice UIs are often
-  JS-heavy and data-dense, so set an explicit budget (JS < 300KB compressed, CSS < 100KB) and
-  enforce it.
-- **Loading:** inline critical CSS, no render-blocking JS in `<head>`, preload the LCP element with
-  `fetchpriority="high"`, prefer SSR/streaming over client-only fetches of above-fold content.
-- **Interactivity:** break long tasks and `await scheduler.yield()`; debounce search/filter; give
-  immediate visual feedback before heavy work; move CPU-heavy work off the main thread.
-- **Stability:** reserve space for every image/embed (dimensions or `aspect-ratio`); insert dynamic
-  content below the viewport or animate with `transform`; fonts use `font-display: swap` with matched
-  fallback metrics to avoid FOUT shift.
-- **Scale:** virtualize lists > 100 rows; use event delegation and clean up listeners on unmount.
+### Security & robustness
 
-## Security & robustness
-
-Operator consoles perform privileged actions on sensitive data — apply a baseline even though the
-audience is internal. Full detail in `references/web-quality.md`.
+Operator consoles perform privileged actions on sensitive data. Full detail in `references/web-quality.md`.
 
 - **Transport:** HTTPS only, no mixed content, HSTS (`max-age=31536000; includeSubDomains; preload`).
 - **Headers:** `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
   CSP with `default-src 'self'`, `base-uri 'self'`, `form-action 'self'`, nonces over
-  `'unsafe-inline'`. Prefer CSP `frame-ancestors 'self'` over `X-Frame-Options`. Do not send
-  `X-XSS-Protection`.
+  `'unsafe-inline'`. Prefer CSP `frame-ancestors 'self'` over `X-Frame-Options`. No `X-XSS-Protection`.
 - **DOM-XSS:** never assign untrusted input to `innerHTML`/`document.write`; use `textContent` or
-  sanitize. Enforce **Trusted Types** (`require-trusted-types-for 'script'`) so HTML sinks accept
-  only sanitized, typed values — roll out in Report-Only first.
-- **Third-party:** pin CDN scripts/stylesheets with Subresource Integrity; never load polyfills from
-  an untrusted CDN. Keep dependencies patched (`npm audit`); avoid prototype-pollution merges of
-  untrusted input.
-- **Markup:** valid HTML5, semantic elements (`<nav> <main> <table>` with `<th scope>`), no duplicate
-  IDs. Secure cookies: `Secure; HttpOnly; SameSite=Strict; Path=/`.
-- **Errors:** global `error` + `unhandledrejection` handlers, user-safe messages, and strip
-  `sourcesContent` from production source maps (no leaked source).
+  sanitize. Enforce **Trusted Types** (`require-trusted-types-for 'script'`).
+- **Third-party:** pin CDN scripts/stylesheets with Subresource Integrity; no untrusted CDN polyfills.
+  Keep dependencies patched. Avoid prototype-pollution merges.
+- **Markup:** valid HTML5, semantic elements (`<nav>`, `<main>`, `<table>` with `<th scope>`), no
+  duplicate IDs. Secure cookies: `Secure; HttpOnly; SameSite=Strict; Path=/`.
+- **Errors:** global `error` + `unhandledrejection` handlers, user-safe messages, strip
+  `sourcesContent` from production source maps.
 
-## Evidence required
+## Six — Error Handling
 
-A request using this skill should provide:
+| Error | Detection | Resolution |
+|-------|-----------|------------|
+| Multi-capability request as single dashboard | Single route/page for multiple capabilities | Split into one route per capability; shared shell |
+| Missing capability page | Required route not implemented | Add the missing route with shared layout |
+| Missing loading/empty/error states | Critical workflow lacks state handling | Add loading, empty, error, permission-denied states |
+| Unbounded client-side list | All records loaded client-side without justification | Implement server-side filtering + pagination |
+| Backend rule duplication | Frontend replicates lifecycle/authorization rules | Remove frontend duplication; backend stays authoritative |
+| Color-only meaning | Status conveyed only by color | Add icon, text, or border change alongside color |
+| Sub-44px touch targets | Interactive element < 44×44px | Increase target size to 44×44px minimum |
+| Hover-only interaction | Feature only accessible on hover | Provide tap/long-press/always-visible alternative |
+| Missing focus states | No `:focus-visible` styling | Add visible focus indicators (≥3:1 contrast) |
+| Layout shell duplication | Page contains own `<html>`, `<head>`, `<body>` | Remove shell; import shared layout |
+| No meta tags | Missing `<title>` or `<meta description>` | Layout provides defaults; pages supply values |
+| Hardcoded absolute URLs | Internal links use `http://localhost:...` | Use relative paths or base URL utility |
+| Mixed content | HTTP resources on HTTPS page | Upgrade all resources to HTTPS |
+| No CSP | Missing Content-Security-Policy header | Add CSP with `default-src 'self'` and nonces |
+| `innerHTML` with user input | Untrusted input assigned to `innerHTML` | Use `textContent` or sanitize; enforce Trusted Types |
+| Missing SRI | Third-party scripts without integrity hashes | Add `integrity` and `crossorigin` attributes |
+| JS budget exceeded | JS > 300KB compressed | Analyze bundle, code-split, tree-shake |
+| CSS budget exceeded | CSS > 100KB compressed | Remove unused CSS, consolidate utilities |
+| LCP > 2.5s | Largest Contentful Paint exceeds target | Preload LCP element, inline critical CSS, SSR |
+| INP > 200ms | Interaction to Next Paint exceeds target | Break long tasks, yield main thread, debounce |
+| CLS > 0.1 | Cumulative Layout Shift exceeds target | Reserve space for images/embeds, use `aspect-ratio` |
 
-- route / page source files;
-- a shared shell or navigation when multiple pages exist;
-- an API client boundary or typed contract;
-- at least one list / filter / task / action flow;
-- state-handling evidence (loading / empty / error / permission);
-- accessibility evidence: semantic controls, labels, focus styles, contrast, keyboard path;
-- performance evidence: bundle/CSS within budget, virtualized long lists, debounced input, no CLS
-  from late content;
-- security evidence: HTTPS-only, security headers/CSP, sanitized HTML sinks, SRI-pinned third-party,
+## Seven — Evidence & Checklist
+
+**Evidence required:**
+
+- Route / page source files;
+- A shared shell or navigation when multiple pages exist;
+- An API client boundary or typed contract;
+- At least one list / filter / task / action flow;
+- State-handling evidence (loading / empty / error / permission);
+- Accessibility evidence: semantic controls, labels, focus styles, contrast, keyboard path;
+- Performance evidence: bundle/CSS within budget, virtualized long lists, debounced input, no CLS;
+- Security evidence: HTTPS-only, security headers/CSP, sanitized HTML sinks, SRI-pinned third-party,
   no leaked source maps;
-- build / type / lint / test checks when available;
-- a manual smoke path when automation is unavailable.
+- Build / type / lint / test checks when available;
+- A manual smoke path when automation is unavailable.
 
-## Regression test reconciliation
+**Gate implications — BLOCK when:**
 
-When a backoffice request adds a new capability page, navigation item, route, visible section,
-action, filter, or configuration workflow, reconcile existing operator-console regression tests.
+- Multi-capability backoffice request implemented as single decorative dashboard;
+- Required capability pages / routes missing;
+- Loading / error / empty / permission states absent for critical workflows;
+- Large-data lists implemented as unbounded client-only lists without justification;
+- Backend-source-of-truth rules duplicated or contradicted;
+- Design-pattern table ignored → accessibility / touch regressions ship;
+- Core Web Vitals regression ships without justification or bundles blow budget;
+- Security baseline missing (mixed content, no CSP/Trusted Types, no SRI, `innerHTML` with user input).
 
-Do not leave older tests expecting the previous navigation or section list unchanged when the new
-behavior is intentionally additive.
+**Gate may WARN when:**
 
-Do not use brittle positional selectors for repeated labels or buttons. Prefer route-scoped
-rendering, `within(...)`, unique accessible labels, or test-specific component roots.
+- Route exists but advanced filtering is deferred and documented;
+- Accessibility automation is unavailable but semantic controls are present;
+- Configuration UI is UI-local only and persistence is explicitly out of scope;
+- Performance budgets exceeded but mitigation plan and measurement attached.
 
-## Gate implications
+**Regression test reconciliation:**
 
-Gate must BLOCK promotion when:
+When adding a capability page, navigation item, route, visible section, action, filter, or
+configuration workflow, reconcile existing regression tests. Do not leave older tests expecting
+the previous navigation or section list unchanged. Avoid brittle positional selectors; prefer
+route-scoped rendering, `within(...)`, unique accessible labels, or test-specific component roots.
 
-- a multi-capability backoffice request is implemented as a single decorative dashboard only;
-- required capability pages / routes are missing;
-- loading / error / empty / permission states are absent for critical workflows;
-- large-data lists are implemented as unbounded client-only lists without justification;
-- backend-source-of-truth rules are duplicated or contradicted;
-- the design-pattern table is ignored and accessibility / touch regressions ship (e.g. no focus
-  states, hover-only interactions, sub-44px targets, color-only meaning);
-- a Core Web Vitals regression ships without justification (LCP > 2.5s, INP > 200ms, CLS > 0.1) or
-  bundles blow the budget (JS > 300KB, CSS > 100KB) with no documented reason;
-- a security baseline is missing (mixed content, no CSP/Trusted Types for HTML sinks, third-party
-  scripts without SRI, or `innerHTML`/`document.write` fed untrusted input).
+**Reference guides:**
 
-Gate may WARN when:
-
-- a route exists but advanced filtering is deferred and documented;
-- accessibility automation is unavailable but semantic controls are present;
-- configuration UI is UI-local only and persistence is explicitly out of scope;
-- performance budgets are exceeded but a mitigation plan and measurement are attached.
-
----
+| Reference | Description |
+|-----------|-------------|
+| `references/design-patterns.md` | Full per-category design pattern rules, key checks, anti-patterns |
+| `references/web-quality.md` | WCAG 2.2 AA, Core Web Vitals, security baseline detail |
+| `references/condensed.md` | Condensed version for tools that don't read SKILL.md format |
 
 ## Test Cases
 
@@ -463,4 +367,3 @@ Gate may WARN when:
 **Input:** A backoffice page with color-only status indicators (red = error, green = success), no alt text on icons, and keyboard-trapped modal.
 **Expected output:** A review identifying: color-only meaning (WCAG 1.4.1 violation), missing alt text (WCAG 1.1.1 violation), keyboard trap (WCAG 2.1.2 violation), with severity ratings and fixes.
 **Assertion:** All three violations are identified with WCAG success criteria references.
-
